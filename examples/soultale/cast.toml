@@ -1,0 +1,295 @@
+# Cast for Soultale.
+#
+# This file holds every speaker code that Volume 1 uses. Volume 1 contains the
+# three prologue chapters and chapters 3 to 22. It has 46 codes and 687
+# dialogue lines.
+#
+# The build stops when a chapter uses a code that this file does not have. The
+# error names the code and the chapter. Add the code here, then build again.
+#
+# Give each entry a name and a voice. The name is for you and for the reports.
+# The renderer uses the voice.
+
+
+[narrator]
+# The narrator speaks 79 percent of the book. Choose this voice first, and
+# listen to it for several minutes before you accept it.
+voice = ""
+
+
+# LEADS
+#
+# Two codes carry most of the dialogue of the volume. Give each one a voice
+# that no other character uses.
+
+# 160 lines. First in chapter 4.
+[cast.BLK]
+name  = ""
+voice = ""
+
+# 54 lines. First in chapter 0.
+[cast.INK]
+name  = ""
+voice = ""
+
+
+# RECURRING
+#
+# These codes have 5 to 39 lines each. Give each one a voice. Two of them can
+# share a voice when they never appear in the same chapter, but start with one
+# voice for each and share only when you run out.
+
+# 39 lines. First in chapter 18.
+[cast.LCH]
+name  = ""
+voice = ""
+
+# 35 lines. First in chapter 0.
+[cast.ZER]
+name  = ""
+voice = ""
+
+# 35 lines. First in chapter 4.
+[cast.GBR]
+name  = ""
+voice = ""
+
+# 32 lines. First in chapter 13.
+[cast.RGN]
+name  = ""
+voice = ""
+
+# 29 lines. First in chapter 17.
+[cast.RMI]
+name  = ""
+voice = ""
+
+# 26 lines. First in chapter 12.
+[cast.VLT]
+name  = ""
+voice = ""
+
+# 23 lines. First in chapter 4.
+[cast.LCF]
+name  = ""
+voice = ""
+
+# 22 lines. First in chapter 15.
+[cast.SMP]
+name  = ""
+voice = ""
+
+# 21 lines. First in chapter 11.
+[cast.ZPH]
+name  = ""
+voice = ""
+
+# 21 lines. First in chapter 16.
+[cast.MRL]
+name  = ""
+voice = ""
+
+# 20 lines. First in chapter 10.
+[cast.EMR]
+name  = ""
+voice = ""
+
+# 20 lines. First in chapter 16.
+[cast.DRK]
+name  = ""
+voice = ""
+
+# 19 lines. First in chapter 9.
+[cast.MRW]
+name  = ""
+voice = ""
+
+# 18 lines. First in chapter 14.
+[cast.CAL]
+name  = ""
+voice = ""
+
+# 14 lines. First in chapter 8.
+[cast.SNA]
+name  = ""
+voice = ""
+
+# 13 lines. First in chapter 1.
+[cast.DRM]
+name  = ""
+voice = ""
+
+# 12 lines. First in chapter 1.
+[cast.END]
+name  = ""
+voice = ""
+
+# 9 lines. First in chapter 4.
+[cast.VTH]
+name  = ""
+voice = ""
+
+# 7 lines. First in chapter 1.
+[cast.BLB]
+name  = ""
+voice = ""
+
+# 6 lines. First in chapter 14.
+[cast.MAN]
+name  = ""
+voice = ""
+
+# 5 lines. First in chapter 7.
+[cast.AQL]
+name  = ""
+voice = ""
+
+# 5 lines. First in chapter 17.
+[cast.MRC]
+name  = ""
+voice = ""
+
+
+# SMALL PARTS
+#
+# These codes have 4 lines or fewer. Several of them can share one voice,
+# because a listener does not hold a voice with one line in memory. Give the
+# same voice to more than one code here when the codes are far apart.
+
+# 4 lines. First in chapter 1.
+[cast.EDG]
+name  = ""
+voice = ""
+
+# 4 lines. First in chapter 9.
+[cast.VLG]
+name  = ""
+voice = ""
+
+# 3 lines. First in chapter 0. The nameless voice of the prologue.
+[cast."///"]
+name  = ""
+voice = ""
+
+# 3 lines. First in chapter 12.
+[cast.VNT]
+name  = ""
+voice = ""
+
+# 3 lines. First in chapter 12.
+[cast.SRH]
+name  = ""
+voice = ""
+
+# 3 lines. First in chapter 13.
+[cast.AST]
+name  = ""
+voice = ""
+
+# 3 lines. First in chapter 15.
+[cast.CHD]
+name  = ""
+voice = ""
+
+# 3 lines. First in chapter 17.
+[cast.KLN]
+name  = ""
+voice = ""
+
+# 2 lines. First in chapter 9.
+[cast.STW]
+name  = ""
+voice = ""
+
+# 2 lines. First in chapter 12.
+[cast.ST1]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 5.
+[cast."KID #1"]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 5.
+[cast."KID #2"]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 7.
+[cast.MAR]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 8.
+[cast.SIENNA]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 10.
+[cast.BRN]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 10.
+[cast.MIN]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 12.
+[cast.ST2]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 15.
+[cast.BCK]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 15.
+[cast.WMN]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 16.
+[cast.MCH]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 19.
+[cast.GABRIEL]
+name  = ""
+voice = ""
+
+# 1 line. First in chapter 22.
+[cast.MOM]
+name  = ""
+voice = ""
+
+
+# UNKNOWN SPEAKERS
+#
+# The code ??? is not one character. It is a different character in each part
+# of the book, so it cannot have one entry.
+#
+# Give it one entry for each group of chapters. The renderer finds the entry
+# from the chapter number. A ??? line in a chapter that no entry covers stops
+# the build, which is correct: a new unknown character needs a new voice.
+#
+# Volume 1 has no ??? line, so these entries are for later volumes:
+#
+#   [[cast_range."???"]]
+#   chapters = "38"
+#   name     = ""
+#   voice    = ""
+#
+#   [[cast_range."???"]]
+#   chapters = "115-120"      # 51 lines, the largest group
+#   name     = ""
+#   voice    = ""
+#
+# The other groups are chapter 73, chapter 128, and chapter 175.
+#
+# A group can use the voice of a character that the story names later. The
+# listener then hears the connection when they read the book again. Or the
+# group can keep a voice of its own. Choose this for each group.
