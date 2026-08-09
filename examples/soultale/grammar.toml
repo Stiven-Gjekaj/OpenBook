@@ -1,0 +1,182 @@
+# Grammar for the Soultale manuscript.
+#
+# The source is a set of EPUB files. Each rule here is checked against all 325
+# chapters of the book. The comments give the counts that the check found.
+
+
+[source]
+format = "epub"
+
+# The book comes in more than one EPUB file. Each file contains the archive
+# chapter, so two files can hold the same chapter. The parser uses the chapter
+# number to find a chapter that it already has, and it keeps the first one.
+files = ["soultale-definitivus-pt-1.epub", "soultale-definitivus-pt-2.epub"]
+
+# The reading order comes from the spine of each EPUB. The parser does not sort
+# file names, because the file names contain a time value and not a chapter
+# number.
+#
+# The chapter title comes from the navigation document. The same string is also
+# in the <title> element and in the <h1> element of each chapter. All three
+# agree in all 325 chapters. Some titles start with a space, so the parser
+# removes the space at each end before it reads the title.
+chapter_title = "(Chapter {NUMBER} || {VOLUME}) {TITLE}"
+number_pattern = '-?\d+'
+volume_pattern = '[^)]+'
+
+# The parser reads a chapter that has one of these volume names, but it does
+# not put the chapter in the audiobook.
+#
+# Two chapters match. The three prologue chapters do not match. The audiobook
+# contains them.
+skip_volume_pattern = '^Archive'
+
+# The narrator says this at the start of a chapter. The raw title contains two
+# vertical bars, and the speech engine speaks them.
+chapter_announcement       = "Chapter {NUMBER}. {TITLE}"
+chapter_announcement_named = "{VOLUME}. {TITLE}"
+
+
+[grammar]
+
+# Dialogue.
+#
+# The real form in the EPUB is:
+#   <strong>LEA</strong>: My papa's going to ask why I was out so late.
+#
+# The exporter uses two elements for bold text and gives them the same meaning.
+# The parser must accept both.
+dialogue_elements = ["b", "strong"]
+
+# The parser removes the element, then applies this template to what is left.
+#
+# A bold element is a speaker code only when it starts a segment and a colon
+# comes after it. A bold word inside a sentence is emphasis. See the note on
+# text style.
+dialogue = "{SPEAKER}: {TEXT}"
+
+# The speaker code.
+#
+# The book contains 187 different codes. Most codes are 2 to 4 capital letters.
+# The class must also accept these codes, which are real:
+#
+#   ???  ///  JHN?  PR1  PR2  PR3  GD1  GD2  SC2
+#   KID #1  KID #2  NEWS ANCHOR  CUSTOMER  GABRIEL  PROC  NER & SHN
+#
+# The class accepts no lowercase letter.
+speaker_pattern = '[A-Z0-9?/#&][A-Z0-9?/#& ]{1,13}'
+
+# A paragraph can hold more than one dialogue line. The lines are divided by a
+# line break element and not by a paragraph element. This is common. The parser
+# divides each paragraph at every line break before it looks for a speaker.
+split_at_line_break = true
+
+# An action inside a line of dialogue.
+#
+# The author writes an action between two asterisks, inside the words of the
+# character:
+#
+#   **RMI**: You want to try that again? *circling remi warily*
+#
+# There are 46 of these. 40 of them are in volume 1 and the other six are in
+# volume 2. No later volume uses one.
+#
+# They divide into two kinds. Some change how the line sounds: *cough*,
+# *sniffling*, *whispered*. Some tell the reader where the character looks or
+# what they do: *to his assistant*, *answering phone*, *hanging up*. Neither
+# kind is part of the sentence, so neither kind can be spoken as words.
+#
+# The pattern uses the asterisks and not the italic elements. Italic marks
+# emphasis in this book, and the renderer removes it. See strip_elements.
+action = '\*(?P<TEXT>[^*\n]{1,80})\*'
+
+
+[grammar.unison]
+# Two characters can speak one line together:
+#   <strong>NER &amp; SHN</strong>: text
+#
+# The ampersand is an XML entity in the file. The parser must decode the entity
+# before it looks for the separator.
+separator = " & "
+
+#   voice_blend  Make one new voice from the average of the style vectors of
+#                the two characters. Then speak the line one time.
+#   mix          Speak the line one time for each character. Then make the two
+#                pieces of audio the same length and mix them.
+#   primary      Use the voice of the first character only.
+mode = "voice_blend"
+
+
+[grammar.structure]
+
+# End matter. The exporter puts it in an underline element. The element is
+# consistent even when the words are not, so the parser uses the element and
+# does not read the text.
+end_matter_element = "u"
+
+# A scene break. The author writes a short line of dashes. The renderer makes a
+# pause here and speaks nothing. Without this rule the narrator says the name
+# of each dash.
+scene_break = '^\s*-{3,}\s*$'
+
+# Text style.
+#
+# Bold and italic mark emphasis. In rare places they mark the words of one
+# character inside the narration. Neither changes the voice and neither changes
+# the pronunciation, because the speech engine gets the same sounds from the
+# same letters. Stress comes from the words of the sentence and not from the
+# style of the text.
+#
+# The parser therefore removes these elements and keeps the text inside them.
+# The exception is a bold element that holds a speaker code.
+strip_elements = ["i", "em", "b", "strong", "span", "a"]
+
+# Paragraph alignment is also not a signal. 75 percent of all paragraphs are
+# centred, and many chapters are centred from start to end. The parser ignores
+# alignment.
+
+
+[render]
+read_chapter_names = true
+read_end_matter    = false
+
+# Pauses.
+#
+# A pause happens only where the kind of the text changes. Two dialogue lines
+# that come one after the other get no pause, because the conversation must
+# stay quick. Two narration paragraphs that come one after the other get no
+# pause for the same reason.
+#
+# The speech engine still makes its own short stop at the end of a sentence.
+# These values add silence after that stop.
+pause_dialogue_to_narration = "400ms"
+pause_narration_to_dialogue = "600ms"
+pause_at_scene_break        = "2s"
+pause_after_chapter_name    = "1s"
+
+# An action inside a line of dialogue.
+#
+#   pause     Take the action out and leave a silence where it was. The line
+#             keeps its rhythm and the character does not say the word "cough".
+#   narrator  The narrator speaks the action. This suits an action that tells
+#             the reader where a character looks, and it interrupts a short
+#             line badly.
+#   drop      Take the action out and leave nothing.
+action          = "pause"
+pause_at_action = "500ms"
+
+
+[output]
+# One audiobook for each volume. The EPUB files are not a guide here. Part 1
+# holds volume 1 to the middle of volume 6, so a file for each part would cut
+# volume 6 in two.
+#
+# The renderer puts the chapters in order of chapter number, and it makes one
+# chapter mark for each chapter.
+group_by  = "volume"
+file_name = "Soultale - {VOLUME}.m4b"
+
+# The three prologue chapters are chapter 0, 1 and 2. They come before chapter
+# 3, so the order inside the file stays correct.
+[output.merge_volumes]
+"Prologue" = "Volume 1"
