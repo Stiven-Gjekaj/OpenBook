@@ -107,28 +107,62 @@ that.
 
 ## The website
 
-A site for the project, in this repository, built from the same documents.
+A site where a person reads Soultale and listens to it. This is not a page
+about the tool. It is the book itself, with the audio beside the text.
 
-- [ ] Write the pages: what OpenBook is, how to install it, how to write the two
-      configuration files, and what each stage does.
-- [ ] Put a few short pieces of audio on the page. A person deciding whether to
-      use this wants to hear it, and no description of a voice is worth ten
-      seconds of one.
-- [ ] Build the site with no framework. The content is a handful of pages, and a
-      build tool would be larger than the thing it builds.
-- [ ] A workflow that publishes on a push to the default branch.
+The site is made by the same pipeline that makes the audio. One parse gives
+both, so the words on the page and the words in the audio cannot disagree.
+
+- [ ] Write the chapters out as HTML from the parsed segments.
+- [ ] A player beside the text, with one file for each chapter.
+- [ ] Remember where a person stopped, in their own browser.
+- [ ] Move the text with the audio, at least by paragraph, because the parse
+      already knows where each piece of speech starts.
+- [ ] A page for each volume, and a way to reach any chapter.
+- [ ] A link to download the M4B of a volume, for a person who wants it in an
+      audiobook application.
+- [ ] Build with no framework. The pages are made from data that this project
+      already holds.
+
+### The two audio formats
+
+The volume M4B is for downloading, and it is wrong for the web. Volume 9 is
+about nine hours in one file, and a browser must fetch a large part of it to
+start in the middle.
+
+- [ ] Write one Opus file for each chapter, beside the M4B of each volume.
+      Opus at about 32 kbit for one channel is good for speech, and the whole
+      book is then near 680 MB. The player fetches one chapter, seeks in it
+      quickly, and loads nothing else.
+
+### Where to host it
+
+The text is small. The audio is not, and the audio decides this.
+
+**The pages: Cloudflare Pages.** Free, no charge for bandwidth on a static
+site, a custom name at no cost, and it builds from this repository on a push.
+
+**The audio: Cloudflare R2.** It charges nothing to send data out, ever. The
+whole book costs about one cent each month to store, and a thousand listeners
+cost the same as one. Every other object store charges for each gigabyte that
+leaves it, and that bill grows exactly when the book does well.
+
+**Not GitHub Pages, for the audio.** A published site should stay under a
+gigabyte and a hundred gigabytes each month, and GitHub asks that Pages is not
+used to serve media. 47 hours of audio reaches the first limit and passes the
+second with few listeners. Git also keeps every version of a binary file
+forever, so each new render makes the repository permanently larger.
+
+GitHub Pages is still fine for the text alone, if the audio lives elsewhere.
+Backblaze B2 behind Cloudflare gives the same free egress as R2 with more
+setup. Bunny is cheap and good for media, but not free. The Internet Archive
+costs nothing and keeps things for a long time, and is worth a copy as a
+second home, but it gives no control over the player.
+
+- [ ] Put the audio in R2 and the pages in Cloudflare Pages.
+- [ ] A workflow that publishes the pages on a push to the default branch.
+- [ ] A command that uploads only the audio that changed.
 - [ ] Keep the site out of the test and lint runs, or give it its own.
-
-**Where to host it: GitHub Pages.** The repository is already here, so there is
-no second account and no third party that has to stay working. Publishing is a
-workflow in this repository, which means the site cannot fall behind the code
-without the same commit that moved the code. A custom name costs nothing, and
-the same pattern already runs on MiruScriptX.
-
-Cloudflare Pages is the one to change to later, and only for a reason: it
-serves from more places, and it can run code at the edge. A page that describes
-a command line tool needs neither. Netlify and Vercel are the same answer with
-another account attached.
 
 ## Documents
 
