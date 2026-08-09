@@ -1,7 +1,16 @@
+<div align="center">
+
+<img src="assets/openbook.svg" alt="OpenBook" width="140">
+
 # OpenBook
 
-Turns a book in EPUB form into an audiobook, on your own machine, with a
-different voice for each character.
+### Turns a book into an audiobook, on your own machine, with a different voice for each character
+
+</div>
+
+---
+
+## Overview
 
 OpenBook reads the chapters out of an EPUB file, divides the text into
 narration and dialogue, gives each character the voice you chose for them, and
