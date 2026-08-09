@@ -7,8 +7,9 @@
 ## Read first
 
 - [README.md](README.md) says what OpenBook is and how to start it.
-- [docs/configuration.md](docs/configuration.md) explains every key of the two
-  configuration files.
+- [examples/soultale/grammar.toml](examples/soultale/grammar.toml) and
+  [examples/soultale/cast.toml](examples/soultale/cast.toml) carry a comment on
+  every key. They are the configuration reference until `docs/` holds one.
 - [docs/architecture.md](docs/architecture.md) explains how the stages fit
   together.
 - [TODO.md](TODO.md) says what is not built yet. Look here before you report
@@ -44,7 +45,8 @@ Do not use the issue tracker for a security problem. See
 
 OpenBook reads one book format. A question about a different book is a question
 about writing a new grammar file, and
-[docs/configuration.md](docs/configuration.md) is the place to start.
+[examples/soultale/grammar.toml](examples/soultale/grammar.toml) is the place to
+start.
 
 ## Contributing
 
