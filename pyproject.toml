@@ -1,0 +1,56 @@
+[project]
+name = "openbook"
+version = "0.1.0"
+description = "Turns a Soultale EPUB into an audiobook with a different voice for each character, on your own machine"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Stiven Gjekaj" }]
+keywords = ["audiobook", "text-to-speech", "epub", "tts", "narration"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Text Processing :: Markup",
+]
+
+# The core reads EPUB files, configuration, and text with the standard library
+# only. A speech engine needs more, and it lives in an optional group, so that
+# a person who wants to look at the parse does not download a machine learning
+# framework first.
+dependencies = []
+
+[project.optional-dependencies]
+speech = ["kokoro>=0.9", "soundfile>=0.12", "numpy>=1.26"]
+
+[project.urls]
+Homepage = "https://github.com/Stiven-Gjekaj/OpenBook"
+Issues = "https://github.com/Stiven-Gjekaj/OpenBook/issues"
+
+[project.scripts]
+openbook = "openbook.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openbook"]
+
+[tool.ruff]
+line-length = 88
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+
+# The audio cache and the finished audiobooks. Both are made from the source
+# text and the configuration, so neither belongs in the repository.
+/cache/
+/out/
+
+# The manuscript is not part of this project.
+*.epub
