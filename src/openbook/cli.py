@@ -392,6 +392,7 @@ def _words(options) -> int:
 
 def _render(options) -> int:
     project = Project.open(options.project)
+    project.prepare()
     engine = _engine_for(options)
     cache = Cache(project.cache_directory)
     volume = build_volume(project, options.volume, max_characters=engine.max_characters)
@@ -464,6 +465,7 @@ def _video(options) -> int:
             "there is no picture to put the sound behind"
         )
 
+    project.prepare()
     engine = _engine_for(options)
     cache = Cache(project.cache_directory)
     volume = build_volume(project, options.volume, max_characters=engine.max_characters)
@@ -506,12 +508,12 @@ def _video(options) -> int:
         project.directory / settings.music if settings and settings.music else None
     )
 
-    work = project.output_directory / f".{out.stem}.wav"
+    work = project.work_directory / f"{out.stem}.wav"
     try:
         audio = _levelled(audio, project, out.stem)
         audio.write(work)
         if music_path is not None:
-            mixed = project.output_directory / f".{out.stem}.mixed.wav"
+            mixed = project.work_directory / f"{out.stem}.mixed.wav"
             level = settings.music_level if settings else 0.15
             mix_music(work, Music(path=music_path, level=level), mixed)
             work.unlink(missing_ok=True)
@@ -547,13 +549,13 @@ def _video(options) -> int:
             cards = make_chapter_cards(
                 marks,
                 style,
-                project.output_directory / ".cards",
+                project.work_directory / "cards",
                 total=audio.seconds,
                 volumes=names,
             )
             check_marks_against_speech(marks, volume)
             check_cards_against_time(cards, marks, audio.seconds)
-            listing = write_concat_list(cards, project.output_directory / ".cards.txt")
+            listing = write_concat_list(cards, project.work_directory / "cards.txt")
             print(f"  {len(cards)} cards drawn")
             write_video_from_cards(listing, work, out, **shape)
         else:
@@ -762,9 +764,9 @@ def _levelled(audio, project, stem: str):
         print(f"  loudness   not measured, only {audio.seconds:.1f}s of audio")
         return audio
 
-    project.output_directory.mkdir(parents=True, exist_ok=True)
-    before = project.output_directory / f".{stem}.raw.wav"
-    after = project.output_directory / f".{stem}.level.wav"
+    project.work_directory.mkdir(parents=True, exist_ok=True)
+    before = project.work_directory / f"{stem}.raw.wav"
+    after = project.work_directory / f"{stem}.level.wav"
     try:
         audio.write(before)
         measured = measure(before)

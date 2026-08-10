@@ -11,6 +11,11 @@ build/
 # text and the configuration, so neither belongs in the repository.
 /cache/
 /out/
+/.work/
+
+# The recordings a voice is taken from. They are yours, they are large, and
+# they are not the tool.
+/voices/
 
 # The manuscript is not part of this project.
 *.epub

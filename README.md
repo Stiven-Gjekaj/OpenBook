@@ -279,6 +279,12 @@ is found only by listening to the same fault twice.
 
 ## Project structure
 
+A project directory holds your book, your configuration, and everything the
+tool makes from them. `out/` holds the finished files, `cache/` the audio
+already made, `voices/` your recordings, and `.work/` the half finished pieces.
+Nothing is written outside it except the speech models, which live in
+`~/.cache/huggingface` and are shared with every other project on the machine.
+
 ```
 src/openbook/       the pipeline
   config/           reads and checks the configuration files

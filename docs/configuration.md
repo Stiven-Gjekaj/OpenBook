@@ -4,6 +4,38 @@
 
 # Configuration
 
+## What lives where
+
+Everything a project reads and everything it makes is inside the project
+directory. Delete that one directory and the whole thing is gone.
+
+```
+my-audiobook/
+  grammar.toml        what a chapter looks like
+  cast.toml           which voice each character takes
+  lexicon.toml        how a word is said
+  corrections.toml    what to say instead, for one line
+  book.epub           your manuscript
+  voices/             the recordings a Chatterbox voice is taken from
+  cache/              the audio already made, keyed on text and voice
+  out/                the finished files, and nothing else
+  .work/              half finished pieces, removed as they are used
+```
+
+`out` holds only what you asked for. The levelled copy, the mixed copy and the
+chapter cards are working files and go to `.work`, which is made when a command
+starts and emptied as it runs. Anything in the process that asks for a
+temporary file is sent there too, so a command that is interrupted leaves its
+pieces under a name that says what they belong to, rather than in the system
+temporary directory where they say nothing.
+
+**One thing sits outside**, and it is not the project's to hold: the speech
+models, in `~/.cache/huggingface`. Chatterbox is 3 GB of it and Kokoro 0.3 GB.
+They are shared by every project on the machine, and `HF_HOME` moves them if
+you want them somewhere else.
+
+---
+
 A project is a directory holding the book and up to three files. Only the first
 two are needed.
 

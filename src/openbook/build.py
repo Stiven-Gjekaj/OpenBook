@@ -71,6 +71,32 @@ class Project:
     def output_directory(self) -> Path:
         return self.directory / "out"
 
+    @property
+    def work_directory(self) -> Path:
+        """Where the half finished things go while a command runs.
+
+        Everything a project makes belongs to the project, so a person who
+        wants the whole thing gone can delete one directory and be sure. The
+        pieces here are minutes old and are removed as they are finished with,
+        but a command that is interrupted leaves them, and a stray file under
+        this name says what it belongs to. A stray file in the system temp
+        directory says nothing at all.
+
+        It is kept apart from out, which holds only what was asked for.
+        """
+        return self.directory / ".work"
+
+    def prepare(self) -> Path:
+        """Make the working directory, and send anything using temp into it."""
+        import tempfile
+
+        self.work_directory.mkdir(parents=True, exist_ok=True)
+        # This reaches everything in the process that asks for a temporary
+        # file, including the parts of the project that never hear about a
+        # project directory, and anything a library does on their behalf.
+        tempfile.tempdir = str(self.work_directory)
+        return self.work_directory
+
     def chapters(self) -> tuple[Chapter, ...]:
         # The files are looked for every time, and only the reading is kept.
         # A file that went missing is the caller's situation and has to be
