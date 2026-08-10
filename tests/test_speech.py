@@ -1,8 +1,10 @@
+from array import array
+
 import pytest
 
-from openbook.cast.utterance import BlendedVoice, Utterance, Voice
+from openbook.cast.utterance import BlendedVoice, MixedVoice, Utterance, Voice
 from openbook.errors import OpenBookError
-from openbook.speech import Audio, Cache, SilentEngine, key_for
+from openbook.speech import Audio, Cache, SilentEngine, key_for, overlay
 from openbook.speech.cache import key_of
 
 
@@ -208,3 +210,73 @@ def test_kokoro_not_being_installed_is_reported_and_not_retried(monkeypatch):
     monkeypatch.setattr(builtins, "__import__", refuse)
     with pytest.raises(OpenBookError, match="uv sync --extra speech"):
         KokoroEngine().speak("hello", Voice("af_heart"))
+
+
+def test_overlay_is_as_long_as_the_longest_piece():
+    # Two people saying one line do not finish together. Stretching either to
+    # fit would change what the engine said.
+    short = Audio(samples=b"\x00\x00" * 10, rate=100)
+    long = Audio(samples=b"\x00\x00" * 30, rate=100)
+    assert len(overlay([short, long], 100).samples) == 60
+
+
+def test_overlay_adds_the_samples():
+    one = Audio(samples=array("h", [100, 200]).tobytes(), rate=100)
+    two = Audio(samples=array("h", [10, 20]).tobytes(), rate=100)
+    made = array("h")
+    made.frombytes(overlay([one, two], 100).samples)
+    assert list(made) == [110, 220]
+
+
+def test_overlay_brings_a_sum_down_rather_than_letting_it_wrap():
+    # A sum that wraps around does not sound loud. It sounds broken.
+    loud = Audio(samples=array("h", [30000]).tobytes(), rate=100)
+    made = array("h")
+    made.frombytes(overlay([loud, loud], 100).samples)
+    assert list(made) == [32767]
+
+
+def test_overlay_keeps_the_weight_of_two_voices():
+    # Two people saying one line are louder than one, so the samples are added
+    # and not averaged. The one moment that wants weight must not be the
+    # quietest in the chapter.
+    one = Audio(samples=array("h", [1000]).tobytes(), rate=100)
+    made = array("h")
+    made.frombytes(overlay([one, one], 100).samples)
+    assert list(made) == [2000]
+
+
+def test_overlay_refuses_two_rates():
+    one = Audio(samples=b"\x00\x00", rate=24000)
+    two = Audio(samples=b"\x00\x00", rate=48000)
+    with pytest.raises(OpenBookError, match="wrong speed"):
+        overlay([one, two], 24000)
+
+
+def test_a_mixed_voice_makes_the_engine_speak_once_for_each_part():
+    from openbook.speech.render import _say
+
+    class Counting(SilentEngine):
+        def __init__(self):
+            super().__init__()
+            self.said = []
+
+        def speak(self, text, voice):
+            self.said.append(voice.name)
+            return super().speak(text, voice)
+
+    engine = Counting()
+    audio = _say(engine, "one two", MixedVoice(parts=("a", "b")))
+    assert engine.said == ["a", "b"]
+    assert audio.seconds > 0
+
+
+def test_a_mix_and_a_blend_of_the_same_voices_are_different_audio():
+    mixed = MixedVoice(parts=("a", "b"))
+    blended = BlendedVoice(parts=("a", "b"), weights=(0.5, 0.5))
+    assert key_for("x", mixed, "e", "1") != key_for("x", blended, "e", "1")
+
+
+def test_a_mixed_voice_needs_two_parts():
+    with pytest.raises(ValueError, match="at least two parts"):
+        MixedVoice(parts=("a",))

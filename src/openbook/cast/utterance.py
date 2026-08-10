@@ -61,7 +61,29 @@ class BlendedVoice:
         )
 
 
-VoiceRef = Voice | BlendedVoice
+@dataclass(frozen=True)
+class MixedVoice:
+    """Several voices, each saying the whole line, laid over each other.
+
+    Unlike a blended voice this keeps the characters apart, because each one is
+    a separate piece of audio in its own voice. What it cannot keep is their
+    timing: two readings of the same words are two different lengths, so the
+    longer one is still going when the shorter has stopped. Whether that sounds
+    like a crowd or like an echo depends on the line, which is why the blend is
+    the usual choice and this is the one you ask for.
+    """
+
+    parts: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if len(self.parts) < 2:
+            raise ValueError("a mixed voice needs at least two parts")
+
+    def key(self) -> str:
+        return "&".join(self.parts)
+
+
+VoiceRef = Voice | BlendedVoice | MixedVoice
 
 
 @dataclass(frozen=True)

@@ -13,7 +13,9 @@ sounds like a choice.
 from __future__ import annotations
 
 import io
+import sys
 import wave
+from array import array
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,6 +23,7 @@ from ..errors import OpenBookError
 
 WIDTH = 2  # bytes for one sample
 CHANNELS = 1
+LOUDEST = 32767  # the largest value a 16 bit sample holds
 
 
 @dataclass(frozen=True)
@@ -91,3 +94,60 @@ def join_all(pieces: list[Audio], rate: int) -> Audio:
     for piece in pieces:
         joined = joined.join(piece)
     return joined
+
+
+def overlay(pieces: list[Audio], rate: int) -> Audio:
+    """Lay pieces of audio over each other, so they sound at the same time.
+
+    The result is as long as the longest piece. Two people saying one line do
+    not finish together, and stretching either of them to fit would change what
+    the engine said.
+
+    The samples are added rather than averaged, because two people saying one
+    line are louder than one person saying it, and averaging would make the one
+    moment that wants weight the quietest in the chapter. The sum is brought
+    down only if it would pass what a 16 bit sample holds, since a sum that
+    wraps around does not sound loud, it sounds broken.
+    """
+    for piece in pieces:
+        if piece.rate != rate:
+            raise OpenBookError(
+                f"a piece of audio at {piece.rate} cannot be laid over audio at "
+                f"{rate}. One of the two would speak at the wrong speed"
+            )
+    if not pieces:
+        return Audio(samples=b"", rate=rate)
+    if len(pieces) == 1:
+        return pieces[0]
+
+    longest = max(len(piece.samples) // WIDTH for piece in pieces)
+    total = [0] * longest
+    for piece in pieces:
+        for index, value in enumerate(values_of(piece.samples)):
+            total[index] += value
+
+    loudest = max((abs(value) for value in total), default=0)
+    if loudest > LOUDEST:
+        total = [value * LOUDEST // loudest for value in total]
+    return Audio(samples=bytes_of(total), rate=rate)
+
+
+def values_of(samples: bytes) -> array:
+    """The samples as numbers.
+
+    The bytes are little endian, because that is what a wav file holds, and an
+    array is in the order of the machine. The two agree everywhere this runs
+    and the swap costs nothing where they do not.
+    """
+    values = array("h")
+    values.frombytes(samples)
+    if sys.byteorder != "little":
+        values.byteswap()
+    return values
+
+
+def bytes_of(values) -> bytes:
+    made = array("h", values)
+    if sys.byteorder != "little":
+        made.byteswap()
+    return made.tobytes()

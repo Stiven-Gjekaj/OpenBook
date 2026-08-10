@@ -14,10 +14,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from ..cast.utterance import Silence, Utterance
+from ..cast.utterance import MixedVoice, Silence, Utterance, Voice, VoiceRef
 from ..errors import OpenBookError
 from ..plan.planner import Plan
-from .audio import Audio, join_all
+from .audio import Audio, join_all, overlay
 from .cache import Cache, key_of
 
 
@@ -80,11 +80,25 @@ def render_plan(
     return joined, report
 
 
+def _say(engine, text: str, voice: VoiceRef) -> Audio:
+    """Get one piece of audio for one line, whatever kind of voice says it.
+
+    A mixed voice is the only one an engine never sees. Laying two readings
+    over each other is arithmetic on samples and not a thing a model does, so
+    it happens here and every engine stays ignorant of it.
+    """
+    if isinstance(voice, MixedVoice):
+        return overlay(
+            [engine.speak(text, Voice(name=part)) for part in voice.parts], engine.rate
+        )
+    return engine.speak(text, voice)
+
+
 def _speak(utterance: Utterance, engine, retries: int, report: RenderReport) -> Audio:
     last: Exception | None = None
     for attempt in range(retries + 1):
         try:
-            return engine.speak(utterance.text, utterance.voice)
+            return _say(engine, utterance.text, utterance.voice)
         except OpenBookError:
             # An error a person can correct. Trying again gives the same
             # answer, so it goes straight up.

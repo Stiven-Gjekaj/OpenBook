@@ -21,6 +21,7 @@ from .utterance import (
     NARRATOR,
     BlendedVoice,
     Item,
+    MixedVoice,
     Silence,
     Utterance,
     Voice,
@@ -138,11 +139,12 @@ def _dialogue_voice(
             parts=tuple(entry.voice for entry in entries),
             weights=tuple(share for _ in entries),
         )
+    if mode == "mix":
+        return MixedVoice(parts=tuple(entry.voice for entry in entries))
 
     raise OpenBookError(
-        f"the unison mode {mode!r} is not built yet. Use voice_blend, which "
-        "makes one piece of audio and cannot drift, or primary, which uses the "
-        "voice of the first character"
+        f"the unison mode {mode!r} is not one this cast stage knows. Use "
+        "voice_blend, mix, or primary"
     )
 
 

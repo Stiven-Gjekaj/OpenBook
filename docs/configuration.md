@@ -66,7 +66,13 @@ reads a paragraph as one unit gets most of the dialogue wrong.
 | `mode` | `voice_blend`, `primary`, or `mix` |
 
 `voice_blend` averages the style of both voices and speaks the line once, so
-the two cannot drift apart. `mix` is not built.
+the two cannot drift apart. `primary` uses the voice of the first character
+named. `mix` speaks the line once in each voice and lays the readings over each
+other, which keeps the characters apart and lets their timing separate: two
+readings of the same words are two different lengths, so the longer one is
+still going when the shorter has stopped. Whether that sounds like a crowd or
+like an echo depends on the line, which is why the blend is the usual choice
+and this is the one you ask for.
 
 ### [grammar.structure]
 

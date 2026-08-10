@@ -2,7 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from openbook.cast import BlendedVoice, Silence, Utterance, Voice, resolve_chapter
+from openbook.cast import (
+    BlendedVoice,
+    MixedVoice,
+    Silence,
+    Utterance,
+    Voice,
+    resolve_chapter,
+)
 from openbook.config.cast import load_cast
 from openbook.config.grammar import load_grammar
 from openbook.errors import CastError
@@ -172,3 +179,20 @@ def test_a_scene_break_becomes_a_silence(grammar, cast):
 def test_the_end_matter_is_left_out_by_default(grammar, cast):
     result = items("<p>Last.</p><p><u>End of Chapter 230</u></p>", grammar, cast)
     assert not [i for i in spoken(result) if i.kind == "end matter"]
+
+
+def test_two_characters_together_can_be_kept_apart_instead(grammar, cast, tmp_path):
+    # mix speaks the line once in each voice and lays the two over each other,
+    # so the characters stay apart. What they cannot stay is together in time.
+    text = (EXAMPLES / "grammar.toml").read_text(encoding="utf-8")
+    path = tmp_path / "grammar.toml"
+    path.write_text(text.replace('mode = "voice_blend"', 'mode = "mix"'), "utf-8")
+    changed = load_grammar(path)
+
+    result = spoken(
+        items("<p><strong>NER &amp; SHN</strong>: Stop.</p>", changed, cast)
+    )
+    voice = result[-1].voice
+    assert isinstance(voice, MixedVoice)
+    assert voice.parts == ("am_adam", "am_onyx")
+    assert voice.key() == "am_adam&am_onyx"
