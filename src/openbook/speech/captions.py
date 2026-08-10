@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..cast.utterance import ACTION, DIALOGUE, NARRATOR, Utterance
+from ..cast.utterance import ACTION, ANNOUNCEMENT, DIALOGUE, NARRATOR, Utterance
 
 # What a reader can take in. Two lines of about forty characters is the usual
 # limit for a caption, and a cue that stays up longer than this feels stuck.
@@ -105,15 +105,23 @@ def cues_from_timeline(
     *,
     names: dict[str, str] | None = None,
     limit: int = MOST_CHARACTERS,
+    announcements: bool = False,
 ) -> list[Cue]:
     """Turn the places of the utterances into captions.
 
     An utterance longer than one caption is divided, and the time it takes is
     shared out by how much text each piece holds. The pace of a voice is even
     enough over one sentence for that to hold.
+
+    The name of the chapter is left out. The card on the screen already carries
+    it, and a caption of the same words over the top of it says one thing
+    twice. Ask for announcements when the captions go with sound that has no
+    picture behind it.
     """
     cues: list[Cue] = []
     for utterance, start, end in timeline:
+        if utterance.kind == ANNOUNCEMENT and not announcements:
+            continue
         if utterance.kind == ACTION:
             # An action is a sound and not speech, and a caption says so.
             cues.append(Cue(start=start, end=end, text=f"[{utterance.text}]"))

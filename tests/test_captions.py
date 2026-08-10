@@ -142,3 +142,18 @@ def test_every_cue_of_a_render_is_at_most_two_lines():
     text = "one two three four five six seven eight nine ten eleven twelve thirteen"
     cues = cues_from_timeline([(line(text), 0.0, 10.0)])
     assert all(cue.text.count("\n") <= 1 for cue in cues)
+
+
+def test_the_chapter_name_is_not_captioned():
+    # The card on the screen already carries it, and a caption of the same
+    # words over the top says one thing twice.
+    said = Utterance(text="Chapter 0. Point - Null.", voice=VOICE, kind="announcement")
+    timeline = [(said, 0.0, 2.0), (line("She walked home."), 2.0, 4.0)]
+    assert [cue.text for cue in cues_from_timeline(timeline)] == ["She walked home."]
+
+
+def test_the_chapter_name_can_be_asked_for():
+    # Sound with no picture behind it wants the announcement after all.
+    said = Utterance(text="Chapter 0. Point - Null.", voice=VOICE, kind="announcement")
+    cues = cues_from_timeline([(said, 0.0, 2.0)], announcements=True)
+    assert cues[0].text == "Chapter 0. Point - Null."
