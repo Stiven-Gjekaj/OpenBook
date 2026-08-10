@@ -149,12 +149,28 @@ nothing installed.
 | `pause_narration_to_dialogue` | Silence where prose turns into speech |
 | `pause_at_scene_break` | Silence at a scene break |
 | `pause_after_chapter_name` | Silence after a chapter is announced |
+| `pause_between_chapters` | The rest at the end of a chapter, before the next is announced |
 | `action` | `pause`, `narrator`, or `drop` |
 | `pause_at_action` | How long an action lasts when it becomes a pause |
 | `intro` | What the narrator reads before the chapters |
 | `outro` | What the narrator reads after them |
 | `intro_title` | The name of the intro in the chapter list |
 | `outro_title` | The name of the outro |
+
+`read_end_matter` decides whether the words that close a chapter are spoken.
+In Soultale every chapter ends with three lines, and only the third of them is
+narration:
+
+```
+End of Chapter 0
+"Point - Null"
+[ The 1 named 0. ]
+```
+
+Read together they close the chapter: it is named, then titled, then answered.
+Read alone the last line arrives from nowhere. Nothing falls between the
+three, because all three are narration and a pause lands only where the kind
+of the text changes. `pause_between_chapters` follows them.
 
 **A pause falls only where the kind of the text changes.** Two lines of
 dialogue get nothing between them, so a conversation keeps its speed, and two

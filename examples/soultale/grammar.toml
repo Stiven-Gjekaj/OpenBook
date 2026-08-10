@@ -163,7 +163,20 @@ strip_elements = ["i", "em", "b", "strong", "span", "a"]
 
 [render]
 read_chapter_names = true
-read_end_matter    = false
+
+# The end of a chapter.
+#
+# Every chapter closes with three lines. Two of them are in the underline
+# element and the third is not:
+#
+#   End of Chapter 0
+#   "Point - Null"
+#   [ The 1 named 0. ]
+#
+# With this false only the third was read, so the closing line arrived with
+# nothing in front of it. Read together they are the natural close: the
+# chapter is named, then its title, then the line that comments on it.
+read_end_matter    = true
 
 # Pauses.
 #
@@ -178,6 +191,11 @@ pause_dialogue_to_narration = "400ms"
 pause_narration_to_dialogue = "600ms"
 pause_at_scene_break        = "2s"
 pause_after_chapter_name    = "1s"
+
+# The rest between one chapter and the next. It falls after the closing line
+# and before the next chapter is announced, so it is the only silence a
+# listener gets to take in what happened.
+pause_between_chapters      = "3s"
 
 # An action inside a line of dialogue.
 #
