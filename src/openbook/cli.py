@@ -599,6 +599,8 @@ def _merge_lexicon(path: Path, unknown, lexicon) -> int:
     A blank entry is a word waiting for one, and putting it in the file a
     second time helps nobody.
     """
+    from .config.reader import load_toml
+
     fresh = [entry for entry in unknown if not lexicon.has(entry.word)]
     if not fresh:
         print(f"{path}")
@@ -614,7 +616,10 @@ def _merge_lexicon(path: Path, unknown, lexicon) -> int:
     # A lexicon holds one table and it is [words], so new keys at the end of
     # the file land in it. A file that never declared it needs the header, and
     # a file that did must not get it twice: TOML refuses a table named twice.
-    if "words" not in tomllib.loads(text):
+    #
+    # The file is read the same way the loader reads it, rather than from the
+    # text just taken, so the two can never disagree about what is in it.
+    if "words" not in load_toml(path):
         added.append("[words]")
     added.extend(_entry_line(entry) for entry in fresh)
     made = text.rstrip("\n") + "\n" + "\n".join(added) + "\n"
