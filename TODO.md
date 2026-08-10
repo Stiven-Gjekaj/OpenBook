@@ -23,6 +23,7 @@ Measured on Volume 1 of Soultale, which is 23 chapters and 3 hours 49 minutes:
 | Speaking one corrected line again | one piece made, the rest from the cache |
 | Levelling | -25.2 LUFS raw, -19.1 after |
 | Encoding the video | 2 minutes, 214 MB |
+| Speaking it with Chatterbox | 0.45 times real time, about twenty times slower |
 
 Built: the EPUB reader, the parser, the cast, the planner, the lexicon and its
 word finder, three engines, the cache, loudness, the M4B, the video with its
@@ -36,10 +37,15 @@ writes, and the checks that refuse a video whose picture and sound disagree.
 The engine is built and nothing has read a chapter with it yet. Three numbers
 decide whether it stays, and none of them can be guessed:
 
-- [ ] How fast it reads on this machine. Kokoro does about ten times real
-      time, so a four hour volume takes twenty three minutes. A model that
-      makes a token at a time will be slower, and how much slower decides
-      whether a volume is an afternoon or a week.
+- [x] How fast it reads on this machine. **0.45 times real time**, measured
+      on chapter 0: 16.9 minutes of audio in 38 minutes, the model load
+      included. Kokoro does about ten times real time, so this is roughly
+      twenty times slower, and Volume 1 at 3h49m is about eight and a half
+      hours. An overnight job, and only once, because the cache keeps it.
+
+      The three long lines measured before this gave 0.5 to 0.6, which was
+      optimistic: a chapter is mostly short lines and every generation carries
+      the same fixed cost whatever its length.
 - [ ] Whether it drops or repeats a word over a whole chapter. This is the one
       risk Kokoro does not carry, and listening is the only thing that finds
       it.
