@@ -9,7 +9,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
   <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
-  <img src="https://img.shields.io/badge/tests-493_passing-427819?style=for-the-badge" alt="493 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-521_passing-427819?style=for-the-badge" alt="521 tests passing"/>
 </p>
 
 <p align="center">
@@ -72,7 +72,7 @@ and a page for checking the result by ear.
 | Give each segment a voice | Built. Unison lines can be spoken in both voices at once |
 | Plan the pauses and divide long lines | Built. 16,905 utterances, none over the engine limit |
 | Find the words needing a pronunciation | Built. 539 words, and a merge for new chapters |
-| Speak, through a cache | Built. Chatterbox, Kokoro, espeak-ng, and a silent clock |
+| Speak, through a cache | Built. Chatterbox and its Turbo model, Kokoro, espeak-ng, a silent clock |
 | Write an M4B with chapter marks | Built. Levelled to -19 LUFS, with a cover |
 | One video for each volume, for YouTube | Built. Cards, description, captions |
 | Check the result by ear, and correct it | Built. A page to mark lines, and a file that remakes them |
@@ -184,10 +184,11 @@ runs**. A four hour volume takes about twenty minutes, and the whole of
 Soultale, at 47 hours, takes about four and a half. The second render of
 anything takes seconds, because only what changed is made again.
 
-Four engines use one interface, chosen with `--engine`. **chatterbox** reads
-the book in the voice of a recording you supply, and is the one a book ships
-in. **kokoro** chooses from its own list of voices and is the one to fall back
-to. **espeak-ng** sounds like a machine from the 1990s and needs no model, no
+Five engines use one interface, chosen with `--engine`. **chatterbox** reads
+the book in the voice of a recording you supply, and **chatterbox-turbo** is
+the same through a newer model that reads several times faster and holds one
+loudness by itself. **kokoro** chooses from its own list of voices and is the
+one to fall back to. **espeak-ng** sounds like a machine from the 1990s and needs no model, no
 download and no Python package, so a whole volume can be checked against real
 speech in seconds. **silent** is the default and is a clock: quiet of the
 length the words would take, for checking the pauses and the chapter marks

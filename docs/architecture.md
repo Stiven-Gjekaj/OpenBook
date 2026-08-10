@@ -76,13 +76,29 @@ Everything useful follows from that:
 - A character can move to a different engine, and the rest of the book keeps
   the audio it already has.
 
-Four engines use that interface. **Chatterbox** reads the book in the voice of
-a recording you supply, and is the one a book ships in. **Kokoro** chooses from
-its own list of voices and is the one to fall back to. **espeak-ng** sounds
-like a machine from the 1990s and needs no model, no download and no Python
-package, so a whole volume can be checked against real speech in seconds. **The
-silent engine** is a clock: quiet of the length the words would take, which is
-what the stages after it were built and tested against.
+Five engines use that interface. **Chatterbox** reads the book in the voice of
+a recording you supply. **Chatterbox Turbo** is the same idea through a newer
+model that reads several times faster and holds one loudness by itself.
+**Kokoro** chooses from its own list of voices and is the one to fall back to.
+**espeak-ng** sounds like a machine from the 1990s and needs no model, no
+download and no Python package, so a whole volume can be checked against real
+speech in seconds. **The silent engine** is a clock: quiet of the length the
+words would take, which is what the stages after it were built and tested
+against.
+
+The third of those properties is what lets the narrator and the cast use
+different engines. The narrator reads 79 percent of Soultale in one voice, and
+wants a model that cannot drift over a third of a million words. The cast
+speaks in pieces that average thirteen words, where a model that is less steady
+is safe and a bad piece costs five seconds to make again.
+
+A voice for either Chatterbox model is a path to a recording, so the recording
+is part of the key and the path is not. Two takes under one name are two voices,
+and a cache that could not tell them apart would serve the old one for ever. A
+file that only changed its name is the same voice and keeps every line it has.
+
+Adding the cache later would mean rebuilding the stages around it, so it comes
+first.
 
 ## What a token at a time costs
 
@@ -103,21 +119,23 @@ Three things hold that down, and none of them removes it:
   comes out the same way. A book is made over days and in pieces, and a line
   remade next week has to match the chapter around it.
 
-What is left is why the review page exists. This engine is the reason a person
-has to be able to find six bad lines without listening to forty seven hours.
+What is left is why the review page exists. These engines are the reason a
+person has to be able to find six bad lines without listening to forty seven
+hours.
 
-A voice here is a path to a recording, so the recording is part of the cache
-key and not only the path. Two takes under one name are two voices, and a cache
-that could not tell them apart would serve the old one for ever.
+### What it costs, measured
 
-The last of these is what lets the narrator and the cast use different engines.
-The narrator reads 79 percent of Soultale in one voice, and wants a model that
-cannot drift over a third of a million words. The cast speaks in pieces that
-average thirteen words, where a model that is less steady is safe and a bad
-piece costs five seconds to make again.
+Chapter 0 is 112 pieces and seventeen minutes of audio. Chatterbox made it in
+thirty eight minutes, which is **0.45 times real time**, so a four hour volume
+is about eight and a half hours. Kokoro does about ten times real time.
 
-Adding the cache later would mean rebuilding the stages around it, so it comes
-first.
+The audio also came back peaking at **+0.6 dB**, above what a sample holds, so
+the chapter was clipping before the levelling stage saw it.
+
+Turbo is here because of those two numbers. It claims six times real time and
+it brings every line to one loudness itself. Neither claim is measured yet, and
+the cache holds both readings apart, so the same chapter can be made by each
+and the two compared.
 
 ## Checking the thing that was made
 

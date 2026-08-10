@@ -16,6 +16,10 @@
 #                directory: "voices/blook.wav". Ten to twenty seconds of clean
 #                speech is enough, and what is in the recording is what comes
 #                out, including the room it was recorded in.
+#   chatterbox-turbo
+#                The same paths, through a newer model that reads several
+#                times faster, holds one loudness by itself, and takes five
+#                seconds of reference instead of twenty.
 #   kokoro       One of its own names, such as "af_heart". The first letter
 #                says the accent: a for American, b for British.
 #   espeak       A language and a variant: "en-us", "en-gb+Alicia".
