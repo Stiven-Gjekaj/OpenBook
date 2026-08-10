@@ -76,3 +76,90 @@ def test_a_configuration_that_does_not_exist_gives_one_line(tmp_path, capsys):
     err = capsys.readouterr().err
     assert err.startswith("openbook: ")
     assert "the file does not exist" in err
+
+
+def cast_with_voices(project):
+    """Give every code in the example cast a voice, so a render can run."""
+    import re
+
+    path = project / "cast.toml"
+    text = path.read_text(encoding="utf-8")
+    count = [0]
+
+    def fill(_):
+        count[0] += 1
+        return f'voice = "v{count[0]:03d}"'
+
+    path.write_text(re.sub(r'voice = ""', fill, text), encoding="utf-8")
+    return project
+
+
+def test_check_is_ready_once_every_voice_is_chosen(project, capsys):
+    assert main(["-C", str(cast_with_voices(project)), "check"]) == 0
+    assert "ready" in capsys.readouterr().out
+
+
+def test_plan_prints_a_line_with_its_voice(project, capsys):
+    cast_with_voices(project)
+    assert main(["-C", str(project), "plan", "--volume", "Volume 1"]) == 0
+    assert "Point - Null." in capsys.readouterr().out
+
+
+def test_plan_can_show_one_chapter(project, capsys):
+    cast_with_voices(project)
+    assert (
+        main(["-C", str(project), "plan", "--volume", "Volume 1", "--chapter", "3"])
+        == 0
+    )
+    out = capsys.readouterr().out
+    assert "chapter 3" in out
+    assert "chapter 0" not in out
+
+
+def test_notes_reports_what_the_parser_noticed(project, capsys):
+    assert main(["-C", str(project), "notes"]) == 0
+    assert "notes" in capsys.readouterr().err
+
+
+def test_a_dry_run_makes_nothing(project, capsys):
+    cast_with_voices(project)
+    assert (
+        main(["-C", str(project), "render", "--volume", "Volume 1", "--dry-run"]) == 0
+    )
+    assert "utterances" in capsys.readouterr().out
+    assert not (project / "out").exists()
+
+
+def test_a_render_writes_a_file_and_reuses_it(project, capsys):
+    import shutil
+
+    if not shutil.which("ffmpeg"):
+        import pytest
+
+        pytest.skip("ffmpeg is not installed")
+
+    cast_with_voices(project)
+    assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
+    first = capsys.readouterr().out
+    assert "Soultale - Volume 1.m4b" in first
+    assert (project / "out" / "Soultale - Volume 1.m4b").exists()
+
+    assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
+    assert "0 made" in capsys.readouterr().out
+
+
+def test_a_render_of_a_volume_that_does_not_exist_is_named(project, capsys):
+    cast_with_voices(project)
+    assert main(["-C", str(project), "render", "--volume", "Volume 9"]) == 2
+    assert "no volume is named 'Volume 9'" in capsys.readouterr().err
+
+
+def test_a_render_stops_when_a_code_has_no_voice(project, capsys):
+    # The example ships uncast. A render must refuse rather than narrate.
+    assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 2
+    assert "no voice" in capsys.readouterr().err
+
+
+def test_the_cache_reports_what_it_holds(project, capsys):
+    assert main(["-C", str(project), "cache"]) == 0
+    assert "pieces" in capsys.readouterr().out

@@ -1,8 +1,9 @@
 """The command line.
 
-Every command reads the same two configuration files and the same book. A
-command that finds a problem in either writes one line to the error stream and
-gives back the code 2. Nothing here writes audio yet.
+Every command reads the same configuration and the same book. A problem that a
+person can correct writes one line to the error stream and gives back the code
+2. A command that finds work still to do gives back 1. Nothing else gives back
+anything but 0.
 """
 
 from __future__ import annotations
@@ -13,16 +14,17 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from . import __version__
-from .config.cast import load_cast
-from .config.grammar import load_grammar
+from .build import Project, build_volume, render_volume, volume_names
 from .errors import OpenBookError
-from .source.epub import read_book
+from .speech import Cache, SilentEngine
+from .speech.package import have_ffmpeg, write_m4b
+
+ENGINES = ("silent",)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="openbook",
-        description="Turns a book in EPUB form into an audiobook.",
+        prog="openbook", description="Turns a book in EPUB form into an audiobook."
     )
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument(
@@ -35,91 +37,186 @@ def build_parser() -> argparse.ArgumentParser:
     )
     commands = parser.add_subparsers(dest="command", required=True)
 
-    chapters = commands.add_parser(
-        "chapters", help="list the chapters that the audiobook will contain"
-    )
-    chapters.add_argument(
-        "--volume", help="list one volume only, such as 'Volume 1'", default=None
+    chapters = commands.add_parser("chapters", help="list the chapters of the book")
+    chapters.add_argument("--volume", default=None, help="one volume only")
+
+    commands.add_parser("check", help="read the configuration and say what is missing")
+
+    plan = commands.add_parser("plan", help="print every line and the voice it takes")
+    plan.add_argument("--volume", required=True)
+    plan.add_argument("--chapter", type=int, default=None, help="one chapter only")
+
+    commands.add_parser("notes", help="print what the parser noticed in the book")
+
+    render = commands.add_parser("render", help="make the audio for a volume")
+    render.add_argument("--volume", required=True)
+    render.add_argument("--engine", choices=ENGINES, default="silent")
+    render.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="say what a render would do, and make nothing",
     )
 
-    commands.add_parser(
-        "check", help="read the configuration and report what is not finished"
-    )
+    cache = commands.add_parser("cache", help="report or clean the audio already made")
+    cache.add_argument("--prune", action="store_true", help="remove what nothing uses")
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = build_parser()
-    options = parser.parse_args(argv)
+    options = build_parser().parse_args(argv)
     try:
-        if options.command == "chapters":
-            return _chapters(options)
-        return _check(options)
+        return _COMMANDS[options.command](options)
     except OpenBookError as error:
         print(f"openbook: {error}", file=sys.stderr)
         return 2
 
 
-def _load(options: argparse.Namespace):
-    project: Path = options.project
-    grammar = load_grammar(project / "grammar.toml")
-    cast = load_cast(project / "cast.toml")
-    files = [project / name for name in grammar.source.files]
-    return grammar, cast, files
-
-
-def _chapters(options: argparse.Namespace) -> int:
-    grammar, _, files = _load(options)
-    chapters = read_book(files, grammar.source)
+def _chapters(options) -> int:
+    project = Project.open(options.project)
     wanted = options.volume
-
     shown = 0
-    for chapter in chapters:
-        group = grammar.output.group_of(chapter.volume)
+    for chapter in project.chapters():
+        group = project.grammar.output.group_of(chapter.volume)
         if wanted and wanted not in (chapter.volume, group):
             continue
         print(f"{chapter.number:>4}  {group:<10}  {chapter.title}")
         shown += 1
 
     if wanted and shown == 0:
-        volumes = sorted({grammar.output.group_of(c.volume) for c in chapters})
-        print(
-            f"openbook: no volume is named {wanted!r}. The book has "
-            f"{', '.join(volumes)}",
-            file=sys.stderr,
+        raise OpenBookError(
+            f"no volume is named {wanted!r}. The book has "
+            f"{', '.join(volume_names(project))}"
         )
-        return 2
     print(f"\n{shown} chapters", file=sys.stderr)
     return 0
 
 
-def _check(options: argparse.Namespace) -> int:
-    grammar, cast, files = _load(options)
-    print(f"grammar  reads {len(grammar.source.files)} book file(s)")
+def _check(options) -> int:
+    project = Project.open(options.project)
+    print(f"grammar  reads {len(project.grammar.source.files)} book file(s)")
 
-    missing = [path for path in files if not path.exists()]
-    for path in missing:
-        print(f"missing  {path}", file=sys.stderr)
+    ready = True
+    try:
+        chapters = project.chapters()
+        print(
+            f"book     {len(chapters)} chapters in {len(volume_names(project))} volumes"
+        )
+    except OpenBookError as error:
+        print(f"book     {error}", file=sys.stderr)
+        ready = False
 
-    if not missing:
-        chapters = read_book(files, grammar.source)
-        volumes = sorted({grammar.output.group_of(c.volume) for c in chapters})
-        print(f"book     {len(chapters)} chapters in {len(volumes)} volumes")
-
-    uncast = cast.uncast()
-    print(f"cast     {len(cast.codes())} speaker codes")
-    if not cast.narrator:
+    uncast = project.cast.uncast()
+    print(f"cast     {len(project.cast.codes())} speaker codes")
+    if not project.cast.narrator:
         print("         the narrator has no voice yet")
+        ready = False
     if uncast:
         print(f"         {len(uncast)} of them have no voice yet")
         for entry in uncast[:10]:
             print(f"           {entry.code}")
         if len(uncast) > 10:
             print(f"           and {len(uncast) - 10} more")
+        ready = False
 
-    ready = not missing and not uncast and bool(cast.narrator)
+    print(
+        f"ffmpeg   {'found' if have_ffmpeg() else 'not found, needed to write an M4B'}"
+    )
+    if not have_ffmpeg():
+        ready = False
+
     print("ready" if ready else "not ready")
     return 0 if ready else 1
+
+
+def _plan(options) -> int:
+    project = Project.open(options.project)
+    engine = SilentEngine()
+    volume = build_volume(project, options.volume, max_characters=engine.max_characters)
+
+    for chapter, plan in zip(volume.chapters, volume.chapter_plans, strict=True):
+        if options.chapter is not None and chapter.number != options.chapter:
+            continue
+        print(f"\n=== chapter {chapter.number}: {chapter.title}")
+        for item in plan.items:
+            if hasattr(item, "seconds"):
+                print(f"     ~ {item.seconds:.2f}s  {item.reason}")
+            else:
+                print(f"  {item.speaker:>10} [{item.voice.key()}]  {item.text[:70]}")
+    print(
+        f"\n{len(volume.plan.utterances)} utterances, "
+        f"{volume.plan.silent_seconds:.0f}s of silence",
+        file=sys.stderr,
+    )
+    return 0
+
+
+def _notes(options) -> int:
+    project = Project.open(options.project)
+    found = [(c.number, note) for c in project.parsed() for note in c.notes]
+    for number, note in found:
+        print(f"{number:>4}  {note}")
+    print(f"\n{len(found)} notes", file=sys.stderr)
+    return 0
+
+
+def _render(options) -> int:
+    project = Project.open(options.project)
+    engine = SilentEngine()
+    cache = Cache(project.cache_directory)
+    volume = build_volume(project, options.volume, max_characters=engine.max_characters)
+
+    if options.dry_run:
+        held = sum(1 for u in volume.plan.utterances if cache.holds(_key(u, engine)))
+        total = len(volume.plan.utterances)
+        print(f"volume     {volume.name}, {len(volume.chapters)} chapters")
+        print(f"utterances {total}, of which {held} are already made")
+        print(f"words      {volume.plan.words():,}")
+        print(f"silence    {volume.plan.silent_seconds:.0f}s")
+        return 0
+
+    audio, marks, report = render_volume(volume, engine, cache)
+    name = project.grammar.output.file_name.replace("{VOLUME}", volume.name)
+    path = project.output_directory / name
+    write_m4b(audio, marks, path, title=volume.name, author="")
+
+    print(f"{path}")
+    print(
+        f"  {report.utterances} utterances, {report.made} made, "
+        f"{report.reused} from the cache"
+    )
+    print(f"  {len(marks)} chapters, {audio.seconds / 3600:.2f} hours")
+    return 0
+
+
+def _cache(options) -> int:
+    project = Project.open(options.project)
+    cache = Cache(project.cache_directory)
+    if options.prune:
+        engine = SilentEngine()
+        live: set[str] = set()
+        for name in volume_names(project):
+            volume = build_volume(project, name, max_characters=engine.max_characters)
+            live |= {_key(u, engine) for u in volume.plan.utterances}
+        removed = cache.prune(live)
+        print(f"removed {removed} pieces of audio that nothing uses")
+    print(f"{len(cache.keys())} pieces, {cache.size() / 1_000_000:.1f} MB")
+    return 0
+
+
+def _key(utterance, engine) -> str:
+    from .speech.cache import key_of
+
+    return key_of(utterance, engine)
+
+
+_COMMANDS = {
+    "chapters": _chapters,
+    "check": _check,
+    "plan": _plan,
+    "notes": _notes,
+    "render": _render,
+    "cache": _cache,
+}
 
 
 if __name__ == "__main__":  # pragma: no cover
