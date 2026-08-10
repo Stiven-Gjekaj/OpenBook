@@ -7,9 +7,9 @@
 ## Read first
 
 - [README.md](README.md) says what OpenBook is and how to start it.
-- [examples/soultale/grammar.toml](examples/soultale/grammar.toml) and
-  [examples/soultale/cast.toml](examples/soultale/cast.toml) carry a comment on
-  every key. They are the configuration reference until `docs/` holds one.
+- [docs/configuration.md](docs/configuration.md) explains every key of every
+  file. The examples in [examples/soultale](examples/soultale) carry a comment
+  on each one as well.
 - [docs/architecture.md](docs/architecture.md) explains how the stages fit
   together.
 - [TODO.md](TODO.md) says what is not built yet. Look here before you report

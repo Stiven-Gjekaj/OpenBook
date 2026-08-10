@@ -250,10 +250,17 @@ assets/             the logo
 <a href="docs/architecture.md"><b>Architecture</b></a>
 </td>
 <td align="center" width="25%" valign="top">
+<h3>Configure</h3>
+<p>Every key of<br/>every file</p>
+<a href="docs/configuration.md"><b>Configuration</b></a>
+</td>
+<td align="center" width="25%" valign="top">
 <h3>Plan</h3>
 <p>Every task<br/>that is left</p>
 <a href="TODO.md"><b>Roadmap</b></a>
 </td>
+</tr>
+<tr>
 <td align="center" width="25%" valign="top">
 <h3>Help</h3>
 <p>When it refuses<br/>to run</p>
@@ -264,6 +271,8 @@ assets/             the logo
 <p>How to work<br/>on this</p>
 <a href="CONTRIBUTING.md"><b>Contributing</b></a>
 </td>
+<td align="center" width="25%" valign="top"></td>
+<td align="center" width="25%" valign="top"></td>
 </tr>
 </table>
 

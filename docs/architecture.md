@@ -33,9 +33,15 @@ EPUB files
    v
  audio for each utterance       through a cache
    |
-   |  package
+   |  loudness   (src/openbook/speech/loudness.py)
    v
- one file for each volume
+ one level for the whole volume
+   |
+   +--> package  an M4B with chapter marks, a cover, and captions
+   |
+   +--> video    a card for each chapter, a description, captions
+   |
+   +--> review   a page listing every line, to check it by ear
 ```
 
 The first four stages need the standard library only. They hold nearly every
@@ -78,6 +84,27 @@ piece costs five seconds to make again.
 
 Adding the cache later would mean rebuilding the stages around it, so it comes
 first.
+
+## Checking the thing that was made
+
+Every fault found in the video path was found by looking at the finished file,
+and none of them raised anything:
+
+  A video seven minutes longer than its audio, because the reader of the card
+  list needs the last card written twice and that repeat carries its duration.
+  A card changing twenty two seconds before the chapter it names, because the
+  silence between two chapters belongs to the card in front of it.
+  A card saying "Chapter 22 of 23" where the narrator says "Chapter 21".
+  A card saying "Chapter 0" where the narrator says "Prologue".
+
+Each piece behaved as written. They disagreed only with each other, and only
+where somebody watches and listens at once. A test of one side cannot find
+that, so `speech/verify.py` reads both sides and compares them, and it runs
+before the encode rather than after it.
+
+The same reasoning gives the review page. A test says a line was made; only a
+person can say it sounds right, and the page exists so that finding the six
+lines that went wrong does not mean listening to forty seven hours.
 
 ## Errors
 
