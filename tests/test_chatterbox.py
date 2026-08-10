@@ -206,3 +206,43 @@ def test_a_different_take_is_still_a_different_voice(engine, project):
     before = engine.voice_key(Voice("voices/blook.wav"))
     (project / "voices" / "blook.wav").write_bytes(b"RIFF....WAVEfmt a second take")
     assert engine.voice_key(Voice("voices/blook.wav")) != before
+
+
+# The most expensive thing in this project to get wrong.
+#
+# A change to how a key is built throws away every piece of audio under the
+# old one. Chapter 0 alone is thirty eight minutes of rendering and a volume is
+# eight and a half hours, and nothing announces it: the render simply says it
+# made everything again. These pin the shape of the key so that a change to it
+# has to be deliberate.
+#
+# The version is left out of the pin because it carries the version of the
+# package, and a package upgrade should remake the audio. What is pinned is
+# the part this project decides.
+
+
+def test_the_settings_key_has_not_moved():
+    assert Settings().key() == "g0.5-t0.8"
+
+
+def test_the_voice_key_has_not_moved(tmp_path):
+    (tmp_path / "voices").mkdir()
+    (tmp_path / "voices" / "one.wav").write_bytes(b"RIFF a fixed recording")
+    engine = ChatterboxEngine(directory=tmp_path)
+    said = engine.voice_key(Voice("voices/one.wav"), kind="narration")
+    assert said == "104cfa97f1454236@e0.3"
+
+
+def test_the_whole_key_has_not_moved(tmp_path):
+    from openbook.speech.cache import key_for
+
+    (tmp_path / "voices").mkdir()
+    (tmp_path / "voices" / "one.wav").write_bytes(b"RIFF a fixed recording")
+    engine = ChatterboxEngine(directory=tmp_path)
+    said = engine.voice_key(Voice("voices/one.wav"), kind="narration")
+    assert (
+        key_for(
+            "The light arrives like violence.", said, "chatterbox", "pinned-0.5-0.8"
+        )
+        == "ae6e70b94f7b33f29ab40b41135baafc551ce6a1c0db16c85f125cc7247b7323"
+    )
