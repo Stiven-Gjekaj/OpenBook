@@ -108,64 +108,37 @@ Mostly done. The M4B is written with its chapter marks. Loudness levelling and t
 - [ ] A file of corrections that the render reads, so that a marked line is
   made again and nothing else is.
 
-## The website
+## Release on YouTube
 
-A site where a person reads Soultale and listens to it. This is not a page
-about the tool. It is the book itself, with the audio beside the text.
+One video for each volume. The website is not being built.
 
-The site is made by the same pipeline that makes the audio. One parse gives
-both, so the words on the page and the words in the audio cannot disagree.
+YouTube takes video and not audio, so a volume becomes a still picture with the
+sound behind it. The cover of the book is inside each EPUB file already, so
+nothing new has to be drawn.
 
-- [ ] Write the chapters out as HTML from the parsed segments.
-- [ ] A player beside the text, with one file for each chapter.
-- [ ] Remember where a person stopped, in their own browser.
-- [ ] Move the text with the audio, at least by paragraph, because the parse
-  already knows where each piece of speech starts.
-- [ ] A page for each volume, and a way to reach any chapter.
-- [ ] A link to download the M4B of a volume, for a person who wants it in an
-  audiobook application.
-- [ ] Build with no framework. The pages are made from data that this project
-  already holds.
+- [ ] A command that writes one video for each volume: the cover held still,
+      with the audio of the volume behind it.
+- [ ] Encode as H.264 in MP4, with the picture at one frame each second and the
+      encoder told it is a still. A nine hour video of one picture is then
+      small and quick to make.
+- [ ] Give the sound at 48000 samples a second, in two channels. Kokoro makes
+      24000 in one channel, and YouTube changes whatever it is given. Doing the
+      change here means it happens once and well, rather than twice.
+- [ ] Write the description of the video beside it, with a time for each
+      chapter. YouTube reads those times and makes its own chapter list from
+      them. The first one has to be 0:00, there have to be at least three, and
+      each has to last at least ten seconds. The render already knows where
+      every chapter starts, so this is only a change of form.
+- [ ] Check the length of each volume against the twelve hour limit of a
+      video. Volume 9 is the longest at about nine hours, so all of them fit,
+      but the check should exist before one of them does not.
 
-### The two audio formats
+The M4B stays. It is what a person downloads for an audiobook application, and
+it is where the video takes its sound from.
 
-The volume M4B is for downloading, and it is wrong for the web. Volume 9 is
-about nine hours in one file, and a browser must fetch a large part of it to
-start in the middle.
-
-- [ ] Write one Opus file for each chapter, beside the M4B of each volume.
-  Opus at about 32 kbit for one channel is good for speech, and the whole
-  book is then near 680 MB. The player fetches one chapter, seeks in it
-  quickly, and loads nothing else.
-
-### Where to host it
-
-The text is small. The audio is not, and the audio decides this.
-
-**The pages: Cloudflare Pages.** Free, no charge for bandwidth on a static
-site, a custom name at no cost, and it builds from this repository on a push.
-
-**The audio: Cloudflare R2.** It charges nothing to send data out, ever. The
-whole book costs about one cent each month to store, and a thousand listeners
-cost the same as one. Every other object store charges for each gigabyte that
-leaves it, and that bill grows exactly when the book does well.
-
-**Not GitHub Pages, for the audio.** A published site should stay under a
-gigabyte and a hundred gigabytes each month, and GitHub asks that Pages is not
-used to serve media. 47 hours of audio reaches the first limit and passes the
-second with few listeners. Git also keeps every version of a binary file
-forever, so each new render makes the repository permanently larger.
-
-GitHub Pages is still fine for the text alone, if the audio lives elsewhere.
-Backblaze B2 behind Cloudflare gives the same free egress as R2 with more
-setup. Bunny is cheap and good for media, but not free. The Internet Archive
-costs nothing and keeps things for a long time, and is worth a copy as a
-second home, but it gives no control over the player.
-
-- [ ] Put the audio in R2 and the pages in Cloudflare Pages.
-- [ ] A workflow that publishes the pages on a push to the default branch.
-- [ ] A command that uploads only the audio that changed.
-- [ ] Keep the site out of the test and lint runs, or give it its own.
+The per-chapter Opus files are no longer needed. They existed so a browser
+could start in the middle of a volume without fetching all of it, and there is
+no browser now.
 
 ## Documents
 

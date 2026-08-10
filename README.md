@@ -69,7 +69,7 @@ marks, in a real voice. What is left is the review page and the reading site.
 | Speak, through a cache | Built. Kokoro, and a silent engine for checking timing |
 | Write an M4B with chapter marks | Built |
 | Review page | Not built |
-| The reading and listening site | Not built |
+| One video for each volume, for YouTube | Not built |
 
 [TODO.md](TODO.md) holds every task that is left, with the reason for each.
 
