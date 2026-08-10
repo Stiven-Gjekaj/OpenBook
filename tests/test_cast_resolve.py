@@ -128,9 +128,15 @@ def test_a_book_with_no_narrator_stops_the_build(grammar, tmp_path):
         items("<p>Text.</p>", grammar, load_cast(path))
 
 
-def test_two_characters_together_get_one_blended_voice(grammar, cast):
+def test_two_characters_together_can_be_made_one_voice(grammar, cast, tmp_path):
+    # The other way. One voice comes out and it is neither of theirs, so the
+    # two cannot come apart in time at all.
+    text = (EXAMPLES / "grammar.toml").read_text(encoding="utf-8")
+    path = tmp_path / "grammar.toml"
+    path.write_text(text.replace('mode = "mix"', 'mode = "voice_blend"'), "utf-8")
+
     result = spoken(
-        items("<p><strong>NER &amp; SHN</strong>: Stop.</p>", grammar, cast)
+        items("<p><strong>NER &amp; SHN</strong>: Stop.</p>", load_grammar(path), cast)
     )
     voice = result[-1].voice
     assert isinstance(voice, BlendedVoice)
@@ -181,16 +187,11 @@ def test_the_end_matter_is_left_out_by_default(grammar, cast):
     assert not [i for i in spoken(result) if i.kind == "end matter"]
 
 
-def test_two_characters_together_can_be_kept_apart_instead(grammar, cast, tmp_path):
-    # mix speaks the line once in each voice and lays the two over each other,
-    # so the characters stay apart. What they cannot stay is together in time.
-    text = (EXAMPLES / "grammar.toml").read_text(encoding="utf-8")
-    path = tmp_path / "grammar.toml"
-    path.write_text(text.replace('mode = "voice_blend"', 'mode = "mix"'), "utf-8")
-    changed = load_grammar(path)
-
+def test_two_characters_together_are_both_heard(grammar, cast):
+    # What this book asks for. The line is spoken once in each voice and the
+    # two are laid over each other, so both characters keep their own voice.
     result = spoken(
-        items("<p><strong>NER &amp; SHN</strong>: Stop.</p>", changed, cast)
+        items("<p><strong>NER &amp; SHN</strong>: Stop.</p>", grammar, cast)
     )
     voice = result[-1].voice
     assert isinstance(voice, MixedVoice)

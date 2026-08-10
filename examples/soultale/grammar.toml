@@ -105,11 +105,20 @@ action = '\*(?P<TEXT>[^*\n]{1,80})\*'
 separator = " & "
 
 #   voice_blend  Make one new voice from the average of the style vectors of
-#                the two characters. Then speak the line one time.
-#   mix          Speak the line one time for each character. Then make the two
-#                pieces of audio the same length and mix them.
+#                the two characters. Then speak the line one time. One voice
+#                comes out, and it is neither of them.
+#   mix          Speak the line one time for each character, and lay the two
+#                pieces of audio over each other. Both voices are heard, and
+#                both characters keep their own.
 #   primary      Use the voice of the first character only.
-mode = "voice_blend"
+#
+# mix does not stretch either piece to the length of the other, because that
+# would change the speed one of the characters speaks at. The two start
+# together and the shorter one stops first. Measured on Kokoro with af_heart
+# and am_michael: a one word line ends 0.07s apart, a six word line 0.35s, and
+# a fifteen word line 0.60s. Short lines sound like two people. Long ones
+# start to sound like a round.
+mode = "mix"
 
 
 [grammar.structure]
