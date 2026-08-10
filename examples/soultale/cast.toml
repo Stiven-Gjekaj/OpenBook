@@ -46,7 +46,11 @@
 # listen to it for several minutes before you accept it. This is also the one
 # voice where a wandering model costs most, because it reads a third of a
 # million words and a dropped one is found only by listening.
-voice = ""
+#
+# A Kokoro name while the cast is being tried out, because it needs no
+# recording. Put the path of a recording here and render with
+# '--engine chatterbox' when the real voice is ready.
+voice = "af_heart"
 
 
 # LEADS
@@ -62,7 +66,7 @@ voice = ""
 # 54 lines. First in chapter 0.
 [cast.INK]
 name  = ""
-voice = ""
+voice = "am_adam"
 
 
 # RECURRING
@@ -82,7 +86,7 @@ voice = ""
 # 35 lines. First in chapter 0.
 [cast.ZER]
 name  = ""
-voice = ""
+voice = "bm_george"
 
 # 36 lines. First in chapter 4.
 [cast.GBR]
@@ -152,12 +156,12 @@ voice = ""
 # 13 lines. First in chapter 1.
 [cast.DRM]
 name  = ""
-voice = ""
+voice = "bm_lewis"
 
 # 12 lines. First in chapter 1.
 [cast.END]
 name  = ""
-voice = ""
+voice = "am_onyx"
 
 # 9 lines. First in chapter 4.
 [cast.VTH]
@@ -167,7 +171,7 @@ voice = ""
 # 7 lines. First in chapter 1.
 [cast.BLB]
 name  = ""
-voice = ""
+voice = "am_puck"
 
 # 6 lines. First in chapter 14.
 [cast.MAN]
@@ -196,7 +200,7 @@ voice = ""
 # 4 lines. First in chapter 1.
 [cast.EDG]
 name  = ""
-voice = ""
+voice = "am_eric"
 
 # 4 lines. First in chapter 9.
 [cast.VLG]
@@ -204,9 +208,13 @@ name  = ""
 voice = ""
 
 # 3 lines. First in chapter 0. The nameless voice of the prologue.
+#
+# This is Zero. It takes his voice and keeps a name of its own, so that a
+# listener hears who is speaking while a caption does not say so. Change this
+# voice whenever ZER changes, or the two come apart.
 [cast."///"]
 name  = ""
-voice = ""
+voice = "bm_george"
 
 # 3 lines. First in chapter 12.
 [cast.VNT]
