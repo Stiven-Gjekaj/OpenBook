@@ -79,7 +79,12 @@ def plan_volume(
     for index, chapter in enumerate(chapters):
         if index:
             items.append(
-                Silence(seconds=grammar.render.after_chapter_name, reason="new chapter")
+                # The gap that closes a chapter. It follows the end matter,
+                # which is the last thing said, so it is the rest a listener
+                # gets before the next chapter is announced. It used to borrow
+                # the pause that follows a chapter name, which is a different
+                # thing that happens to be a length.
+                Silence(seconds=grammar.render.between_chapters, reason="new chapter")
             )
         plan = plan_chapter(
             chapter, grammar, max_characters=max_characters, corrections=corrections

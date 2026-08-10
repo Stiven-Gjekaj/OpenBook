@@ -271,18 +271,15 @@ def _short(line: str) -> str:
 def _plan(options) -> int:
     project = Project.open(options.project)
     engine = SilentEngine()
-    volume = build_volume(project, options.volume, max_characters=engine.max_characters)
-
-    shown = [
-        (chapter, plan)
-        for chapter, plan in zip(volume.chapters, volume.chapter_plans, strict=True)
-        if options.chapter is None or chapter.number == options.chapter
-    ]
-    if not shown:
-        raise OpenBookError(
-            f"volume {volume.name!r} has no chapter {options.chapter}. It holds "
-            f"{volume.chapters[0].number} to {volume.chapters[-1].number}"
-        )
+    # Narrowed before the cast is resolved, so one finished chapter can be read
+    # while the rest of the volume is still waiting for voices.
+    volume = build_volume(
+        project,
+        options.volume,
+        max_characters=engine.max_characters,
+        only=options.chapter,
+    )
+    shown = list(zip(volume.chapters, volume.chapter_plans, strict=True))
 
     for chapter, plan in shown:
         print(f"\n=== chapter {chapter.number}: {chapter.title}")

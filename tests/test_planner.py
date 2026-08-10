@@ -258,3 +258,39 @@ def test_a_volume_reports_every_correction_its_chapters_used(grammar):
         [(narration("One."),), (narration("Two."),)], grammar, corrections=corrections
     )
     assert sorted(plan.corrected) == ["One.", "Two."]
+
+
+def test_the_rest_between_chapters_is_its_own_length(grammar):
+    """It used to borrow the pause that follows a chapter name.
+
+    They are different things. One is a beat after the narrator says the name
+    of a chapter. The other is the rest a listener gets to take in what
+    happened, and it falls after the last line of the chapter.
+    """
+    plan = plan_volume([(narration("Last."),), (narration("First."),)], grammar)
+    gaps = [s for s in plan.items if isinstance(s, Silence)]
+    assert [s.reason for s in gaps] == ["new chapter"]
+    assert gaps[0].seconds == grammar.render.between_chapters
+    assert gaps[0].seconds != grammar.render.after_chapter_name
+
+
+def test_the_end_of_a_chapter_is_the_last_thing_before_the_rest(grammar):
+    # End of Chapter 0, then the title, then the line that comments on it,
+    # then the silence. Nothing falls between the three, because a pause only
+    # lands where the kind of the text changes and all three are narration.
+    ending = (
+        Utterance(text="End of Chapter 0", voice=NARRATOR, kind="end matter"),
+        Utterance(text='"Point - Null"', voice=NARRATOR, kind="end matter"),
+        narration("[ The 1 named 0. ]"),
+    )
+    plan = plan_volume([ending, (narration("Next."),)], grammar)
+    said = [
+        i.text if isinstance(i, Utterance) else f"~{i.seconds:g}s" for i in plan.items
+    ]
+    assert said == [
+        "End of Chapter 0",
+        '"Point - Null"',
+        "[ The 1 named 0. ]",
+        "~3s",
+        "Next.",
+    ]

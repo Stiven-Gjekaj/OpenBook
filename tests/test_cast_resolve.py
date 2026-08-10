@@ -190,8 +190,24 @@ def test_a_scene_break_becomes_a_silence(grammar, cast):
     assert breaks == [Silence(seconds=2.0, reason="scene break")]
 
 
-def test_the_end_matter_is_left_out_by_default(grammar, cast):
+def test_the_end_matter_is_read_when_the_book_asks_for_it(grammar, cast):
+    # Soultale closes every chapter with its number, its title, and a line
+    # that comments on it. Reading only the last of the three left the closing
+    # line arriving with nothing in front of it.
     result = items("<p>Last.</p><p><u>End of Chapter 230</u></p>", grammar, cast)
+    said = [i for i in spoken(result) if i.kind == "end matter"]
+    assert [i.text for i in said] == ["End of Chapter 230"]
+
+
+def test_the_end_matter_can_be_left_out(grammar, cast, tmp_path):
+    text = (EXAMPLES / "grammar.toml").read_text(encoding="utf-8")
+    path = tmp_path / "grammar.toml"
+    path.write_text(
+        text.replace("read_end_matter    = true", "read_end_matter    = false"), "utf-8"
+    )
+    result = items(
+        "<p>Last.</p><p><u>End of Chapter 230</u></p>", load_grammar(path), cast
+    )
     assert not [i for i in spoken(result) if i.kind == "end matter"]
 
 

@@ -74,6 +74,7 @@ class Render:
     narration_to_dialogue: float
     at_scene_break: float
     after_chapter_name: float
+    between_chapters: float
     action: str
     at_action: float
     intro: str
@@ -291,6 +292,7 @@ def _read_render(table: Table) -> Render:
         narration_to_dialogue=table.duration("pause_narration_to_dialogue"),
         at_scene_break=table.duration("pause_at_scene_break"),
         after_chapter_name=table.duration("pause_after_chapter_name"),
+        between_chapters=table.duration("pause_between_chapters", "3s"),
         action=table.one_of("action", ACTION_MODES, "pause"),
         at_action=table.duration("pause_at_action", 0.5),
         intro=table.string("intro", ""),
