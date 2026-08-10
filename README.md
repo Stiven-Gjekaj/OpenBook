@@ -217,6 +217,7 @@ new voice and the tool must ask rather than choose.
 src/openbook/       the pipeline
   config/           reads and checks the configuration files
   source/           reads chapters out of EPUB files
+  parse/            turns a chapter into typed segments
   cli.py            the command line
 tests/              the tests
 examples/soultale/  the configuration for Soultale
