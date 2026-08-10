@@ -183,15 +183,36 @@ class VolumePlan:
 
 
 def build_volume(
-    project: Project, name: str, *, max_characters: int | None = None
+    project: Project,
+    name: str,
+    *,
+    max_characters: int | None = None,
+    only: int | None = None,
 ) -> VolumePlan:
-    """Work every stage for one volume, up to but not including the sound."""
+    """Work every stage for one volume, up to but not including the sound.
+
+    One chapter can be asked for, and then nothing else in the volume is
+    resolved at all. That matters while a cast is being filled in: a chapter
+    whose characters all have voices can be heard without waiting for the
+    other twenty two to be cast.
+
+    The chapter keeps its own number and the volume keeps its length, so a
+    card still reads Chapter 0 of 2 and not Chapter 1 of 1.
+    """
     chapters = [c for c in project.parsed() if project.volume_of(c) == name]
     if not chapters:
         known = sorted({project.volume_of(c) for c in project.parsed()})
         raise OpenBookError(
             f"no volume is named {name!r}. The book has {', '.join(known)}"
         )
+
+    if only is not None:
+        held = ", ".join(str(c.number) for c in chapters)
+        chapters = [c for c in chapters if c.number == only]
+        if not chapters:
+            raise OpenBookError(
+                f"volume {name!r} has no chapter {only}. It holds {held}"
+            )
 
     items: list[tuple[Item, ...]] = []
     chapter_plans: list[Plan] = []

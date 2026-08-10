@@ -88,6 +88,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="write a page listing every line, to check the render by ear",
     )
+    # Trying one chapter is a thing somebody does on the way to a volume, so
+    # it belongs on the command line. In the configuration it would be a
+    # standing claim about the shape of the book, and it would have to be
+    # remembered and taken out again.
+    render.add_argument(
+        "--chapter", type=int, default=None, help="one chapter of the volume only"
+    )
     render.add_argument(
         "--dry-run",
         action="store_true",
@@ -395,7 +402,12 @@ def _render(options) -> int:
     project.prepare()
     engine = _engine_for(options)
     cache = Cache(project.cache_directory)
-    volume = build_volume(project, options.volume, max_characters=engine.max_characters)
+    volume = build_volume(
+        project,
+        options.volume,
+        max_characters=engine.max_characters,
+        only=options.chapter,
+    )
 
     if options.dry_run:
         held = sum(1 for u in volume.plan.utterances if cache.holds(_key(u, engine)))
@@ -538,14 +550,7 @@ def _video(options) -> int:
                 body_font=here / settings.body_font,
                 background=settings.background,
             )
-            # Each card names the volume of the chapter on it. The prologue
-            # and volume 1 share a file and are still two volumes.
-            volumes = project.volumes()
-            by_title = {c.title: c.volume for c in volume.chapters}
-            names = []
-            for mark in marks:
-                found = volumes.get(by_title.get(mark.title, ""))
-                names.append((found.name, found.title) if found else ("", ""))
+            names = _volume_labels(project, volume, marks)
             cards = make_chapter_cards(
                 marks,
                 style,
@@ -571,6 +576,28 @@ def _video(options) -> int:
     )
     _report_corrections(project, volume, named)
     return 0
+
+
+def _volume_labels(project, volume, marks) -> list[tuple[str, str]]:
+    """What goes above the work on each card: the volume, and its title.
+
+    Each card names the volume of the chapter on it. The prologue and volume 1
+    share a file and are still two volumes.
+
+    A volume the archive chapters do not list keeps the name the chapter was
+    written under, with no title beneath it. The archive names the numbered
+    volumes and says nothing about the prologue, and a card that showed
+    nothing there would leave a listener with no idea where in the book they
+    are.
+    """
+    volumes = project.volumes()
+    by_title = {c.title: c.volume for c in volume.chapters}
+    names = []
+    for mark in marks:
+        written = by_title.get(mark.title, "")
+        found = volumes.get(written)
+        names.append((found.name, found.title) if found else (written, ""))
+    return names
 
 
 def _report_corrections(project, volume, named=None, *, lead: str = "  ") -> None:

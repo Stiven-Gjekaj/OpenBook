@@ -74,6 +74,7 @@ def test_a_volume_that_does_not_exist_is_named(project, capsys):
 def test_check_reports_that_the_cast_is_not_finished(project, capsys):
     # The example cast ships with no voices, so check must say so and give back
     # a code that is not zero.
+    cast_with_no_voices(project)
     assert main(["-C", str(project), "check"]) == 1
     out = capsys.readouterr().out
     assert "the narrator has no voice yet" in out
@@ -91,6 +92,23 @@ def test_a_configuration_that_does_not_exist_gives_one_line(tmp_path, capsys):
     err = capsys.readouterr().err
     assert err.startswith("openbook: ")
     assert "the file does not exist" in err
+
+
+def cast_with_no_voices(project):
+    """Blank every voice in the cast.
+
+    The example is a working project now and some of it is cast. A test that
+    needs an unfinished cast makes one rather than trusting a shipped file to
+    stay blank for ever.
+    """
+    import re
+
+    path = project / "cast.toml"
+    path.write_text(
+        re.sub(r'voice = "[^"]*"', 'voice = ""', path.read_text(encoding="utf-8")),
+        encoding="utf-8",
+    )
+    return project
 
 
 def cast_with_voices(project):
@@ -167,6 +185,7 @@ def test_a_render_of_a_volume_that_does_not_exist_is_named(project, capsys):
 
 def test_a_render_stops_when_a_code_has_no_voice(project, capsys):
     # The example ships uncast. A render must refuse rather than narrate.
+    cast_with_no_voices(project)
     assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 2
     assert "no voice" in capsys.readouterr().err
 
@@ -344,6 +363,7 @@ def test_check_accepts_a_correction_for_another_volume(project, capsys):
 
 
 def test_check_does_not_blame_the_corrections_for_an_unfinished_cast(project, capsys):
+    cast_with_no_voices(project)
     corrections(project, '[corrections]\n"nobody says this" = "x"\n')
     assert main(["-C", str(project), "check"]) == 1
     out = capsys.readouterr().out
@@ -585,3 +605,103 @@ def test_check_says_nothing_about_voices_an_engine_reads_by_name(project, capsys
     cast_with_voices(project)
     main(["-C", str(project), "check"])
     assert "cannot find" not in capsys.readouterr().out
+
+
+def test_a_card_names_a_volume_the_archive_does_not_list(project):
+    """The archive names the numbered volumes and says nothing about the
+    prologue. A card that showed nothing above the work would leave a listener
+    with no idea where in the book they are, so the name the chapter was
+    written under is used instead."""
+    from openbook.build import Project, build_volume
+    from openbook.cli import _volume_labels
+    from openbook.speech.package import Mark
+
+    cast_with_voices(project)
+    opened = Project.open(project)
+    volume = build_volume(opened, "Volume 1", max_characters=480)
+
+    written = {c.title: c.volume for c in volume.chapters}
+    assert written["Point - Null."] == "Prologue"
+    assert "Prologue" not in opened.volumes(), "the archive never names it"
+
+    marks = [Mark(title=c.title, start=0.0, end=10.0) for c in volume.chapters]
+    labels = dict(
+        zip(
+            [m.title for m in marks],
+            _volume_labels(opened, volume, marks),
+            strict=True,
+        )
+    )
+
+    # The prologue keeps the name it was written under, with no title beneath.
+    assert labels["Point - Null."] == ("Prologue", "")
+    # A volume the archive does name keeps both.
+    assert labels["Wandering Spirit."][0] == "Volume 1"
+
+
+def test_one_chapter_can_be_rendered_while_the_rest_is_uncast(project, capsys):
+    """The reason the narrowing happens before the cast is resolved.
+
+    A person filling in forty four voices wants to hear the chapter they have
+    finished, not to wait for the other twenty two.
+    """
+    import re
+
+    path = project / "cast.toml"
+    text = path.read_text(encoding="utf-8")
+    # Only the narrator has a voice. Every character is still waiting.
+    path.write_text(
+        re.sub(r'^voice = ""', 'voice = "af_heart"', text, count=1, flags=re.M),
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "-C",
+                str(project),
+                "render",
+                "--volume",
+                "Volume 1",
+                "--chapter",
+                "0",
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
+    assert "1 chapters" in capsys.readouterr().out
+
+
+def test_a_chapter_that_is_not_in_the_volume_is_named_by_render(project, capsys):
+    cast_with_voices(project)
+    assert (
+        main(
+            [
+                "-C",
+                str(project),
+                "render",
+                "--volume",
+                "Volume 1",
+                "--chapter",
+                "99",
+                "--dry-run",
+            ]
+        )
+        == 2
+    )
+    assert "has no chapter 99" in capsys.readouterr().err
+
+
+def test_one_chapter_keeps_the_number_its_volume_gives_it(project):
+    """A card must read Chapter 0 of 2, not Chapter 1 of 1. The volume is
+    narrowed but the book is not, so the count comes from the whole book."""
+    from openbook.build import Project, build_volume
+    from openbook.cast import last_chapters
+
+    cast_with_voices(project)
+    opened = Project.open(project)
+    volume = build_volume(opened, "Volume 1", max_characters=480, only=0)
+    assert len(volume.chapters) == 1
+    assert len(volume.every) > 1, "the whole book is still there to count with"
+    last = last_chapters(volume.every)
+    assert last[volume.chapters[0].volume] >= volume.chapters[0].number
