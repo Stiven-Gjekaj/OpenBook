@@ -86,6 +86,9 @@ class VolumePlan:
     chapters: tuple[ParsedChapter, ...]
     plan: Plan
     chapter_plans: tuple[Plan, ...]
+    grammar: Grammar
+    narrator: str
+    every: tuple[ParsedChapter, ...]
     notes: tuple[Note, ...] = field(default_factory=tuple)
 
 
@@ -118,6 +121,9 @@ def build_volume(
         chapters=tuple(chapters),
         plan=plan_volume(items, project.grammar, max_characters=max_characters),
         chapter_plans=tuple(chapter_plans),
+        grammar=project.grammar,
+        narrator=project.cast.narrator,
+        every=project.parsed(),
         notes=tuple(notes),
     )
 
@@ -143,14 +149,30 @@ def _say_as_written(items: tuple[Item, ...], lexicon: Lexicon) -> tuple[Item, ..
     )
 
 
-def render_volume(volume: VolumePlan, engine, cache):
+def fill(text: str, volume: VolumePlan, named) -> str:
+    """Put the details of a volume into a piece of text the author wrote."""
+    numbers = [chapter.number for chapter in volume.chapters]
+    for name, value in (
+        ("VOLUME", named.name if named else volume.name),
+        ("TITLE", named.title if named else ""),
+        ("FIRST", str(min(numbers)) if numbers else ""),
+        ("LAST", str(max(numbers)) if numbers else ""),
+        ("CHAPTERS", str(len(numbers))),
+    ):
+        text = text.replace(f"{{{name}}}", value)
+    return " ".join(text.split())
+
+
+def render_volume(volume: VolumePlan, engine, cache, *, named=None):
     """Make the sound for a volume, and say where each chapter starts.
 
     The chapters are made one at a time so that the mark for each one carries
     the length the engine actually produced, and not the length the plan
     guessed. A guess drifts, and a chapter mark that drifts is worse than none.
     """
-    from .cast.utterance import Silence
+    from .cast import chapter_label, last_chapters
+    from .cast.utterance import ANNOUNCEMENT, Silence, Utterance, Voice
+    from .plan.planner import Plan
     from .speech.audio import Audio, join_all
     from .speech.package import Mark
     from .speech.render import RenderReport, render_plan
@@ -159,7 +181,32 @@ def render_volume(volume: VolumePlan, engine, cache):
     marks: list[Mark] = []
     total = RenderReport()
     at = 0.0
+    render = volume.grammar.render
+    narrator = Voice(volume.narrator)
 
+    def spoken(text: str, title: str) -> None:
+        """Put a piece the narrator reads before or after the chapters."""
+        nonlocal at
+        words = fill(text, volume, named)
+        if not words:
+            return
+        said = Utterance(text=words, voice=narrator, kind=ANNOUNCEMENT)
+        audio, report = render_plan(Plan(items=(said,)), engine, cache)
+        pieces.append(audio)
+        marks.append(Mark(title=title, start=at, end=at + audio.seconds))
+        total.made += report.made
+        total.reused += report.reused
+        total.keys |= report.keys
+        total.timeline += [(u, at + b, at + e) for u, b, e in report.timeline]
+        at += audio.seconds
+        pieces.append(
+            Audio.silence(seconds=render.after_chapter_name, rate=engine.rate)
+        )
+        at += render.after_chapter_name
+
+    spoken(render.intro, render.intro_title)
+
+    last = last_chapters(volume.every)
     for index, (chapter, plan) in enumerate(
         zip(volume.chapters, volume.chapter_plans, strict=True)
     ):
@@ -174,7 +221,14 @@ def render_volume(volume: VolumePlan, engine, cache):
 
         audio, report = render_plan(plan, engine, cache)
         pieces.append(audio)
-        marks.append(Mark(title=chapter.title, start=at, end=at + audio.seconds))
+        marks.append(
+            Mark(
+                title=chapter.title,
+                start=at,
+                end=at + audio.seconds,
+                label=chapter_label(chapter.number, last[chapter.volume]),
+            )
+        )
         at += audio.seconds
 
         total.made += report.made
@@ -188,6 +242,8 @@ def render_volume(volume: VolumePlan, engine, cache):
             (utterance, start + begins, start + ends)
             for utterance, begins, ends in report.timeline
         ]
+
+    spoken(render.outro, render.outro_title)
 
     joined = join_all(pieces, engine.rate)
     total.seconds = joined.seconds

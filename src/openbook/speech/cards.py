@@ -58,8 +58,8 @@ class Style:
     title_size: int = 190
     body_size: int = 64
     faint_size: int = 40
-    volume_size: int = 50
-    volume_colour: str = "#9C8FD6"
+    volume_name_colour: str = "#6A5FA0"
+    volume_title_colour: str = "#CFC6F2"
 
     def __post_init__(self) -> None:
         for path in (self.title_font, self.body_font, self.title_back_font):
@@ -94,15 +94,16 @@ def make_card(
     style: Style,
     out: Path,
     *,
-    volume: str = "",
+    volume_name: str = "",
+    volume_title: str = "",
     chapter: str = "",
     subtitle: str = "",
 ) -> Path:
-    """Draw one card: the name of the work, and what is playing under it.
+    """Draw one card: the volume, the name of the work, and what is playing.
 
-    The volume is shown on the first card of each volume and left off the rest.
-    A listener needs telling once which volume they are in, and a line that
-    never changes stops being read after the first time it does not change.
+    The volume sits above the name of the work and is built the same way as the
+    chapter below it: the number small and dim, the title under it and bright.
+    The card then reads the same on both sides of the logo.
     """
     pillow = _pillow()
 
@@ -121,16 +122,44 @@ def make_card(
     title_box = draw.textbbox((0, 0), style.title, font=title_font)
     title_height = title_box[3] - title_box[1]
     lines = [line for line in wrap(draw, subtitle, body_font, limit) if line]
+    has_volume = bool(volume_name or volume_title)
 
     gap = style.body_size * 0.9
     block = title_height + gap
-    if volume:
-        block += style.volume_size * 1.7
+    if volume_name:
+        block += style.faint_size * 1.9
+    if volume_title:
+        block += style.body_size * 1.35
+    if has_volume:
+        block += gap * 0.5
     if chapter:
         block += style.faint_size * 1.9
     block += len(lines) * style.body_size * 1.35
 
     top = (style.height - block) / 2
+
+    # The volume above the name of the work, stacked the same way as the
+    # chapter below it: the number small and dim, the title under it and bright.
+    if volume_name:
+        width = draw.textbbox((0, 0), volume_name, font=faint_font)[2]
+        draw.text(
+            ((style.width - width) / 2, top),
+            volume_name,
+            font=faint_font,
+            fill=style.volume_name_colour,
+        )
+        top += style.faint_size * 1.9
+    if volume_title:
+        width = draw.textbbox((0, 0), volume_title, font=body_font)[2]
+        draw.text(
+            ((style.width - width) / 2, top),
+            volume_title,
+            font=body_font,
+            fill=style.volume_title_colour,
+        )
+        top += style.body_size * 1.35
+    if has_volume:
+        top += gap * 0.5
 
     box = draw.textbbox((0, 0), style.title, font=title_font)
     x = (style.width - (box[2] - box[0])) / 2 - box[0]
@@ -141,17 +170,6 @@ def make_card(
     draw.text((x, y), style.title, font=title_font, fill=style.title_colour)
 
     below = top + title_height + gap
-    if volume:
-        volume_font = pillow.font.truetype(str(style.body_font), style.volume_size)
-        width = draw.textbbox((0, 0), volume, font=volume_font)[2]
-        draw.text(
-            ((style.width - width) / 2, below),
-            volume,
-            font=volume_font,
-            fill=style.volume_colour,
-        )
-        below += style.volume_size * 1.7
-
     if chapter:
         width = draw.textbbox((0, 0), chapter, font=faint_font)[2]
         draw.text(
@@ -184,7 +202,7 @@ def make_chapter_cards(
     *,
     total: float | None = None,
     labels: list[str] | None = None,
-    volumes: list[str] | None = None,
+    volumes: list[tuple[str, str]] | None = None,
 ) -> list[tuple[Path, float]]:
     """Draw one card for each chapter, and say how long each is shown.
 
@@ -203,21 +221,24 @@ def make_chapter_cards(
         # The words the narrator uses for this chapter. A prologue chapter is
         # announced as "Prologue" and not as "Chapter 0", and a card that
         # disagrees with the voice is worse than a card with no label at all.
-        label = (
-            labels[index]
-            if labels is not None
-            else f"Chapter {index + 1} of {len(marks)}"
+        # A mark that carries its own label wins, which is how an intro gets a
+        # card with no chapter line on it.
+        if labels is not None:
+            label = labels[index]
+        elif mark.label:
+            label = mark.label
+        else:
+            label = f"Chapter {index + 1} of {len(marks)}"
+
+        name, volume_title = volumes[index] if volumes is not None else ("", "")
+        make_card(
+            style,
+            path,
+            volume_name=name,
+            volume_title=volume_title,
+            chapter=label,
+            subtitle=mark.title,
         )
-        # The volume is named on its first card only. A line that repeats on
-        # every card stops being read.
-        volume = ""
-        if volumes is not None:
-            volume = (
-                volumes[index]
-                if index == 0 or volumes[index] != volumes[index - 1]
-                else ""
-            )
-        make_card(style, path, volume=volume, chapter=label, subtitle=mark.title)
         cards.append((path, max(0.04, until - mark.start)))
     return cards
 

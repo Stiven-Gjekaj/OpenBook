@@ -41,6 +41,34 @@ def spoken_announcements(volume) -> list[str]:
     return said
 
 
+def check_marks_against_speech(marks, volume) -> None:
+    """Refuse a video whose chapter cards disagree with its narration.
+
+    A mark with no label is an intro or an outro. It has no chapter line on its
+    card, so there is nothing for the narration to disagree with.
+    """
+    said = {}
+    for chapter, text in zip(
+        volume.chapters, spoken_announcements(volume), strict=True
+    ):
+        said[chapter.title] = (chapter.number, text)
+
+    for mark in marks:
+        if not mark.label or mark.title not in said:
+            continue
+        number, announcement = said[mark.title]
+        if not announcement:
+            continue
+        head = mark.label.split(" of ")[0].strip()
+        if head.lower() not in announcement.lower():
+            raise OpenBookError(
+                f"chapter {number}: the card says {mark.label!r} and the "
+                f"narrator says {announcement!r}. The listener would see one "
+                "thing and hear another. Make chapter_announcement and the "
+                "card use the same words"
+            )
+
+
 def check_cards_against_speech(volume, labels: list[str]) -> None:
     """Refuse a video whose cards disagree with its narration.
 

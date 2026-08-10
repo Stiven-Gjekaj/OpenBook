@@ -27,6 +27,7 @@ class Mark:
     title: str
     start: float
     end: float
+    label: str = ""
 
 
 def have_ffmpeg() -> bool:

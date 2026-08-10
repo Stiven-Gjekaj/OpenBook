@@ -171,3 +171,20 @@ def test_the_export_can_be_asked_for_another_rate_and_channels(tmp_path):
     assert grammar.output.sample_rate == 48000
     assert grammar.output.channels == 2
     assert grammar.output.bitrate == "128k"
+
+
+def test_the_intro_and_outro_are_empty_unless_asked_for(tmp_path):
+    grammar = load_grammar(write(tmp_path, MINIMAL))
+    assert grammar.render.intro == ""
+    assert grammar.render.outro == ""
+    assert grammar.render.intro_title == "Introduction"
+
+
+def test_the_intro_and_outro_are_the_words_the_author_wrote(tmp_path):
+    text = MINIMAL.replace(
+        'action = "pause"',
+        'action = "pause"\nintro = "Welcome to {VOLUME}."\noutro = "That was {VOLUME}."',
+    )
+    grammar = load_grammar(write(tmp_path, text))
+    assert grammar.render.intro == "Welcome to {VOLUME}."
+    assert grammar.render.outro == "That was {VOLUME}."

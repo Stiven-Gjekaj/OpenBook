@@ -100,3 +100,27 @@ def test_cards_that_outlast_the_sound_are_refused():
 def test_a_small_rounding_difference_is_allowed():
     marks = [Mark("One.", 0.0, 100.0)]
     check_cards_against_time([("a.png", 100.4)], marks, 100.0)
+
+
+def test_a_mark_with_no_label_is_not_checked_against_the_narration():
+    # An intro has no chapter line on its card, so there is nothing for the
+    # narration to disagree with.
+    from openbook.speech.verify import check_marks_against_speech
+
+    volume = FakeVolume(["Chapter 3. Wandering Spirit."], numbers=[3])
+    volume.chapters[0].title = "T3."
+    marks = [
+        Mark("Introduction", 0.0, 20.0),
+        Mark("T3.", 20.0, 600.0, label="Chapter 3 of 22"),
+    ]
+    check_marks_against_speech(marks, volume)
+
+
+def test_a_labelled_mark_that_disagrees_is_still_refused():
+    from openbook.speech.verify import check_marks_against_speech
+
+    volume = FakeVolume(["Chapter 21. Whose Names Aren't Called."], numbers=[21])
+    volume.chapters[0].title = "T21."
+    marks = [Mark("T21.", 0.0, 600.0, label="Chapter 22 of 23")]
+    with pytest.raises(OpenBookError, match="see one thing and hear another"):
+        check_marks_against_speech(marks, volume)

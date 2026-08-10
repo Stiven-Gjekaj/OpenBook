@@ -75,6 +75,10 @@ class Render:
     after_chapter_name: float
     action: str
     at_action: float
+    intro: str
+    outro: str
+    intro_title: str
+    outro_title: str
 
 
 @dataclass(frozen=True)
@@ -273,6 +277,10 @@ def _read_render(table: Table) -> Render:
         after_chapter_name=table.duration("pause_after_chapter_name"),
         action=table.one_of("action", ACTION_MODES, "pause"),
         at_action=table.duration("pause_at_action", 0.5),
+        intro=table.string("intro", ""),
+        outro=table.string("outro", ""),
+        intro_title=table.string("intro_title", "Introduction"),
+        outro_title=table.string("outro_title", "Afterword"),
     )
     table.done()
     return render

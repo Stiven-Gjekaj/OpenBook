@@ -291,3 +291,84 @@ def test_a_chapter_with_no_narration_gives_no_peek():
     from openbook.speech.video import opening_words
 
     assert opening_words(FakeChapterWithText([]), 50) == ""
+
+
+@needs_font
+@needs_pillow
+def test_a_card_stacks_the_volume_above_the_title(tmp_path):
+    from PIL import Image
+
+    from openbook.speech.cards import Style, make_card
+
+    style = Style(
+        title_font=_fonts(),
+        body_font=_fonts(),
+        width=640,
+        height=360,
+        title_size=60,
+        body_size=24,
+        faint_size=16,
+    )
+    with_volume = make_card(
+        style,
+        tmp_path / "a.png",
+        volume_name="Volume 1",
+        volume_title="The Ascension",
+        chapter="Chapter 3 of 22",
+        subtitle="Wandering Spirit.",
+    )
+    without = make_card(
+        style,
+        tmp_path / "b.png",
+        chapter="Chapter 3 of 22",
+        subtitle="Wandering Spirit.",
+    )
+    assert Image.open(with_volume).tobytes() != Image.open(without).tobytes()
+
+
+@needs_font
+@needs_pillow
+def test_a_card_with_no_chapter_line_still_draws(tmp_path):
+    # An intro has no chapter, and its card is the volume and the work only.
+    from openbook.speech.cards import Style, make_card
+
+    style = Style(
+        title_font=_fonts(),
+        body_font=_fonts(),
+        width=640,
+        height=360,
+        title_size=60,
+        body_size=24,
+        faint_size=16,
+    )
+    path = make_card(
+        style,
+        tmp_path / "c.png",
+        volume_name="Volume 1",
+        volume_title="The Ascension",
+        subtitle="Introduction",
+    )
+    assert path.exists()
+
+
+@needs_font
+@needs_pillow
+def test_a_mark_carries_the_label_its_card_shows(tmp_path):
+    from openbook.speech.cards import Style, make_chapter_cards
+
+    style = Style(
+        title_font=_fonts(),
+        body_font=_fonts(),
+        width=320,
+        height=180,
+        title_size=30,
+        body_size=14,
+        faint_size=10,
+    )
+    labelled = [
+        Mark("Introduction", 0.0, 20.0),
+        Mark("One.", 20.0, 620.0),
+        Mark("Two.", 620.0, 1220.0, label="Chapter 4 of 22"),
+    ]
+    cards = make_chapter_cards(labelled, style, tmp_path / "cards", total=1220.0)
+    assert len(cards) == 3

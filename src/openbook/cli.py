@@ -15,7 +15,6 @@ from pathlib import Path
 
 from . import __version__
 from .build import Project, build_volume, render_volume, volume_names
-from .cast import chapter_label, last_chapters
 from .errors import OpenBookError
 from .speech import Cache, SilentEngine
 from .speech.package import have_ffmpeg, write_m4b
@@ -257,7 +256,8 @@ def _render(options) -> int:
         print(f"silence    {volume.plan.silent_seconds:.0f}s")
         return 0
 
-    audio, marks, report = render_volume(volume, engine, cache)
+    named = project.volumes().get(volume.name)
+    audio, marks, report = render_volume(volume, engine, cache, named=named)
     name = project.grammar.output.file_name.replace("{VOLUME}", volume.name)
     path = project.output_directory / name
     output = project.grammar.output
@@ -285,8 +285,8 @@ def _video(options) -> int:
     from .speech.captions import cues_from_timeline, names_from_cast, to_srt
     from .speech.cards import Style, make_chapter_cards, write_concat_list
     from .speech.verify import (
-        check_cards_against_speech,
         check_cards_against_time,
+        check_marks_against_speech,
     )
     from .speech.video import (
         Music,
@@ -308,7 +308,8 @@ def _video(options) -> int:
     engine = _engine_for(options)
     cache = Cache(project.cache_directory)
     volume = build_volume(project, options.volume, max_characters=engine.max_characters)
-    audio, marks, report = render_volume(volume, engine, cache)
+    named = project.volumes().get(volume.name)
+    audio, marks, report = render_volume(volume, engine, cache, named=named)
 
     name = (settings.file_name if settings else "{VOLUME}.mp4").replace(
         "{VOLUME}", volume.name
@@ -327,7 +328,6 @@ def _video(options) -> int:
 
     # The name of the volume comes from the archive chapters, so it is written
     # in one place and read from there rather than typed again here.
-    named = project.volumes().get(volume.name)
     heading = f"Soultale, {named.written}" if named else f"Soultale, {volume.name}"
 
     before = settings.description.strip() if settings else ""
@@ -371,12 +371,6 @@ def _video(options) -> int:
             "channels": settings.channels if settings else 2,
         }
         if options.visual is None and settings is not None and settings.draws_cards:
-            last = last_chapters(project.parsed())
-            labels = [
-                chapter_label(chapter.number, last[chapter.volume])
-                for chapter in volume.chapters
-            ]
-            check_cards_against_speech(volume, labels)
             here = project.directory
             style = Style(
                 title=settings.title,
@@ -389,23 +383,22 @@ def _video(options) -> int:
                 body_font=here / settings.body_font,
                 background=settings.background,
             )
+            # Each card names the volume of the chapter on it. The prologue
+            # and volume 1 share a file and are still two volumes.
             volumes = project.volumes()
-            names = [
-                (
-                    volumes[chapter.volume].full.upper()
-                    if chapter.volume in volumes
-                    else chapter.volume.upper()
-                )
-                for chapter in volume.chapters
-            ]
+            by_title = {c.title: c.volume for c in volume.chapters}
+            names = []
+            for mark in marks:
+                found = volumes.get(by_title.get(mark.title, ""))
+                names.append((found.name, found.title) if found else ("", ""))
             cards = make_chapter_cards(
                 marks,
                 style,
                 project.output_directory / ".cards",
                 total=audio.seconds,
-                labels=labels,
                 volumes=names,
             )
+            check_marks_against_speech(marks, volume)
             check_cards_against_time(cards, marks, audio.seconds)
             listing = write_concat_list(cards, project.output_directory / ".cards.txt")
             print(f"  {len(cards)} cards drawn")
