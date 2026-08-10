@@ -103,7 +103,7 @@ def write_m4b(
         metadata.write_text(
             write_metadata(marks, title=title, author=author), encoding="utf-8"
         )
-        _run(
+        run_ffmpeg(
             [
                 "ffmpeg",
                 "-y",
@@ -147,7 +147,7 @@ def write_opus(audio: Audio, path: Path, *, bitrate: str = "32k") -> Path:
     source = path.parent / f".{path.stem}.wav"
     try:
         audio.write(source)
-        _run(
+        run_ffmpeg(
             [
                 "ffmpeg",
                 "-y",
@@ -168,7 +168,7 @@ def write_opus(audio: Audio, path: Path, *, bitrate: str = "32k") -> Path:
     return path
 
 
-def _run(command: list[str]) -> None:
+def run_ffmpeg(command: list[str]) -> None:
     result = subprocess.run(command, capture_output=True, text=True, check=False)
     if result.returncode == 0:
         return

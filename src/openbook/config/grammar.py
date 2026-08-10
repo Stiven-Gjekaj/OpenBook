@@ -93,12 +93,27 @@ class Output:
 
 
 @dataclass(frozen=True)
+class Video:
+    """How a volume becomes a file for YouTube."""
+
+    file_name: str
+    visual: str
+    music: str
+    music_level: float
+    framerate: int
+    bitrate: str
+    sample_rate: int
+    channels: int
+
+
+@dataclass(frozen=True)
 class Grammar:
     source: Source
     dialogue: Dialogue
     structure: Structure
     render: Render
     output: Output
+    video: Video | None
 
 
 def load_grammar(path: Path) -> Grammar:
@@ -113,6 +128,8 @@ def load_grammar(path: Path) -> Grammar:
     grammar_table.done()
     render = _read_render(root.table("render"))
     output = _read_output(root.table("output"))
+    video_table = root.table("video", optional=True)
+    video = _read_video(video_table) if video_table is not None else None
     root.done()
 
     return Grammar(
@@ -121,6 +138,7 @@ def load_grammar(path: Path) -> Grammar:
         structure=structure,
         render=render,
         output=output,
+        video=video,
     )
 
 
@@ -265,6 +283,34 @@ def _read_output(table: Table) -> Output:
         )
     table.done()
     return output
+
+
+def _read_video(table: Table) -> Video:
+    video = Video(
+        file_name=table.string("file_name"),
+        visual=table.string("visual"),
+        music=table.string("music", ""),
+        music_level=float(table.string("music_level", "0.15")),
+        framerate=table.integer("framerate", 1),
+        bitrate=table.string("bitrate", "128k"),
+        sample_rate=table.integer("sample_rate", 48000),
+        channels=table.integer("channels", 2),
+    )
+    if "{VOLUME}" not in video.file_name:
+        raise ConfigError(
+            "the name of a file must contain {VOLUME}, or every volume writes "
+            "over the one before it",
+            path=table.path,
+            key="video.file_name",
+        )
+    if video.framerate < 1:
+        raise ConfigError(
+            "a video needs at least one frame each second",
+            path=table.path,
+            key="video.framerate",
+        )
+    table.done()
+    return video
 
 
 def _require_names(

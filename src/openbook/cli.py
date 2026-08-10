@@ -65,6 +65,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="say what a render would do, and make nothing",
     )
 
+    video = commands.add_parser("video", help="make the file that goes to YouTube")
+    video.add_argument("--volume", required=True)
+    video.add_argument("--engine", choices=ENGINES, default="silent")
+    video.add_argument("--speed", type=float, default=1.0)
+    video.add_argument("--visual", type=Path, default=None, help="a picture or a loop")
+    video.add_argument("--music", type=Path, default=None)
+    video.add_argument(
+        "--description-only",
+        action="store_true",
+        help="write the times for YouTube and encode nothing",
+    )
+
     cache = commands.add_parser("cache", help="report or clean the audio already made")
     cache.add_argument("--prune", action="store_true", help="remove what nothing uses")
     return parser
@@ -268,6 +280,71 @@ def _render(options) -> int:
     return 0
 
 
+def _video(options) -> int:
+    from .speech.video import Music, mix_music, write_video, youtube_description
+
+    project = Project.open(options.project)
+    settings = project.grammar.video
+    if settings is None and options.visual is None:
+        raise OpenBookError(
+            "this project has no [video] table and no --visual was given, so "
+            "there is no picture to put the sound behind"
+        )
+
+    engine = _engine_for(options)
+    cache = Cache(project.cache_directory)
+    volume = build_volume(project, options.volume, max_characters=engine.max_characters)
+    audio, marks, report = render_volume(volume, engine, cache)
+
+    name = (settings.file_name if settings else "{VOLUME}.mp4").replace(
+        "{VOLUME}", volume.name
+    )
+    out = project.output_directory / name
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    description = out.with_suffix(".txt")
+    description.write_text(
+        youtube_description(marks, title=f"Soultale, {volume.name}"), encoding="utf-8"
+    )
+    print(f"{description}")
+    if options.description_only:
+        return 0
+
+    visual = options.visual or (project.directory / settings.visual)
+    music_path = options.music or (
+        project.directory / settings.music if settings and settings.music else None
+    )
+
+    work = project.output_directory / f".{out.stem}.wav"
+    try:
+        audio.write(work)
+        if music_path is not None:
+            mixed = project.output_directory / f".{out.stem}.mixed.wav"
+            level = settings.music_level if settings else 0.15
+            mix_music(work, Music(path=music_path, level=level), mixed)
+            work.unlink(missing_ok=True)
+            work = mixed
+        write_video(
+            work,
+            visual,
+            out,
+            marks=marks,
+            framerate=settings.framerate if settings else 1,
+            bitrate=settings.bitrate if settings else "128k",
+            sample_rate=settings.sample_rate if settings else 48000,
+            channels=settings.channels if settings else 2,
+        )
+    finally:
+        work.unlink(missing_ok=True)
+
+    print(f"{out}")
+    print(
+        f"  {len(marks)} chapters, {audio.seconds / 3600:.2f} hours, "
+        f"{report.made} made, {report.reused} from the cache"
+    )
+    return 0
+
+
 def _cache(options) -> int:
     project = Project.open(options.project)
     cache = Cache(project.cache_directory)
@@ -296,6 +373,7 @@ _COMMANDS = {
     "notes": _notes,
     "words": _words,
     "render": _render,
+    "video": _video,
     "cache": _cache,
 }
 
