@@ -365,3 +365,11 @@ of the project.
 <div align="center">
 <sub>Built to make one book listenable. Start at the <a href="TODO.md">roadmap</a>.</sub>
 </div>
+
+<!--
+Where the finished audiobooks go. This is a link definition and nothing points
+at it, so the page shows nothing, which is right while the channel is empty.
+Write [Soultale Library][channel] anywhere above to show it once volume 1 is up.
+-->
+
+[channel]: https://www.youtube.com/@SoultaleLibrary
