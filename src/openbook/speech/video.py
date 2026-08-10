@@ -231,13 +231,20 @@ def write_video_from_cards(
 ) -> Path:
     """Join a list of cards and the sound into one file.
 
-    Each card is held for the length of its chapter. The output is given a
-    steady frame rate, because the concat reader gives an uneven one and
-    YouTube would have to correct it.
+    Each card is held from the start of its chapter to the start of the next.
+    The output is given a steady frame rate, because the concat reader gives an
+    uneven one and YouTube would have to correct it.
+
+    The length is fixed to the length of the sound. The concat reader needs the
+    last file written a second time or it drops the final card, and that repeat
+    adds the whole duration of that card to the end. Without the limit below,
+    Volume 1 came out seven and a half minutes longer than its audio, all of it
+    a still picture over silence.
     """
     require_ffmpeg()
     _refuse_if_too_long(marks)
     out.parent.mkdir(parents=True, exist_ok=True)
+    seconds = probe_seconds(audio)
     run_ffmpeg(
         [
             "ffmpeg",
@@ -253,6 +260,8 @@ def write_video_from_cards(
             str(concat_list),
             "-i",
             str(audio),
+            "-t",
+            f"{seconds:.3f}",
             "-map",
             "0:v:0",
             "-map",

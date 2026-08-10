@@ -153,20 +153,36 @@ def make_card(
 
 
 def make_chapter_cards(
-    marks, style: Style, directory: Path
+    marks,
+    style: Style,
+    directory: Path,
+    *,
+    total: float | None = None,
+    numbers: list[int] | None = None,
 ) -> list[tuple[Path, float]]:
-    """Draw one card for each chapter, and say how long each is shown."""
+    """Draw one card for each chapter, and say how long each is shown.
+
+    A card is held from the moment its chapter starts until the next one
+    starts, and not for the length of its own audio. The two are not the same:
+    a silence sits between two chapters, and it belongs to the card in front of
+    it. Using the length of the audio instead loses that silence from every
+    card, and by the last chapter the picture changes some seconds early.
+    """
     directory.mkdir(parents=True, exist_ok=True)
+    ends = [mark.start for mark in marks[1:]] + [total if total else marks[-1].end]
+
     cards: list[tuple[Path, float]] = []
-    for index, mark in enumerate(marks):
+    for index, (mark, until) in enumerate(zip(marks, ends, strict=True)):
         path = directory / f"card-{index:03d}.png"
-        make_card(
-            style,
-            path,
-            chapter=f"Chapter {index + 1} of {len(marks)}",
-            subtitle=mark.title,
-        )
-        cards.append((path, max(0.04, mark.end - mark.start)))
+        # The number the book gives the chapter, and not its place in the
+        # volume. The narrator says the number of the book, and a card that
+        # disagrees with the voice is worse than a card with no number.
+        if numbers is not None:
+            label = f"Chapter {numbers[index]}"
+        else:
+            label = f"Chapter {index + 1} of {len(marks)}"
+        make_card(style, path, chapter=label, subtitle=mark.title)
+        cards.append((path, max(0.04, until - mark.start)))
     return cards
 
 
