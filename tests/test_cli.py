@@ -8,6 +8,11 @@ from test_epub import make_epub
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples" / "soultale"
 
+# Writing an M4B needs ffmpeg, and CI installs it on one runner of the six.
+needs_ffmpeg = pytest.mark.skipif(
+    not shutil.which("ffmpeg"), reason="ffmpeg is not installed"
+)
+
 
 @pytest.fixture
 def project(tmp_path):
@@ -94,14 +99,9 @@ def cast_with_voices(project):
     return project
 
 
+@needs_ffmpeg
 def test_check_is_ready_once_every_voice_is_chosen(project, capsys):
     # Being ready includes having ffmpeg, so this cannot pass without it.
-    import shutil
-
-    if not shutil.which("ffmpeg"):
-        import pytest
-
-        pytest.skip("ffmpeg is not installed")
     assert main(["-C", str(cast_with_voices(project)), "check"]) == 0
     assert "ready" in capsys.readouterr().out
 
@@ -137,14 +137,8 @@ def test_a_dry_run_makes_nothing(project, capsys):
     assert not (project / "out").exists()
 
 
+@needs_ffmpeg
 def test_a_render_writes_a_file_and_reuses_it(project, capsys):
-    import shutil
-
-    if not shutil.which("ffmpeg"):
-        import pytest
-
-        pytest.skip("ffmpeg is not installed")
-
     cast_with_voices(project)
     assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
     first = capsys.readouterr().out
@@ -218,14 +212,8 @@ def test_a_chapter_that_is_not_in_the_volume_is_named(project, capsys):
     assert "has no chapter 99" in capsys.readouterr().err
 
 
+@needs_ffmpeg
 def test_a_render_writes_captions_beside_the_audiobook(project, capsys):
-    import shutil
-
-    if not shutil.which("ffmpeg"):
-        import pytest
-
-        pytest.skip("ffmpeg is not installed")
-
     cast_with_voices(project)
     assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
     captions = project / "out" / "Soultale - Volume 1.srt"
@@ -235,14 +223,8 @@ def test_a_render_writes_captions_beside_the_audiobook(project, capsys):
     assert "Chapter 0." in captions.read_text(encoding="utf-8")
 
 
+@needs_ffmpeg
 def test_a_render_can_write_a_review_page(project, capsys):
-    import shutil
-
-    if not shutil.which("ffmpeg"):
-        import pytest
-
-        pytest.skip("ffmpeg is not installed")
-
     cast_with_voices(project)
     assert main(["-C", str(project), "render", "--volume", "Volume 1", "--review"]) == 0
     page = project / "out" / "review - Volume 1.html"
@@ -287,6 +269,7 @@ def corrections(project, text):
     return project
 
 
+@needs_ffmpeg
 def test_a_render_says_how_many_corrections_it_used(project, capsys):
     cast_with_voices(project)
     corrections(project, '[corrections]\n"two" = "too"\n"absent" = "gone"\n')
@@ -313,12 +296,14 @@ def test_a_dry_run_says_how_many_corrections_it_would_use(project, capsys):
     assert "corrections 1 used" in capsys.readouterr().out
 
 
+@needs_ffmpeg
 def test_a_render_says_nothing_when_there_is_no_corrections_file(project, capsys):
     cast_with_voices(project)
     assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
     assert "corrections" not in capsys.readouterr().out
 
 
+@needs_ffmpeg
 def test_a_line_still_waiting_for_words_is_counted(project, capsys):
     cast_with_voices(project)
     corrections(project, '[corrections]\n"two" = ""\n')
