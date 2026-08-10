@@ -14,3 +14,6 @@ build/
 
 # The manuscript is not part of this project.
 *.epub
+
+# macOS writes these into every directory it looks at.
+.DS_Store
