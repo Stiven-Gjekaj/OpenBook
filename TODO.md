@@ -20,35 +20,26 @@ Measured on Volume 1 of Soultale, which is 23 chapters and 3 hours 49 minutes:
 | Reading and parsing the whole book | under a second, 325 chapters |
 | Speaking it with Kokoro | 23 minutes, about ten times faster than real time |
 | Speaking it again after a change | seconds, from the cache |
+| Speaking one corrected line again | one piece made, the rest from the cache |
 | Levelling | -25.2 LUFS raw, -19.1 after |
 | Encoding the video | 2 minutes, 214 MB |
 
 Built: the EPUB reader, the parser, the cast, the planner, the lexicon and its
-word finder, the Kokoro and silent engines, the cache, loudness, the M4B, the
-video with its cards and description and captions, the review page, and the
-checks that refuse a video whose picture and sound disagree.
+word finder, three engines, the cache, loudness, the M4B, the video with its
+cards and description and captions, the review page and the corrections it
+writes, and the checks that refuse a video whose picture and sound disagree.
 
 ## Still to build
 
-### The other half of the review loop
-
-The page marks a line and copies out a block of corrections. Nothing reads that
-block back, so a marked line is not yet remade.
-
-- [ ] Read `corrections.toml` when planning, and use the corrected words in
-      place of the original.
-- [ ] Put the correction into the cache key, so a marked line is made again and
-      nothing else is.
-- [ ] Report how many corrections were used, so a person can see that the file
-      is being read at all.
+The list of code is short now. Everything below is small, and none of it stops
+a volume being made.
 
 ### Speaking
 
-- [ ] The `mix` mode for a line two characters say together. It refuses with a
-      reason today. `voice_blend` covers the three lines in this book, so this
-      only matters for a book that needs the two voices kept apart.
-- [ ] A second engine, so a character can be spoken by something other than
-      Kokoro. The interface is there and nothing else uses it yet.
+- [ ] A way to add the words a new chapter brought to a `lexicon.toml` that
+      already exists. `openbook words --write` refuses to write over a file, so
+      that nothing you wrote is lost, and there is no way yet to put only the
+      new blanks in.
 
 ### Repository
 
@@ -100,3 +91,9 @@ Written down because each one was learned from something that went wrong.
 - **A rule about the book lives in configuration, never in the code.**
 - **A refusal is better than a guess** wherever a wrong answer would only be
   found by listening.
+- **A test that needs a program says so, and skips without it.** ffmpeg and
+  espeak-ng are installed on one runner of the six, so a test that takes them
+  for granted passes here and fails on five machines. Run the suite with both
+  off the path before pushing.
+- **A number written on the page is a claim, and a claim gets a test.** The
+  badge said 336 tests for a long time while there were 426.
