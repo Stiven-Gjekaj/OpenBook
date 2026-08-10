@@ -95,7 +95,7 @@ reads a paragraph as one unit gets most of the dialogue wrong.
 | Key | Means |
 | --- | ----- |
 | `separator` | What divides two names in one code, such as `" & "` |
-| `mode` | `voice_blend`, `primary`, or `mix` |
+| `mode` | `voice_blend`, `mix`, `mix_matched`, or `primary` |
 
 | Mode | What a listener hears |
 | ---- | --------------------- |
@@ -259,6 +259,44 @@ Black.
 A code with no entry stops the build and names the chapter. A code with an
 entry but no voice stops the build when the renderer reaches it, so a cast can
 be read before it is finished.
+
+### How much feeling a line is read with
+
+An engine that reads with feeling, which today means Chatterbox, takes an
+**exaggeration**. It comes from the kind of the line unless an entry says
+otherwise:
+
+| The line | Read with |
+| -------- | --------- |
+| Dialogue | 0.7 |
+| Narration, actions, chapter announcements, end matter | 0.3 |
+
+A narrator states what happened and holds one level for hours. A character in
+a fantasy is frightened, or lying, or giving an order. One value for both
+gives either a theatrical narrator or a flat cast, and a book is 79 percent
+the first and all of the second.
+
+Write `exaggeration` on an entry to say something else about one character,
+and on `[narrator]` to say it about the narration:
+
+```toml
+[narrator]
+voice        = "voices/narrator.wav"
+exaggeration = 0.25
+
+[cast.BLK]
+name         = "Black"
+voice        = "voices/black.wav"
+exaggeration = 0.85
+```
+
+The number is part of the key of each line, not of the whole render. Changing
+it for one character remakes that character and touches nobody else, and
+changing what dialogue is read with leaves three hundred thousand words of
+narration exactly where they are.
+
+A line two characters share takes the number of the first of them, the same
+way `primary` takes the voice of the first of them.
 
 ### A code that is not one character
 

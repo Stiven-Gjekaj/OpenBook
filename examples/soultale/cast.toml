@@ -22,6 +22,23 @@
 #
 # 'openbook check --engine chatterbox' says which recordings are not there
 # yet, so a missing one is found before a render and not after it.
+#
+# HOW MUCH FEELING
+#
+# An engine that reads with feeling takes an exaggeration. Narration gets 0.3
+# and dialogue gets 0.7, because a narrator holds one level for hours and a
+# character in a fantasy is frightened, or lying, or giving an order. One
+# value for both gives a theatrical narrator or a flat cast.
+#
+# Add 'exaggeration' to an entry to say something else about one character:
+#
+#   [cast.BLK]
+#   voice        = "voices/black.wav"
+#   exaggeration = 0.85
+#
+# Leave it out and the kind of the line decides. It is part of the key of each
+# line, so changing it for one character remakes that character and nobody
+# else, and changing the number for dialogue leaves the narration alone.
 
 
 [narrator]
