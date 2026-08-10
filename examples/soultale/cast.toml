@@ -9,11 +9,26 @@
 #
 # Give each entry a name and a voice. The name is for you and for the reports.
 # The renderer uses the voice.
+#
+# What a voice is depends on the engine that speaks it:
+#
+#   chatterbox   A path to a recording of the character, read from this
+#                directory: "voices/black.wav". Ten to twenty seconds of clean
+#                speech is enough, and what is in the recording is what comes
+#                out, including the room it was recorded in.
+#   kokoro       One of its own names, such as "af_heart". The first letter
+#                says the accent: a for American, b for British.
+#   espeak       A language and a variant: "en-us", "en-gb+Alicia".
+#
+# 'openbook check --engine chatterbox' says which recordings are not there
+# yet, so a missing one is found before a render and not after it.
 
 
 [narrator]
 # The narrator speaks 79 percent of the book. Choose this voice first, and
-# listen to it for several minutes before you accept it.
+# listen to it for several minutes before you accept it. This is also the one
+# voice where a wandering model costs most, because it reads a third of a
+# million words and a dropped one is found only by listening.
 voice = ""
 
 
@@ -36,8 +51,11 @@ voice = ""
 # RECURRING
 #
 # These codes have 5 to 39 lines each. Give each one a voice. Two of them can
-# share a voice when they never appear in the same chapter, but start with one
-# voice for each and share only when you run out.
+# share a voice when they never appear in the same chapter, though a listener
+# who meets both is owed two voices, so share only where you have to.
+#
+# What you run out of has changed. A fixed list of voices runs out at its last
+# name. A recording never does, and every voice costs a recording instead.
 
 # 39 lines. First in chapter 18.
 [cast.LCH]
@@ -154,7 +172,9 @@ voice = ""
 #
 # These codes have 4 lines or fewer. Several of them can share one voice,
 # because a listener does not hold a voice with one line in memory. Give the
-# same voice to more than one code here when the codes are far apart.
+# same voice to more than one code here when the codes are far apart. This is
+# where sharing costs least, and it is the first place to spend one recording
+# on several characters.
 
 # 4 lines. First in chapter 1.
 [cast.EDG]

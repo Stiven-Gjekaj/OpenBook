@@ -52,7 +52,10 @@ book it was written for has not been tested, whatever its tests say.
 
 ### It speaks
 
-- Kokoro, espeak-ng, and a silent engine that gives quiet of the right length.
+- Chatterbox, which reads the book in the voice of a recording you supply,
+  Kokoro, espeak-ng, and a silent engine that gives quiet of the right length.
+- A recording is part of the cache key and not only its path, so a better
+  take of a character remakes that character and nothing else.
 - Every piece of audio is kept under a key made from the text, the voice, the
   engine, and the version of the engine. A correction makes one line again.
 - `lexicon.toml` says how an invented name is said, everywhere in the book,

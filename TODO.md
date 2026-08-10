@@ -31,7 +31,23 @@ writes, and the checks that refuse a video whose picture and sound disagree.
 
 ## Still to build
 
-Nothing in the code. What is left is the author's own work, further down.
+### The first chapter through Chatterbox
+
+The engine is built and nothing has read a chapter with it yet. Three numbers
+decide whether it stays, and none of them can be guessed:
+
+- [ ] How fast it reads on this machine. Kokoro does about ten times real
+      time, so a four hour volume takes twenty three minutes. A model that
+      makes a token at a time will be slower, and how much slower decides
+      whether a volume is an afternoon or a week.
+- [ ] Whether it drops or repeats a word over a whole chapter. This is the one
+      risk Kokoro does not carry, and listening is the only thing that finds
+      it.
+- [ ] Whether the narrator still sounds like one person from the first chapter
+      to the last.
+
+Nothing is lost either way. The cache keys on the engine, so a chapter read by
+each engine can sit side by side and be compared.
 
 ### Repository
 
@@ -54,9 +70,19 @@ Nothing in the code. What is left is the author's own work, further down.
 
 None of this is work the tool can do. All of it blocks a real release.
 
-- [ ] **A voice for each of the 44 codes in Volume 1**, with the gender and the
-      accent of each. The current audio uses placeholders handed out in order,
-      so it proves the pipeline and nothing else.
+- [ ] **A recording for each of the 44 codes in Volume 1.** The book now reads
+      in the voice of a recording rather than choosing from a list of twenty
+      eight, so this is no longer a naming job. Ten to twenty seconds of clean
+      speech for each character, in `voices/`, named in `cast.toml`.
+      `openbook check --engine chatterbox` says which ones are not there yet.
+
+      What is in the recording is what comes out, including the room it was
+      recorded in and anything behind it. Two of these matter more than the
+      rest: the narrator reads 79 percent of the book, and Black has 160 lines.
+
+      A recording of a real person is that person's voice. Recording them
+      yourself, or taking one from the public domain, is the road with no
+      complaint at the end of it. See [TERMS.md](TERMS.md).
 - [ ] **The 539 pronunciations.** `openbook words --write` has already written
       them into `lexicon.toml` with each sound left blank, most frequent first.
       Vazroth alone is said 273 times. The first twenty entries cover most of

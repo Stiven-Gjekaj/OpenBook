@@ -76,12 +76,39 @@ Everything useful follows from that:
 - A character can move to a different engine, and the rest of the book keeps
   the audio it already has.
 
-Three engines use that interface. **Kokoro** is the one a book ships in.
-**espeak-ng** sounds like a machine from the 1990s and needs no model, no
-download and no Python package, so it says real words at real lengths on any
-machine and a whole volume can be checked against real speech in seconds.
-**The silent engine** is a clock: quiet of the length the words would take,
-which is what the stages after it were built and tested against.
+Four engines use that interface. **Chatterbox** reads the book in the voice of
+a recording you supply, and is the one a book ships in. **Kokoro** chooses from
+its own list of voices and is the one to fall back to. **espeak-ng** sounds
+like a machine from the 1990s and needs no model, no download and no Python
+package, so a whole volume can be checked against real speech in seconds. **The
+silent engine** is a clock: quiet of the length the words would take, which is
+what the stages after it were built and tested against.
+
+## What a token at a time costs
+
+Chatterbox is autoregressive and Kokoro is not, and that one difference decides
+where each belongs. A model that makes a token at a time can repeat itself,
+drop a word, or trail off. Kokoro cannot: its failure is a wrong sound for a
+word, which the lexicon corrects. A wrong number of words is found by nothing
+except listening.
+
+Three things hold that down, and none of them removes it:
+
+- The planner already cuts everything into pieces, and a short piece wanders
+  far less than a long one.
+- Chatterbox takes 300 characters at a time where the others take 480. The cut
+  falls at the end of a sentence either way, so a lower limit costs a few more
+  pieces and buys back the failure that is hardest to find.
+- The reading is seeded from the words and the voice, so the same line always
+  comes out the same way. A book is made over days and in pieces, and a line
+  remade next week has to match the chapter around it.
+
+What is left is why the review page exists. This engine is the reason a person
+has to be able to find six bad lines without listening to forty seven hours.
+
+A voice here is a path to a recording, so the recording is part of the cache
+key and not only the path. Two takes under one name are two voices, and a cache
+that could not tell them apart would serve the old one for ever.
 
 The last of these is what lets the narrator and the cast use different engines.
 The narrator reads 79 percent of Soultale in one voice, and wants a model that

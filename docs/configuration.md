@@ -196,8 +196,29 @@ voice = "am_michael"
 aliases = ["BLCK"]
 ```
 
+**What a voice is depends on the engine.**
+
+| Engine | A voice is | Example |
+| ------ | ---------- | ------- |
+| `chatterbox` | A path to a recording of the character, read from the project directory | `"voices/black.wav"` |
+| `kokoro` | One of its own voice names. The first letter is the accent | `"af_heart"` |
+| `espeak` | A language, and a variant after a plus | `"en-gb+Alicia"` |
+
+For Chatterbox, ten to twenty seconds of clean speech is enough, and what is in
+the recording is what comes out: the accent, the pace, the room it was recorded
+in, and anything behind it. `openbook check --engine chatterbox` names every
+recording that is not there, so a missing one is found before a render rather
+than twenty minutes into one.
+
+A recording is part of what the cache keys on, not only its path. Writing a
+better take over `voices/black.wav` makes every line Black has again. Without
+that the path would not have changed, nothing would have been remade, and the
+old voice would have stayed in the book for ever with nothing said about it.
+
 The narrator speaks most of a book, so choose that voice first and listen to it
-for several minutes before accepting it.
+for several minutes before accepting it. It is also where the choice of engine
+costs most: see [architecture.md](architecture.md) on why an engine that makes
+a token at a time is a different risk over a third of a million words.
 
 `name` is for you, for the reports, and for the speaker labels in the captions.
 A reader of the captions has never seen this file and cannot know that BLK is
