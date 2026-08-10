@@ -26,12 +26,12 @@ jobs:
         with:
           enable-cache: true
 
-      # ffmpeg and Pillow are installed on one platform only. What they do
-      # does not differ by operating system, so paying for them three times
-      # buys nothing, and without them everywhere those tests only ever skip.
-      - name: Install ffmpeg
+      # ffmpeg, espeak-ng and Pillow are installed on one platform only. What
+      # they do does not differ by operating system, so paying for them three
+      # times buys nothing, and without them everywhere those tests only skip.
+      - name: Install ffmpeg and espeak-ng
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg espeak-ng
 
       - name: Install the project
         run: uv sync --python ${{ matrix.python }}

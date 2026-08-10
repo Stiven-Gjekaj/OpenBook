@@ -76,6 +76,13 @@ Everything useful follows from that:
 - A character can move to a different engine, and the rest of the book keeps
   the audio it already has.
 
+Three engines use that interface. **Kokoro** is the one a book ships in.
+**espeak-ng** sounds like a machine from the 1990s and needs no model, no
+download and no Python package, so it says real words at real lengths on any
+machine and a whole volume can be checked against real speech in seconds.
+**The silent engine** is a clock: quiet of the length the words would take,
+which is what the stages after it were built and tested against.
+
 The last of these is what lets the narrator and the cast use different engines.
 The narrator reads 79 percent of Soultale in one voice, and wants a model that
 cannot drift over a third of a million words. The cast speaks in pieces that

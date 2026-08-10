@@ -20,7 +20,7 @@ from .source.epub import BookDetails, read_details
 from .speech import Cache, SilentEngine
 from .speech.package import have_ffmpeg, write_m4b
 
-ENGINES = ("silent", "kokoro")
+ENGINES = ("silent", "espeak", "kokoro")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -266,8 +266,17 @@ def _engine_for(options):
     The silent engine is the default. It gives quiet of the right length, so a
     person can hear where the pauses fall and check the chapter marks without
     waiting for a real render.
+
+    espeak-ng is the one in between. It sounds like a machine from the 1990s
+    and it says real words at real lengths, which is enough to check the
+    captions and the cards of a whole volume in seconds.
     """
-    if getattr(options, "engine", "silent") == "kokoro":
+    asked = getattr(options, "engine", "silent")
+    if asked == "espeak":
+        from .speech.espeak import EspeakEngine
+
+        return EspeakEngine(speed=getattr(options, "speed", 1.0))
+    if asked == "kokoro":
         try:
             from .speech.kokoro import KokoroEngine
         except ImportError as error:

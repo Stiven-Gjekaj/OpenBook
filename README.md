@@ -68,7 +68,7 @@ and a page for checking the result by ear.
 | Give each segment a voice | Built. Unison lines get one blended voice |
 | Plan the pauses and divide long lines | Built. 16,905 utterances, none over the engine limit |
 | Find the words needing a pronunciation | Built. 539 words, most frequent first |
-| Speak, through a cache | Built. Kokoro, and a silent engine for checking timing |
+| Speak, through a cache | Built. Kokoro, espeak-ng, and a silent engine for timing |
 | Write an M4B with chapter marks | Built. Levelled to -19 LUFS, with a cover |
 | One video for each volume, for YouTube | Built. Cards, description, captions |
 | Check the result by ear, and correct it | Built. A page to mark lines, and a file that remakes them |
@@ -178,6 +178,13 @@ On an Apple M5, Kokoro makes about **10.6 seconds of speech for each second it
 runs**. A four hour volume takes about twenty minutes, and the whole of
 Soultale, at 47 hours, takes about four and a half. The second render of
 anything takes seconds, because only what changed is made again.
+
+Three engines use one interface, chosen with `--engine`. **kokoro** is the one
+a book ships in. **espeak-ng** sounds like a machine from the 1990s and needs
+no model, no download and no Python package, so a whole volume can be checked
+against real speech in seconds. **silent** is the default and is a clock: quiet
+of the length the words would take, for checking the pauses and the chapter
+marks with nothing installed at all.
 
 See [docs/architecture.md](docs/architecture.md) for the whole picture.
 
