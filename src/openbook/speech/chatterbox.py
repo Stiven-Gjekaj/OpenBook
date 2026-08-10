@@ -105,8 +105,43 @@ class Settings:
         return f"g{self.guidance:g}-t{self.temperature:g}"
 
 
-class ChatterboxEngine:
-    """Speaks in the voice of a recording."""
+@dataclass(frozen=True)
+class TurboSettings(Settings):
+    """What to ask of Turbo, which asks for more and starts elsewhere.
+
+    Turbo reads flat at zero where the older model reads flat at one half, so
+    the numbers tuned for that one do not carry across. These are a starting
+    point and nothing more, the way 0.3 and 0.7 were a starting point.
+    """
+
+    narration: float = 0.0
+    dialogue: float = 0.4
+    guidance: float = 0.0
+    min_p: float = 0.0
+    top_p: float = 0.95
+    top_k: int = 1000
+
+    # Turbo brings every line to one loudness on its own. The model that came
+    # first does not, and its raw output peaked above what a sample holds.
+    norm_loudness: bool = True
+
+    def key(self) -> str:
+        # Its own, and not the older one's. Every argument here changes the
+        # audio without changing the words, so all of them belong in a version.
+        return (
+            f"g{self.guidance:g}-t{self.temperature:g}-"
+            f"p{self.min_p:g},{self.top_p:g},{self.top_k:g}-"
+            f"n{int(self.norm_loudness)}"
+        )
+
+
+class _Chatterbox:
+    """What both Chatterbox models do the same way.
+
+    They differ in which class reads the words and which arguments it takes.
+    Everything a book cares about, which is how a voice is named and when the
+    engine refuses, is here and is the same for both.
+    """
 
     def __init__(
         self,
@@ -117,15 +152,23 @@ class ChatterboxEngine:
         max_characters: int | None = MAX_CHARACTERS,
     ) -> None:
         self._directory = Path(directory) if directory else Path()
-        self._settings = settings or Settings()
+        self._settings = settings or self.settings_class()
         self._device = device
         self._max = max_characters
         self._model = None
         self._version: str | None = None
 
-    @property
-    def name(self) -> str:
-        return "chatterbox"
+    # What each model fills in.
+    name: str = ""
+    settings_class: type[Settings] = Settings
+
+    def _model_class(self):
+        """The class that reads the words, imported when it is first needed."""
+        raise NotImplementedError
+
+    def _arguments(self, exaggeration: float) -> dict:
+        """What to pass generate, beyond the words and the recording."""
+        raise NotImplementedError
 
     @property
     def version(self) -> str:
@@ -201,9 +244,7 @@ class ChatterboxEngine:
         wave = model.generate(
             text,
             audio_prompt_path=str(reference),
-            exaggeration=self._settings.exaggeration(kind, exaggeration),
-            cfg_weight=self._settings.guidance,
-            temperature=self._settings.temperature,
+            **self._arguments(self._settings.exaggeration(kind, exaggeration)),
         )
         return Audio(samples=_to_bytes(wave), rate=RATE)
 
@@ -242,19 +283,72 @@ class ChatterboxEngine:
 
     def _loaded(self):
         if self._model is None:
-            try:
-                from chatterbox.tts import ChatterboxTTS
-            except ImportError as error:
-                # Not installed is something a person fixes, not something that
-                # works on a second attempt. Without this it is tried three
-                # times and then reported as a fault in the line being spoken.
-                raise OpenBookError(
-                    "chatterbox is not installed, so nothing can be spoken with "
-                    "it. Add it with 'uv sync --extra chatterbox', or use "
-                    "'--engine kokoro'"
-                ) from error
-            self._model = ChatterboxTTS.from_pretrained(device=self._device or device())
+            model = self._model_class()
+            self._model = model.from_pretrained(device=self._device or device())
         return self._model
+
+
+class ChatterboxEngine(_Chatterbox):
+    """Speaks in the voice of a recording."""
+
+    name = "chatterbox"
+    settings_class = Settings
+
+    def _model_class(self):
+        try:
+            from chatterbox.tts import ChatterboxTTS
+        except ImportError as error:
+            # Not installed is something a person fixes, not something that
+            # works on a second attempt. Without this it is tried three times
+            # and then reported as a fault in the line being spoken.
+            raise OpenBookError(
+                "chatterbox is not installed, so nothing can be spoken with "
+                "it. Add it with 'uv sync --extra chatterbox', or use "
+                "'--engine kokoro'"
+            ) from error
+        return ChatterboxTTS
+
+    def _arguments(self, exaggeration: float) -> dict:
+        return {
+            "exaggeration": exaggeration,
+            "cfg_weight": self._settings.guidance,
+            "temperature": self._settings.temperature,
+        }
+
+
+class ChatterboxTurboEngine(_Chatterbox):
+    """The same, through the model that reads several times faster.
+
+    It brings every line to one loudness on its own, which the model that came
+    first does not: that one gave back audio peaking above what a sample holds,
+    so a whole chapter was clipping before the levelling stage saw it.
+    """
+
+    name = "chatterbox-turbo"
+    settings_class = TurboSettings
+
+    def _model_class(self):
+        try:
+            from chatterbox.tts_turbo import ChatterboxTurboTTS
+        except ImportError as error:
+            raise OpenBookError(
+                "chatterbox is not installed, so nothing can be spoken with "
+                "it. Add it with 'uv sync --extra chatterbox', or use "
+                "'--engine kokoro'"
+            ) from error
+        return ChatterboxTurboTTS
+
+    def _arguments(self, exaggeration: float) -> dict:
+        settings = self._settings
+        return {
+            "exaggeration": exaggeration,
+            "cfg_weight": settings.guidance,
+            "temperature": settings.temperature,
+            "min_p": settings.min_p,
+            "top_p": settings.top_p,
+            "top_k": settings.top_k,
+            "norm_loudness": settings.norm_loudness,
+        }
 
 
 def _named(voice: VoiceRef, rename) -> str:

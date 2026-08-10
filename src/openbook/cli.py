@@ -21,10 +21,12 @@ from .source.epub import BookDetails, read_details
 from .speech import Cache, SilentEngine
 from .speech.package import have_ffmpeg, write_m4b
 
-# chatterbox is the engine a book ships in and kokoro is the one to fall
-# back to. silent stays the default of the commands, because it needs
-# nothing installed and answers the questions about timing.
-ENGINES = ("silent", "espeak", "kokoro", "chatterbox")
+# chatterbox reads in the voice of a recording and kokoro is the one to fall
+# back to. chatterbox-turbo is the same idea through a model that reads several
+# times faster and holds one loudness by itself. silent stays the default of
+# the commands, because it needs nothing installed and answers the questions
+# about timing.
+ENGINES = ("silent", "espeak", "kokoro", "chatterbox", "chatterbox-turbo")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -322,12 +324,13 @@ def _engine_for(options):
     captions and the cards of a whole volume in seconds.
     """
     asked = getattr(options, "engine", "silent")
-    if asked == "chatterbox":
-        from .speech.chatterbox import ChatterboxEngine
+    if asked.startswith("chatterbox"):
+        from .speech.chatterbox import ChatterboxEngine, ChatterboxTurboEngine
 
         # The voices are recordings named in cast.toml and read from the
         # project directory, so the engine has to be told where that is.
-        return ChatterboxEngine(directory=Path(options.project))
+        family = ChatterboxTurboEngine if asked.endswith("turbo") else ChatterboxEngine
+        return family(directory=Path(options.project))
     if asked == "espeak":
         from .speech.espeak import EspeakEngine
 

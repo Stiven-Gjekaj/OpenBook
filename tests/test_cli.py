@@ -705,3 +705,23 @@ def test_one_chapter_keeps_the_number_its_volume_gives_it(project):
     assert len(volume.every) > 1, "the whole book is still there to count with"
     last = last_chapters(volume.every)
     assert last[volume.chapters[0].volume] >= volume.chapters[0].number
+
+
+def test_both_chatterbox_models_can_be_asked_for(project):
+    import argparse
+
+    from openbook.cli import _engine_for
+    from openbook.speech.chatterbox import ChatterboxEngine, ChatterboxTurboEngine
+
+    for name, want in (
+        ("chatterbox", ChatterboxEngine),
+        ("chatterbox-turbo", ChatterboxTurboEngine),
+    ):
+        made = _engine_for(argparse.Namespace(engine=name, project=str(project)))
+        assert isinstance(made, want)
+        assert made.name == name
+
+
+def test_an_engine_nobody_has_is_refused_by_the_command_line(project):
+    with pytest.raises(SystemExit):
+        main(["-C", str(project), "render", "--volume", "V", "--engine", "turbo"])

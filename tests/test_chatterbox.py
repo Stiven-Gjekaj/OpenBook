@@ -5,9 +5,17 @@ from openbook.errors import OpenBookError
 from openbook.speech.chatterbox import (
     MAX_CHARACTERS,
     ChatterboxEngine,
+    ChatterboxTurboEngine,
     Settings,
+    TurboSettings,
     device,
     installed,
+)
+
+# Both models answer to the same questions, so the questions are asked of both
+# and neither can drift away from the other.
+BOTH = pytest.mark.parametrize(
+    "family", [ChatterboxEngine, ChatterboxTurboEngine], ids=["chatterbox", "turbo"]
 )
 
 needs_chatterbox = pytest.mark.skipif(
@@ -26,6 +34,15 @@ def project(tmp_path):
 @pytest.fixture
 def engine(project):
     return ChatterboxEngine(directory=project)
+
+
+@pytest.fixture
+def both(project):
+    """One engine of each model, over the same project."""
+    return [
+        ChatterboxEngine(directory=project),
+        ChatterboxTurboEngine(directory=project),
+    ]
 
 
 def test_the_engine_names_itself(engine):
@@ -246,3 +263,136 @@ def test_the_whole_key_has_not_moved(tmp_path):
         )
         == "ae6e70b94f7b33f29ab40b41135baafc551ce6a1c0db16c85f125cc7247b7323"
     )
+
+
+# What both models must do the same way. A question asked of one and not the
+# other is how two engines come apart.
+
+
+@BOTH
+def test_both_take_less_text_at_once_than_the_other_engines(family, project):
+    from openbook.speech.engine import MAX_CHARACTERS as OTHERS
+
+    assert family(directory=project).max_characters < OTHERS
+
+
+@BOTH
+def test_both_put_the_recording_in_the_key(family, project):
+    engine = family(directory=project)
+    voice = Voice("voices/blook.wav")
+    before = engine.voice_key(voice)
+    (project / "voices" / "blook.wav").write_bytes(b"RIFF....WAVEfmt another take")
+    assert engine.voice_key(voice) != before
+
+
+@BOTH
+def test_both_leave_the_name_of_a_recording_out_of_the_key(family, project):
+    engine = family(directory=project)
+    (project / "voices" / "same.wav").write_bytes(
+        (project / "voices" / "blook.wav").read_bytes()
+    )
+    assert engine.voice_key(Voice("voices/same.wav")) == engine.voice_key(
+        Voice("voices/blook.wav")
+    )
+
+
+@BOTH
+def test_both_name_a_recording_that_is_not_there(family, project):
+    with pytest.raises(OpenBookError, match="no file there"):
+        family(directory=project).reference_for("voices/nobody.wav")
+
+
+@BOTH
+def test_both_find_a_missing_recording_before_loading_a_model(
+    family, project, monkeypatch
+):
+    engine = family(directory=project)
+
+    def refuse():
+        raise AssertionError("the model must not be loaded to check a file")
+
+    monkeypatch.setattr(engine, "_loaded", refuse)
+    with pytest.raises(OpenBookError, match="no file there"):
+        engine.speak("Words.", Voice("voices/nobody.wav"))
+
+
+@BOTH
+def test_both_refuse_nothing_to_say(family, project):
+    with pytest.raises(OpenBookError, match="given nothing to say"):
+        family(directory=project).speak("   ", Voice("voices/blook.wav"))
+
+
+@BOTH
+def test_both_refuse_a_blended_voice_with_what_to_use_instead(family, project):
+    with pytest.raises(OpenBookError, match="mix_matched"):
+        family(directory=project).speak(
+            "Stop.",
+            BlendedVoice(
+                parts=("voices/blook.wav", "voices/ivy.wav"), weights=(0.5, 0.5)
+            ),
+        )
+
+
+@BOTH
+def test_both_read_dialogue_with_more_feeling_than_narration(family, project):
+    settings = family(directory=project)._settings
+    assert settings.exaggeration("dialogue") > settings.exaggeration("narration")
+
+
+@BOTH
+def test_both_let_a_character_say_otherwise(family, project):
+    settings = family(directory=project)._settings
+    assert settings.exaggeration("narration", 0.9) == 0.9
+
+
+# What tells the two apart.
+
+
+def test_the_two_models_do_not_share_a_line(both, project):
+    """Both readings of a chapter are held at once, so they can be compared.
+
+    The name of the engine is in the key, so nothing had to be arranged for
+    this. It is here because it is the reason the second model can be tried at
+    all without losing the first.
+    """
+    from openbook.cast.utterance import Utterance
+    from openbook.speech.cache import key_of
+
+    said = Utterance(text="A line.", voice=Voice("voices/blook.wav"), kind="narration")
+    plain, turbo = both
+    assert key_of(said, plain) != key_of(said, turbo)
+
+
+def test_turbo_starts_from_its_own_numbers():
+    # Turbo reads flat at zero where the older model reads flat at one half,
+    # so the numbers tuned for that one do not carry across.
+    assert TurboSettings().narration != Settings().narration
+    assert TurboSettings().guidance == 0.0
+    assert TurboSettings().norm_loudness is True
+
+
+def test_turbo_names_its_own_arguments_in_its_version():
+    # Every one of them changes the audio without changing the words.
+    plain = TurboSettings()
+    for changed in (
+        TurboSettings(min_p=0.1),
+        TurboSettings(top_p=0.5),
+        TurboSettings(top_k=50),
+        TurboSettings(norm_loudness=False),
+    ):
+        assert changed.key() != plain.key()
+
+
+def test_turbo_asks_the_model_for_the_things_only_it_takes(project):
+    engine = ChatterboxTurboEngine(directory=project)
+    asked = engine._arguments(0.4)
+    assert asked["exaggeration"] == 0.4
+    assert asked["norm_loudness"] is True
+    assert "top_k" in asked
+
+
+def test_the_older_model_asks_for_only_what_it_takes(project):
+    # top_k and norm_loudness do not exist on it, and passing them would be a
+    # TypeError inside the model rather than anything a person could read.
+    asked = ChatterboxEngine(directory=project)._arguments(0.4)
+    assert set(asked) == {"exaggeration", "cfg_weight", "temperature"}
