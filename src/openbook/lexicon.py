@@ -45,6 +45,16 @@ class Lexicon:
     def says(self, word: str) -> str | None:
         return self._lowered.get(word.lower())
 
+    def has(self, word: str) -> bool:
+        """Whether the file holds this word at all, answered or not.
+
+        This is not the same question as says. A word written down with its
+        sound left blank is still waiting for an answer, so the report goes on
+        naming it, and it is already in the file, so a merge must not put it
+        there twice.
+        """
+        return word.lower() in self._lowered
+
     def apply(self, text: str) -> str:
         """Put the entries into a piece of text.
 

@@ -9,7 +9,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
   <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
-  <img src="https://img.shields.io/badge/tests-433_passing-427819?style=for-the-badge" alt="433 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-443_passing-427819?style=for-the-badge" alt="443 tests passing"/>
 </p>
 
 <p align="center">
@@ -67,7 +67,7 @@ and a page for checking the result by ear.
 | Parse a chapter into segments | Built. 7163 lines of dialogue, 186 speaker codes |
 | Give each segment a voice | Built. Unison lines get one blended voice |
 | Plan the pauses and divide long lines | Built. 16,905 utterances, none over the engine limit |
-| Find the words needing a pronunciation | Built. 539 words, most frequent first |
+| Find the words needing a pronunciation | Built. 539 words, and a merge for new chapters |
 | Speak, through a cache | Built. Kokoro, espeak-ng, and a silent engine for timing |
 | Write an M4B with chapter marks | Built. Levelled to -19 LUFS, with a cover |
 | One video for each volume, for YouTube | Built. Cards, description, captions |

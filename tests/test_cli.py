@@ -413,3 +413,140 @@ def test_a_book_file_that_goes_missing_is_still_reported(project):
     (project / "book.epub").unlink()
     with pytest.raises(OpenBookError, match="missing"):
         opened.chapters()
+
+
+def small_dictionary(words):
+    """Stand in for the word list of the machine, so a test is not tied to it."""
+    import openbook.lexicon as lexicon_module
+
+    real = lexicon_module.known_words
+    lexicon_module.known_words = lambda: set(words)
+    return real, lexicon_module
+
+
+def a_book_saying(project, text):
+    make_epub(
+        project / "book.epub",
+        [
+            ("a.xhtml", "(Chapter -1 || Archive) The Continuity.", "<p>skip</p>"),
+            ("b.xhtml", "(Chapter 0 || Prologue) Point - Null.", f"<p>{text}</p>"),
+        ],
+    )
+    return project
+
+
+def words_with(project, argv, known=("the", "and")):
+    real, module = small_dictionary(known)
+    try:
+        return main(["-C", str(project), "words", *argv])
+    finally:
+        module.known_words = real
+
+
+def test_merge_adds_only_the_words_that_are_not_there_yet(project, capsys):
+    a_book_saying(project, "Vazroth and Nilah and Astra")
+    (project / "lexicon.toml").write_text(
+        '[words]\n"vazroth" = "Vaz-roth"\n"nilah" = ""\n', encoding="utf-8"
+    )
+    assert words_with(project, ["--merge"]) == 0
+
+    text = (project / "lexicon.toml").read_text(encoding="utf-8")
+    assert text.count('"astra"') == 1
+    # Answered or not, a word already written down is left where it is.
+    assert text.count('"vazroth"') == 1
+    assert text.count('"nilah"') == 1
+    assert '"vazroth" = "Vaz-roth"' in text
+
+
+def test_merge_keeps_every_answer_and_comment_already_written(project, capsys):
+    # The file holds work somebody sat down and did. None of it survives a
+    # tool that reads a file and writes it back out again.
+    a_book_saying(project, "Vazroth and Astra")
+    written = project / "lexicon.toml"
+    written.write_text(
+        "# My own note at the top.\n"
+        "[words]\n"
+        '"vazroth" = "Vaz-roth"  # I checked this one by ear\n',
+        encoding="utf-8",
+    )
+    assert words_with(project, ["--merge"]) == 0
+
+    text = written.read_text(encoding="utf-8")
+    assert "# My own note at the top." in text
+    assert '"vazroth" = "Vaz-roth"  # I checked this one by ear' in text
+    assert '"astra" = ""' in text
+
+
+def test_a_merged_file_reads_back(project, capsys):
+    # The rule this project keeps: a tool must read what it writes.
+    from openbook.lexicon import load_lexicon
+
+    a_book_saying(project, "Vazroth and Nilah's and Astra")
+    (project / "lexicon.toml").write_text(
+        '[words]\n"vazroth" = "Vaz-roth"\n', encoding="utf-8"
+    )
+    assert words_with(project, ["--merge"]) == 0
+
+    lexicon = load_lexicon(project / "lexicon.toml")
+    assert lexicon.says("vazroth") == "Vaz-roth"
+    assert lexicon.has("nilah's"), "a word holding an apostrophe survived"
+    assert lexicon.has("astra")
+
+
+def test_merge_says_so_when_there_is_nothing_to_add(project, capsys):
+    a_book_saying(project, "Vazroth and Vazroth")
+    written = project / "lexicon.toml"
+    before = '[words]\n"vazroth" = "Vaz-roth"\n'
+    written.write_text(before, encoding="utf-8")
+    assert words_with(project, ["--merge"]) == 0
+    assert "nothing to add" in capsys.readouterr().out
+    assert written.read_text(encoding="utf-8") == before, "the file was not touched"
+
+
+def test_merge_makes_the_table_when_the_file_has_none(project, capsys):
+    from openbook.lexicon import load_lexicon
+
+    a_book_saying(project, "Vazroth and Astra")
+    (project / "lexicon.toml").write_text(
+        "# Only a comment so far.\n", encoding="utf-8"
+    )
+    assert words_with(project, ["--merge"]) == 0
+    assert load_lexicon(project / "lexicon.toml").has("astra")
+
+
+def test_merge_with_no_file_names_the_flag_that_makes_one(project, capsys):
+    a_book_saying(project, "Vazroth")
+    assert words_with(project, ["--merge"]) == 2
+    err = capsys.readouterr().err
+    assert "no" in err and "--write" in err
+
+
+def test_write_over_a_file_that_exists_names_merge(project, capsys):
+    a_book_saying(project, "Vazroth")
+    (project / "lexicon.toml").write_text("[words]\n", encoding="utf-8")
+    assert words_with(project, ["--write"]) == 2
+    assert "--merge" in capsys.readouterr().err
+
+
+def test_write_and_merge_cannot_be_asked_for_together(project):
+    with pytest.raises(SystemExit):
+        main(["-C", str(project), "words", "--write", "--merge"])
+
+
+def test_a_merge_that_would_not_read_back_leaves_the_file_alone(tmp_path):
+    # Defensive. A lexicon holds one table, so the normal path cannot make an
+    # unreadable file, and the check is here because the file it adds to holds
+    # work that must not be lost to a mistake this one cannot foresee.
+    from openbook.cli import _readable
+    from openbook.errors import OpenBookError
+
+    with pytest.raises(OpenBookError, match="does not read back"):
+        _readable('[words]\n"a" = \n', tmp_path / "lexicon.toml", 1)
+
+
+def test_a_merge_that_loses_an_entry_leaves_the_file_alone(tmp_path):
+    from openbook.cli import _readable
+    from openbook.errors import OpenBookError
+
+    with pytest.raises(OpenBookError, match="where 3 were meant"):
+        _readable('[words]\n"a" = ""\n', tmp_path / "lexicon.toml", 3)

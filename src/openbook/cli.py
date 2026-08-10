@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import tomllib
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -59,10 +60,18 @@ def build_parser() -> argparse.ArgumentParser:
         "words", help="list the words that need a pronunciation entry"
     )
     words.add_argument("--limit", type=int, default=60, help="how many to show")
-    words.add_argument(
+    # One makes the file and one adds to it. Each refuses the other's job and
+    # names it, so neither can write over what you have already answered.
+    writing = words.add_mutually_exclusive_group()
+    writing.add_argument(
         "--write",
         action="store_true",
         help="write lexicon.toml with the words found and their sound left blank",
+    )
+    writing.add_argument(
+        "--merge",
+        action="store_true",
+        help="add the words that are not in lexicon.toml yet to the end of it",
     )
 
     render = commands.add_parser("render", help="make the audio for a volume")
@@ -300,9 +309,11 @@ def _words(options) -> int:
     written = project.directory / "lexicon.toml"
     if options.write and written.exists():
         raise OpenBookError(
-            f"{written} exists already. Move it out of the way, or add the "
-            "words by hand, so that nothing you have written is lost"
+            f"{written} exists already. Use --merge to add the words that are "
+            "not in it yet, so that nothing you have written is lost"
         )
+    if options.merge and not written.exists():
+        raise OpenBookError(f"there is no {written} to add to. Use --write to make one")
 
     if not have_dictionary():
         raise OpenBookError(
@@ -319,6 +330,8 @@ def _words(options) -> int:
         if isinstance(segment, Narration | Dialogue)
     ]
     unknown = find_unknown(spoken, lexicon)
+    if options.merge:
+        return _merge_lexicon(written, unknown, lexicon)
     if options.write:
         written.write_text(_starter_lexicon(unknown), encoding="utf-8")
         print(f"{written}")
@@ -558,14 +571,83 @@ def _starter_lexicon(unknown) -> str:
         "",
         "[words]",
     ]
-    for entry in unknown:
-        seen = f"{entry.count} times, first in chapter {entry.chapter}"
-        # Every key is quoted. A word holding an apostrophe, and there are many
-        # of those, is not a name TOML accepts on its own, and the file would
-        # not read back.
-        name = entry.word.replace("\\", "\\\\").replace('"', '\\"')
-        lines.append(f'"{name}" = ""  # {seen}')
+    lines.extend(_entry_line(entry) for entry in unknown)
     return "\n".join(lines) + "\n"
+
+
+def _entry_line(entry) -> str:
+    """One word, with its sound left blank and its count beside it.
+
+    Every key is quoted. A word holding an apostrophe, and there are many of
+    those, is not a name TOML accepts on its own, and the file would not read
+    back.
+    """
+    name = entry.word.replace("\\", "\\\\").replace('"', '\\"')
+    times = "time" if entry.count == 1 else "times"
+    return f'"{name}" = ""  # {entry.count} {times}, first in chapter {entry.chapter}'
+
+
+def _merge_lexicon(path: Path, unknown, lexicon) -> int:
+    """Add the words that are not in the lexicon yet to the end of it.
+
+    The file is added to and never rewritten. It holds answers somebody sat
+    down and worked out, in whatever order and with whatever comments they
+    chose, and none of that survives a tool that reads a file and writes it
+    back out again.
+
+    A word already written down is left alone whether it has an answer or not.
+    A blank entry is a word waiting for one, and putting it in the file a
+    second time helps nobody.
+    """
+    fresh = [entry for entry in unknown if not lexicon.has(entry.word)]
+    if not fresh:
+        print(f"{path}")
+        print(f"  nothing to add. All {len(lexicon)} words the book says are in it")
+        return 0
+
+    text = path.read_text(encoding="utf-8")
+    added = [
+        "",
+        f"# Added by 'openbook words --merge'. {len(fresh)} words the book says",
+        "# that had no entry, most often first.",
+    ]
+    # A lexicon holds one table and it is [words], so new keys at the end of
+    # the file land in it. A file that never declared it needs the header, and
+    # a file that did must not get it twice: TOML refuses a table named twice.
+    if "words" not in tomllib.loads(text):
+        added.append("[words]")
+    added.extend(_entry_line(entry) for entry in fresh)
+    made = text.rstrip("\n") + "\n" + "\n".join(added) + "\n"
+
+    # Read what is about to be written before anything is written. A lexicon
+    # that will not parse is worse than one that is out of date, and the file
+    # this is adding to is not one to leave broken.
+    _readable(made, path, len(lexicon) + len(fresh))
+
+    path.write_text(made, encoding="utf-8")
+    print(f"{path}")
+    print(f"  {len(fresh)} words added, each with its sound left blank")
+    for entry in fresh[:5]:
+        print(f"    {entry.word}")
+    if len(fresh) > 5:
+        print(f"    and {len(fresh) - 5} more")
+    return 0
+
+
+def _readable(text: str, path: Path, expected: int) -> None:
+    try:
+        found = tomllib.loads(text).get("words", {})
+    except tomllib.TOMLDecodeError as error:
+        raise OpenBookError(
+            f"{path} was left alone, because adding the words to it would have "
+            f"made a file that does not read back: {error}"
+        ) from error
+    if len(found) != expected:
+        raise OpenBookError(
+            f"{path} was left alone. Adding the words to it would have given "
+            f"{len(found)} entries where {expected} were meant, so something "
+            "in the file is not what this expected"
+        )
 
 
 def _write_captions(project, beside, report, *, announcements: bool = False):

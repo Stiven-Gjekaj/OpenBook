@@ -54,8 +54,10 @@ book it was written for has not been tested, whatever its tests say.
 - Kokoro, espeak-ng, and a silent engine that gives quiet of the right length.
 - Every piece of audio is kept under a key made from the text, the voice, the
   engine, and the version of the engine. A correction makes one line again.
-- `lexicon.toml` says how an invented name is said, everywhere in the book.
-  `openbook words` finds the words that need an entry, most frequent first.
+- `lexicon.toml` says how an invented name is said, everywhere in the book,
+  the intro and the outro included. `openbook words` finds the words that need
+  an entry, most frequent first. `--write` makes the file and `--merge` adds
+  the words new chapters brought, without rewriting a line of what you wrote.
 
 ### It writes files
 

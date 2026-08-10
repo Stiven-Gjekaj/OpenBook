@@ -220,8 +220,25 @@ voice says an invented name the same wrong way every time it appears, for the
 whole book, and no casting decision repairs it.
 
 `openbook words` finds the words that need an entry, most frequent first.
-`openbook words --write` writes this file with every one of them and their
-sounds left blank, and refuses to write over a file that is already there.
+
+| Command | What it does |
+| ------- | ------------ |
+| `openbook words` | List the words that need an entry |
+| `openbook words --write` | Make the file, every sound left blank |
+| `openbook words --merge` | Add the words that are not in the file yet |
+
+`--write` refuses to write over a file that is already there, and `--merge`
+refuses when there is none. Each names the other.
+
+**`--merge` adds to the end of the file and never rewrites it**, so every
+answer, comment and ordering you chose stays exactly where you put it. Use it
+when new chapters bring new names. A word already written down is left alone
+whether it has an answer or not, so a blank entry is never added twice.
+
+That gives you a way to say a word is fine as it is: leave its entry in the
+file with a blank sound. It changes no audio and it keeps the word out of
+every later merge. `openbook words` goes on listing it, because a blank entry
+is a question nobody has answered.
 
 ---
 

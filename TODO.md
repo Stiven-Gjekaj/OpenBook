@@ -31,15 +31,7 @@ writes, and the checks that refuse a video whose picture and sound disagree.
 
 ## Still to build
 
-The list of code is short now. Everything below is small, and none of it stops
-a volume being made.
-
-### Speaking
-
-- [ ] A way to add the words a new chapter brought to a `lexicon.toml` that
-      already exists. `openbook words --write` refuses to write over a file, so
-      that nothing you wrote is lost, and there is no way yet to put only the
-      new blanks in.
+Nothing in the code. What is left is the author's own work, further down.
 
 ### Repository
 
