@@ -95,6 +95,13 @@ def cast_with_voices(project):
 
 
 def test_check_is_ready_once_every_voice_is_chosen(project, capsys):
+    # Being ready includes having ffmpeg, so this cannot pass without it.
+    import shutil
+
+    if not shutil.which("ffmpeg"):
+        import pytest
+
+        pytest.skip("ffmpeg is not installed")
     assert main(["-C", str(cast_with_voices(project)), "check"]) == 0
     assert "ready" in capsys.readouterr().out
 

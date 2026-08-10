@@ -125,9 +125,9 @@ def mix_music(speech: Path, music: Music, out: Path) -> Path:
     with the speech as the key. Where somebody talks the music drops; where
     nobody talks it comes back.
     """
-    require_ffmpeg()
     if not music.path.exists():
         raise OpenBookError(f"{music.path}: the music file does not exist")
+    require_ffmpeg()
 
     graph = (
         f"[1:a]volume={music.level}[bed];"
@@ -180,9 +180,9 @@ def write_video(
     nothing to encode however long the volume is, because every frame is the
     same. A loop costs real time, so measure before choosing a long one.
     """
-    require_ffmpeg()
     if not visual.exists():
         raise OpenBookError(f"{visual}: the picture does not exist")
+    require_ffmpeg()
 
     # Before the encode and not after it. Learning that a volume is too long
     # once an hour of encoding has gone by helps nobody.
