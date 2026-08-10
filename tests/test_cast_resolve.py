@@ -223,3 +223,33 @@ def test_two_characters_together_are_held_in_step(grammar, cast):
     # The two make different audio out of the same voices, so they must not
     # share a piece of it in the cache.
     assert voice.key() != MixedVoice(parts=voice.parts).key()
+
+
+def test_a_number_written_for_a_character_reaches_the_line(grammar, cast, tmp_path):
+    # The cast file says how much feeling one character is read with, and the
+    # line carries it to whichever engine ends up speaking.
+    path = tmp_path / "cast.toml"
+    path.write_text(
+        '[narrator]\nvoice = "af_heart"\nexaggeration = 0.25\n\n'
+        '[cast.IVY]\nname = "Ivy"\nvoice = "bf_emma"\nexaggeration = 0.85\n',
+        encoding="utf-8",
+    )
+    told = load_cast(path)
+    result = items("<p>Prose.</p><p><strong>IVY</strong>: Stop.</p>", grammar, told)
+    said = [i for i in result if isinstance(i, Utterance)]
+
+    assert said[0].exaggeration == 0.25, "the announcement is the narrator"
+    assert [i.exaggeration for i in said if i.kind == "narration"] == [0.25]
+    assert [i.exaggeration for i in said if i.kind == "dialogue"] == [0.85]
+
+
+def test_a_character_with_no_number_carries_none(grammar, cast):
+    # Nothing written down means the engine chooses from the kind of the line.
+    result = items("<p><strong>IVY</strong>: Stop.</p>", grammar, cast)
+    said = [i for i in result if isinstance(i, Utterance)]
+    assert all(i.exaggeration is None for i in said)
+
+
+def test_an_exaggeration_outside_the_range_is_refused():
+    with pytest.raises(ValueError, match="between 0 and 2"):
+        Utterance(text="x", voice=Voice("a"), kind="narration", exaggeration=5.0)

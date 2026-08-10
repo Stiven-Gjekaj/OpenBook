@@ -52,7 +52,9 @@ def key_of(utterance: Utterance, engine) -> str:
     """
     return key_for(
         utterance.text,
-        engine.voice_key(utterance.voice),
+        engine.voice_key(
+            utterance.voice, kind=utterance.kind, exaggeration=utterance.exaggeration
+        ),
         engine.name,
         engine.version,
     )

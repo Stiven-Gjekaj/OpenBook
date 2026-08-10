@@ -38,6 +38,7 @@ def resolve_chapter(
 ) -> tuple[Item, ...]:
     """Give every segment of a chapter a voice."""
     narrator = _narrator(cast, chapter.number)
+    told = cast.narrator_exaggeration
     items: list[Item] = []
 
     if grammar.render.read_chapter_names:
@@ -46,20 +47,30 @@ def resolve_chapter(
                 text=_announcement(chapter, grammar),
                 voice=narrator,
                 kind=ANNOUNCEMENT,
+                exaggeration=told,
             )
         )
 
     for segment in chapter.segments:
-        items.extend(_resolve(segment, chapter, grammar, cast, narrator))
+        items.extend(_resolve(segment, chapter, grammar, cast, narrator, told))
 
     return tuple(items)
 
 
 def _resolve(
-    segment, chapter: ParsedChapter, grammar: Grammar, cast: Cast, narrator: VoiceRef
+    segment,
+    chapter: ParsedChapter,
+    grammar: Grammar,
+    cast: Cast,
+    narrator: VoiceRef,
+    told: float | None = None,
 ) -> list[Item]:
     if isinstance(segment, Narration):
-        return [Utterance(text=segment.text, voice=narrator, kind=NARRATION)]
+        return [
+            Utterance(
+                text=segment.text, voice=narrator, kind=NARRATION, exaggeration=told
+            )
+        ]
 
     if isinstance(segment, SceneBreak):
         return [Silence(seconds=grammar.render.at_scene_break, reason=SCENE_BREAK)]
@@ -67,10 +78,14 @@ def _resolve(
     if isinstance(segment, EndMatter):
         if not grammar.render.read_end_matter:
             return []
-        return [Utterance(text=segment.text, voice=narrator, kind=END_MATTER)]
+        return [
+            Utterance(
+                text=segment.text, voice=narrator, kind=END_MATTER, exaggeration=told
+            )
+        ]
 
     if isinstance(segment, Dialogue):
-        return _resolve_dialogue(segment, chapter, grammar, cast, narrator)
+        return _resolve_dialogue(segment, chapter, grammar, cast, narrator, told)
 
     raise OpenBookError(f"the cast stage does not know the segment {segment!r}")
 
@@ -81,23 +96,35 @@ def _resolve_dialogue(
     grammar: Grammar,
     cast: Cast,
     narrator: VoiceRef,
+    told: float | None = None,
 ) -> list[Item]:
     voice = _dialogue_voice(segment, chapter.number, grammar, cast)
     speaker = "/".join(segment.speakers)
+    # A line two characters share takes the number of the first of them, the
+    # same way the primary mode takes the voice of the first of them.
+    said = cast.resolve(segment.speakers[0], chapter.number).exaggeration
     items: list[Item] = []
 
     for piece in segment.pieces:
         if isinstance(piece, Speech):
             items.append(
-                Utterance(text=piece.text, voice=voice, kind=DIALOGUE, speaker=speaker)
+                Utterance(
+                    text=piece.text,
+                    voice=voice,
+                    kind=DIALOGUE,
+                    speaker=speaker,
+                    exaggeration=said,
+                )
             )
         elif isinstance(piece, Action):
-            items.extend(_resolve_action(piece, grammar, narrator))
+            items.extend(_resolve_action(piece, grammar, narrator, told))
 
     return items
 
 
-def _resolve_action(action: Action, grammar: Grammar, narrator: VoiceRef) -> list[Item]:
+def _resolve_action(
+    action: Action, grammar: Grammar, narrator: VoiceRef, told: float | None = None
+) -> list[Item]:
     """Give an action the treatment the configuration asks for.
 
     The words of an action are never spoken by the character. The author wrote
@@ -107,7 +134,9 @@ def _resolve_action(action: Action, grammar: Grammar, narrator: VoiceRef) -> lis
     if mode == "drop":
         return []
     if mode == "narrator":
-        return [Utterance(text=action.text, voice=narrator, kind=ACTION)]
+        return [
+            Utterance(text=action.text, voice=narrator, kind=ACTION, exaggeration=told)
+        ]
     return [Silence(seconds=grammar.render.at_action, reason=f"action: {action.text}")]
 
 

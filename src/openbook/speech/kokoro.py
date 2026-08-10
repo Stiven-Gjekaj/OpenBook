@@ -14,7 +14,7 @@ are said differently in the two.
 
 from __future__ import annotations
 
-from ..cast.utterance import BlendedVoice, Voice, VoiceRef
+from ..cast.utterance import NARRATION, BlendedVoice, Voice, VoiceRef
 from ..errors import OpenBookError
 from .audio import Audio
 from .engine import MAX_CHARACTERS
@@ -58,10 +58,23 @@ class KokoroEngine:
     def max_characters(self) -> int | None:
         return self._max
 
-    def voice_key(self, voice: VoiceRef) -> str:
+    def voice_key(
+        self,
+        voice: VoiceRef,
+        *,
+        kind: str = NARRATION,
+        exaggeration: float | None = None,
+    ) -> str:
         return voice.key()
 
-    def speak(self, text: str, voice: VoiceRef) -> Audio:
+    def speak(
+        self,
+        text: str,
+        voice: VoiceRef,
+        *,
+        kind: str = NARRATION,
+        exaggeration: float | None = None,
+    ) -> Audio:
         if not text.strip():
             raise OpenBookError("a speech engine was given nothing to say")
 

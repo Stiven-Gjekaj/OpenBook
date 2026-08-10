@@ -80,28 +80,40 @@ def render_plan(
     return joined, report
 
 
-def _say(engine, text: str, voice: VoiceRef) -> Audio:
+def _say(engine, text: str, voice: VoiceRef, *, kind=None, exaggeration=None) -> Audio:
     """Get one piece of audio for one line, whatever kind of voice says it.
 
     A mixed voice is the only one an engine never sees. Laying two readings
     over each other is arithmetic on samples and not a thing a model does, so
     it happens here and every engine stays ignorant of it.
     """
+    asked = {}
+    if kind is not None:
+        asked["kind"] = kind
+    if exaggeration is not None:
+        asked["exaggeration"] = exaggeration
+
     if isinstance(voice, MixedVoice):
-        pieces = [engine.speak(text, Voice(name=part)) for part in voice.parts]
+        pieces = [engine.speak(text, Voice(name=part), **asked) for part in voice.parts]
         if voice.matched:
             from .stretch import to_one_length
 
             pieces = to_one_length(pieces)
         return overlay(pieces, engine.rate)
-    return engine.speak(text, voice)
+    return engine.speak(text, voice, **asked)
 
 
 def _speak(utterance: Utterance, engine, retries: int, report: RenderReport) -> Audio:
     last: Exception | None = None
     for attempt in range(retries + 1):
         try:
-            return _say(engine, utterance.text, utterance.voice)
+            return _say(
+                engine,
+                utterance.text,
+                utterance.voice,
+                kind=utterance.kind,
+                exaggeration=utterance.exaggeration,
+            )
         except OpenBookError:
             # An error a person can correct. Trying again gives the same
             # answer, so it goes straight up.

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from ..cast.utterance import BlendedVoice, VoiceRef
+from ..cast.utterance import NARRATION, BlendedVoice, VoiceRef
 from ..errors import OpenBookError
 from .audio import Audio
 
@@ -47,9 +47,31 @@ class Engine(Protocol):
     @property
     def max_characters(self) -> int | None: ...
 
-    def speak(self, text: str, voice: VoiceRef) -> Audio: ...
+    def speak(
+        self,
+        text: str,
+        voice: VoiceRef,
+        *,
+        kind: str = NARRATION,
+        exaggeration: float | None = None,
+    ) -> Audio:
+        """Say one line.
 
-    def voice_key(self, voice: VoiceRef) -> str:
+        The kind is what the line is for: narration, dialogue, and so on. Most
+        engines have no use for it and take it to keep one interface. An engine
+        that reads with feeling uses it to know how much feeling to read with,
+        because a line somebody shouts and a line the narrator states are not
+        read the same way.
+        """
+        ...
+
+    def voice_key(
+        self,
+        voice: VoiceRef,
+        *,
+        kind: str = NARRATION,
+        exaggeration: float | None = None,
+    ) -> str:
         """What the cache should call this voice.
 
         Nearly always the name of the voice, and that is what every engine
@@ -98,10 +120,23 @@ class SilentEngine:
     def max_characters(self) -> int | None:
         return self._max
 
-    def voice_key(self, voice: VoiceRef) -> str:
+    def voice_key(
+        self,
+        voice: VoiceRef,
+        *,
+        kind: str = NARRATION,
+        exaggeration: float | None = None,
+    ) -> str:
         return voice.key()
 
-    def speak(self, text: str, voice: VoiceRef) -> Audio:
+    def speak(
+        self,
+        text: str,
+        voice: VoiceRef,
+        *,
+        kind: str = NARRATION,
+        exaggeration: float | None = None,
+    ) -> Audio:
         if not text.strip():
             raise OpenBookError("a speech engine was given nothing to say")
         if isinstance(voice, BlendedVoice) and not voice.parts:

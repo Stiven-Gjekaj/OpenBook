@@ -100,9 +100,17 @@ class Utterance:
     kind: str
     speaker: str = NARRATOR
 
+    # How much feeling to read this line with, when the cast file says so for
+    # this character. Nothing here is a number an engine chose: an engine that
+    # reads with feeling picks its own from the kind of the line, and this is
+    # only the answer somebody wrote down instead.
+    exaggeration: float | None = None
+
     def __post_init__(self) -> None:
         if self.kind not in KINDS:
             raise ValueError(f"{self.kind!r} is not a kind of utterance")
+        if self.exaggeration is not None and not 0.0 <= self.exaggeration <= 2.0:
+            raise ValueError("an exaggeration is between 0 and 2")
 
 
 @dataclass(frozen=True)

@@ -25,9 +25,9 @@ class Counting(SilentEngine):
         super().__init__(**rest)
         self.calls = 0
 
-    def speak(self, text, voice):
+    def speak(self, text, voice, **rest):
         self.calls += 1
-        return super().speak(text, voice)
+        return super().speak(text, voice, **rest)
 
 
 class Failing(SilentEngine):
@@ -38,12 +38,12 @@ class Failing(SilentEngine):
         self.left = failures
         self.calls = 0
 
-    def speak(self, text, voice):
+    def speak(self, text, voice, **rest):
         self.calls += 1
         if self.left:
             self.left -= 1
             raise RuntimeError("the model stopped early")
-        return super().speak(text, voice)
+        return super().speak(text, voice, **rest)
 
 
 def test_a_plan_becomes_audio(tmp_path):

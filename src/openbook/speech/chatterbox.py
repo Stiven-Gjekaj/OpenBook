@@ -34,7 +34,14 @@ import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..cast.utterance import BlendedVoice, MixedVoice, Voice, VoiceRef
+from ..cast.utterance import (
+    DIALOGUE,
+    NARRATION,
+    BlendedVoice,
+    MixedVoice,
+    Voice,
+    VoiceRef,
+)
 from ..errors import OpenBookError
 from .audio import Audio
 
@@ -46,11 +53,19 @@ RATE = 24000
 # more pieces and buys back the failure that is hardest to find.
 MAX_CHARACTERS = 300
 
-# How much the reading leans on the feeling in the reference recording, and how
-# closely it holds to the reference at all. These are the values Chatterbox
-# ships with, and they are here so the version can name them: a change to
-# either makes different audio out of the same words.
-EXAGGERATION = 0.5
+# How much the reading leans on the feeling in the reference recording.
+#
+# Narration and dialogue do not want the same amount. A narrator states what
+# happened and holds a level tone for hours, and a character in a fantasy is
+# frightened or lying or giving an order. One value for both gives either a
+# theatrical narrator or a flat cast, and the book has 79 percent of the first
+# and all of the second.
+NARRATION_EXAGGERATION = 0.3
+DIALOGUE_EXAGGERATION = 0.7
+
+# How closely the reading holds to the reference, and how much the model is
+# allowed to wander. Neither depends on what a line is for, so both are the
+# same everywhere and both belong in the version.
 GUIDANCE = 0.5
 TEMPERATURE = 0.8
 
@@ -59,12 +74,35 @@ TEMPERATURE = 0.8
 class Settings:
     """What to ask of the model. Part of the cache key, so it is written out."""
 
-    exaggeration: float = EXAGGERATION
+    narration: float = NARRATION_EXAGGERATION
+    dialogue: float = DIALOGUE_EXAGGERATION
     guidance: float = GUIDANCE
     temperature: float = TEMPERATURE
 
+    def exaggeration(self, kind: str, asked: float | None = None) -> float:
+        """How much feeling to read one line with.
+
+        A number the cast file gives for a character wins, because somebody
+        wrote it down about that character. With nothing written down the kind
+        of the line decides.
+
+        Only dialogue is dialogue. An action that the narrator speaks, a
+        chapter announcement and the end matter are all the narrator talking,
+        and they are read the way the narration is read.
+        """
+        if asked is not None:
+            return asked
+        return self.dialogue if kind == DIALOGUE else self.narration
+
     def key(self) -> str:
-        return f"e{self.exaggeration:g}-g{self.guidance:g}-t{self.temperature:g}"
+        """What every line shares. The exaggeration is not here.
+
+        The exaggeration changes with the kind of the line, so it goes into
+        the key of each line instead. Then a change to how the cast is read
+        remakes the cast and leaves three hundred thousand words of narration
+        where they are.
+        """
+        return f"g{self.guidance:g}-t{self.temperature:g}"
 
 
 class ChatterboxEngine:
@@ -106,17 +144,35 @@ class ChatterboxEngine:
     def max_characters(self) -> int | None:
         return self._max
 
-    def voice_key(self, voice: VoiceRef) -> str:
-        """The name of the voice, and the recording it is taken from.
+    def voice_key(
+        self,
+        voice: VoiceRef,
+        *,
+        kind: str = NARRATION,
+        exaggeration: float | None = None,
+    ) -> str:
+        """The name of the voice, the recording, and how it is read.
 
         The name is a path and the sound is the file. A better take of the same
         character is written to the same path, and without the file in the key
         every line she has would come back in the old voice for ever, without
         a word about it anywhere.
-        """
-        return _named(voice, lambda name: f"{name}#{self._fingerprint(name)}")
 
-    def speak(self, text: str, voice: VoiceRef) -> Audio:
+        The exaggeration is here and not in the version, because it is chosen
+        by the kind of the line. In the version it would remake the whole book
+        every time the cast was tuned.
+        """
+        said = _named(voice, lambda name: f"{name}#{self._fingerprint(name)}")
+        return f"{said}@e{self._settings.exaggeration(kind, exaggeration):g}"
+
+    def speak(
+        self,
+        text: str,
+        voice: VoiceRef,
+        *,
+        kind: str = NARRATION,
+        exaggeration: float | None = None,
+    ) -> Audio:
         if not text.strip():
             raise OpenBookError("a speech engine was given nothing to say")
         if isinstance(voice, BlendedVoice):
@@ -141,7 +197,7 @@ class ChatterboxEngine:
         wave = model.generate(
             text,
             audio_prompt_path=str(reference),
-            exaggeration=self._settings.exaggeration,
+            exaggeration=self._settings.exaggeration(kind, exaggeration),
             cfg_weight=self._settings.guidance,
             temperature=self._settings.temperature,
         )

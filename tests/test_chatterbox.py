@@ -104,12 +104,61 @@ def test_a_blended_voice_is_refused_with_what_to_use_instead(engine):
         )
 
 
-def test_the_settings_are_part_of_the_version(project):
+def test_the_settings_every_line_shares_are_part_of_the_version(project):
     # A change to how the model reads makes different audio out of the same
     # words, so the cache must not hand back the old sound.
     plain = ChatterboxEngine(directory=project)
-    loud = ChatterboxEngine(directory=project, settings=Settings(exaggeration=0.9))
-    assert plain.version != loud.version
+    loose = ChatterboxEngine(directory=project, settings=Settings(temperature=1.1))
+    assert plain.version != loose.version
+
+
+def test_dialogue_is_read_with_more_feeling_than_narration(project):
+    # A narrator states what happened and holds one level for hours. A
+    # character in a fantasy is frightened, or lying, or giving an order.
+    settings = Settings()
+    assert settings.exaggeration("dialogue") > settings.exaggeration("narration")
+    assert settings.exaggeration("narration") == 0.3
+    assert settings.exaggeration("dialogue") == 0.7
+
+
+def test_the_narrator_reads_everything_that_is_not_dialogue_the_same_way(project):
+    # An action the narrator speaks, a chapter announcement and the end matter
+    # are all the narrator talking.
+    settings = Settings()
+    for kind in ("narration", "action", "announcement", "end matter"):
+        assert settings.exaggeration(kind) == settings.narration
+
+
+def test_a_number_written_for_a_character_wins(project):
+    settings = Settings()
+    assert settings.exaggeration("dialogue", 0.15) == 0.15
+    assert settings.exaggeration("narration", 0.9) == 0.9
+
+
+def test_how_a_line_is_read_is_part_of_its_key_and_not_the_version(project):
+    # The exaggeration changes with the kind of the line, so it cannot live in
+    # the version. There it would remake three hundred thousand words of
+    # narration every time somebody tuned the cast.
+    engine = ChatterboxEngine(directory=project)
+    voice = Voice("voices/black.wav")
+    assert engine.voice_key(voice, kind="narration") != engine.voice_key(
+        voice, kind="dialogue"
+    )
+    assert engine.voice_key(voice, kind="dialogue") != engine.voice_key(
+        voice, kind="dialogue", exaggeration=0.9
+    )
+
+
+def test_tuning_the_cast_leaves_the_narration_alone(project):
+    plain = ChatterboxEngine(directory=project)
+    louder = ChatterboxEngine(directory=project, settings=Settings(dialogue=0.9))
+    voice = Voice("voices/black.wav")
+    assert plain.voice_key(voice, kind="narration") == louder.voice_key(
+        voice, kind="narration"
+    )
+    assert plain.voice_key(voice, kind="dialogue") != louder.voice_key(
+        voice, kind="dialogue"
+    )
 
 
 def test_the_device_is_one_this_machine_has():

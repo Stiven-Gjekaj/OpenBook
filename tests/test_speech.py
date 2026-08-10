@@ -261,9 +261,9 @@ def test_a_mixed_voice_makes_the_engine_speak_once_for_each_part():
             super().__init__()
             self.said = []
 
-        def speak(self, text, voice):
+        def speak(self, text, voice, **rest):
             self.said.append(voice.name)
-            return super().speak(text, voice)
+            return super().speak(text, voice, **rest)
 
     engine = Counting()
     audio = _say(engine, "one two", MixedVoice(parts=("a", "b")))
@@ -330,7 +330,7 @@ def test_the_cache_asks_the_engine_what_to_call_a_voice():
     # An engine whose voice lives in a file says so, and the cache follows it
     # rather than the name alone.
     class Fingerprinting(SilentEngine):
-        def voice_key(self, voice):
+        def voice_key(self, voice, **rest):
             return f"{voice.key()}#take-two"
 
     said = Utterance(text="one two", voice=Voice("ivy.wav"), kind="narration")

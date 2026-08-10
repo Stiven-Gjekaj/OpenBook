@@ -110,6 +110,19 @@ class Table:
     def integer(self, key: str, default: Any = _MISSING) -> int:
         return self._typed(key, default, int, "a whole number")
 
+    def number(self, key: str, default: Any = _MISSING) -> float:
+        """A number that need not be whole. TOML gives 1 and 0.7 as two types."""
+        value = self._raw(key, default)
+        if value is default and default is not _MISSING:
+            return value
+        if isinstance(value, bool) or not isinstance(value, int | float):
+            raise ConfigError(
+                f"this must be a number, and it is {type(value).__name__}",
+                path=self._path,
+                key=self._key_name(key),
+            )
+        return float(value)
+
     def duration(self, key: str, default: Any = _MISSING) -> float:
         value = self.string(key, default)
         if isinstance(value, float):

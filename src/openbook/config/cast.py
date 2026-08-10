@@ -51,6 +51,11 @@ class Entry:
     voice: str
     chapters: Chapters | None = None
 
+    # How much feeling this character is read with, when somebody wrote a
+    # number down for them. Nothing here without one: an engine that reads
+    # with feeling then picks its own from the kind of the line.
+    exaggeration: float | None = None
+
     @property
     def is_cast(self) -> bool:
         return bool(self.voice)
@@ -64,6 +69,7 @@ class Cast:
     """Every entry in the cast file."""
 
     narrator: str
+    narrator_exaggeration: float | None
     entries: dict[str, tuple[Entry, ...]]
     aliases: dict[str, str]
 
@@ -152,6 +158,7 @@ def load_cast(path: Path) -> Cast:
 
     narrator_table = root.table("narrator")
     narrator = narrator_table.string("voice", "")
+    narrator_exaggeration = narrator_table.number("exaggeration", None)
     narrator_table.done()
 
     entries: dict[str, list[Entry]] = {}
@@ -164,6 +171,7 @@ def load_cast(path: Path) -> Cast:
                 code=code,
                 name=table.string("name", ""),
                 voice=table.string("voice", ""),
+                exaggeration=table.number("exaggeration", None),
             )
         )
         _add_aliases(aliases, table.strings("aliases", ()), code, path=name)
@@ -185,6 +193,7 @@ def load_cast(path: Path) -> Cast:
                     code=code,
                     name=table.string("name", ""),
                     voice=table.string("voice", ""),
+                    exaggeration=table.number("exaggeration", None),
                     chapters=parse_chapters(
                         table.string("chapters"), key=f"{key}.chapters", path=name
                     ),
@@ -197,6 +206,7 @@ def load_cast(path: Path) -> Cast:
 
     return Cast(
         narrator=narrator,
+        narrator_exaggeration=narrator_exaggeration,
         entries={code: tuple(group) for code, group in entries.items()},
         aliases=aliases,
     )
