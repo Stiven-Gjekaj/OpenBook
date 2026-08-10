@@ -151,18 +151,22 @@ class ChatterboxEngine:
         kind: str = NARRATION,
         exaggeration: float | None = None,
     ) -> str:
-        """The name of the voice, the recording, and how it is read.
+        """The recording a voice is taken from, and how it is read.
 
-        The name is a path and the sound is the file. A better take of the same
-        character is written to the same path, and without the file in the key
-        every line she has would come back in the old voice for ever, without
-        a word about it anywhere.
+        The recording, and not the name of it. A better take written over the
+        same path is a different voice and has to be made again, which is why
+        the file is in the key at all. A file that only changed its name is
+        the same voice, and holding the name here as well would throw away
+        every line a character has for a rename.
+
+        Two characters given one recording share their audio, which is right:
+        the same words in the same voice are the same sound.
 
         The exaggeration is here and not in the version, because it is chosen
         by the kind of the line. In the version it would remake the whole book
         every time the cast was tuned.
         """
-        said = _named(voice, lambda name: f"{name}#{self._fingerprint(name)}")
+        said = _named(voice, self._fingerprint)
         return f"{said}@e{self._settings.exaggeration(kind, exaggeration):g}"
 
     def speak(

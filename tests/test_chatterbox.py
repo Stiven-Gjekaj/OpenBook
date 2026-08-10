@@ -43,9 +43,9 @@ def test_it_takes_less_text_at_once_than_the_others():
 
 
 def test_the_recording_is_part_of_the_name_the_cache_uses(engine, project):
-    # The name of a voice is a path and the sound is the file. Without the
-    # file in the name, a better take written to the same path would be
-    # ignored for ever and nothing would say so.
+    # The sound is the file and not the path. Without the file in the name, a
+    # better take written to the same path would be ignored for ever and
+    # nothing would say so.
     voice = Voice("voices/blook.wav")
     before = engine.voice_key(voice)
 
@@ -53,7 +53,8 @@ def test_the_recording_is_part_of_the_name_the_cache_uses(engine, project):
     after = engine.voice_key(voice)
 
     assert before != after
-    assert before.startswith("voices/blook.wav#")
+    # The path is not in the key, so that a rename costs nothing.
+    assert "voices/blook.wav" not in before
 
 
 def test_the_same_recording_gives_the_same_name(engine):
@@ -66,7 +67,9 @@ def test_a_line_two_characters_share_names_both_recordings(engine, project):
     mixed = MixedVoice(parts=("voices/blook.wav", "voices/ivy.wav"), matched=True)
     made = engine.voice_key(mixed)
 
-    assert made.count("#") == 2
+    # Both recordings are named, so a better take of either remakes the line.
+    for part in mixed.parts:
+        assert engine.voice_key(Voice(part)).split("@")[0] in made
     # The shape of the voice survives, so a matched mix and a plain one still
     # do not share a piece of audio.
     assert made != engine.voice_key(MixedVoice(parts=mixed.parts))
@@ -170,3 +173,36 @@ def test_the_version_names_the_package():
     from openbook.speech.chatterbox import installed_version
 
     assert installed_version() != "unknown"
+
+
+def test_a_recording_under_another_name_is_the_same_voice(engine, project):
+    """Renaming a clip must not throw away every line a character has.
+
+    The key holds the recording and not the name of it. A better take written
+    over the same path is a different voice and is made again. A file that
+    only changed its name is the same voice and keeps its audio.
+    """
+    (project / "voices" / "narrator.wav").write_bytes(
+        (project / "voices" / "blook.wav").read_bytes()
+    )
+    assert engine.voice_key(Voice("voices/blook.wav")) == engine.voice_key(
+        Voice("voices/narrator.wav")
+    )
+
+
+def test_two_characters_given_one_recording_share_their_audio(engine, project):
+    # The same words in the same voice are the same sound. Zero and the
+    # nameless voice of a prologue are one recording and one set of audio.
+    (project / "voices" / "nameless.wav").write_bytes(
+        (project / "voices" / "blook.wav").read_bytes()
+    )
+    assert engine.voice_key(Voice("voices/nameless.wav")) == engine.voice_key(
+        Voice("voices/blook.wav")
+    )
+
+
+def test_a_different_take_is_still_a_different_voice(engine, project):
+    # The reason the recording is in the key at all.
+    before = engine.voice_key(Voice("voices/blook.wav"))
+    (project / "voices" / "blook.wav").write_bytes(b"RIFF....WAVEfmt a second take")
+    assert engine.voice_key(Voice("voices/blook.wav")) != before
