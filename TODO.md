@@ -45,30 +45,30 @@ matter.
 
 Done.
 
-- [ ] Give every segment a voice, through the cast file.
-- [ ] Stop the build on a speaker code with no entry, and on an entry with no
-      voice, and name the chapter.
-- [ ] Speak a unison line with one voice made from the two style vectors.
-- [ ] Put a pause only where the kind of the text changes. Two dialogue lines
-      together get none, and two narration paragraphs together get none.
-- [ ] Divide a long segment at a sentence end, so that no single piece is
-      longer than the engine accepts. Use a real sentence splitter and not a
-      full stop.
-- [ ] Write the plan out as a manifest that the cache can key on.
-- [ ] A command that prints the plan for a chapter, so a person can read every
-      line and its voice before any audio exists.
+- Give every segment a voice, through the cast file.
+- Stop the build on a speaker code with no entry, and on an entry with no
+  voice, and name the chapter.
+- Speak a unison line with one voice made from the two style vectors.
+- Put a pause only where the kind of the text changes. Two dialogue lines
+  together get none, and two narration paragraphs together get none.
+- Divide a long segment at a sentence end, so that no single piece is
+  longer than the engine accepts. Use a real sentence splitter and not a
+  full stop.
+- Write the plan out as a manifest that the cache can key on.
+- A command that prints the plan for a chapter, so a person can read every
+  line and its voice before any audio exists.
 
 ## Stage: lexicon
 
 Done. The finder reports 539 words over the whole book.
 
-- [ ] Read `lexicon.toml`.
-- [ ] Find the words that need an entry: compare every word of the book against
-      the dictionary of the phonemizer, and report what is missing, most
-      frequent first, with a chapter that holds it.
-- [ ] Put the entries into the text at plan time, so that the manuscript stays
-      clean.
-- [ ] A command that prints the report.
+- Read `lexicon.toml`.
+- Find the words that need an entry: compare every word of the book against
+  the dictionary of the phonemizer, and report what is missing, most
+  frequent first, with a chapter that holds it.
+- Put the entries into the text at plan time, so that the manuscript stays
+  clean.
+- A command that prints the report.
 
 This is the largest quality problem in the whole project. A fixed voice says an
 invented name the same wrong way for 47 hours, and no casting decision repairs
@@ -78,35 +78,35 @@ that.
 
 Done. Kokoro speaks, and a silent engine gives the right timing without a model.
 
-- [ ] An engine interface, so that a character can use a different engine from
-      the narrator.
-- [ ] The Kokoro engine.
-- [ ] Voice blending, both for a unison line and to widen the set of voices
-      past the ones the model ships.
-- [ ] A cache that keys on the text, the voice, the engine, its settings, and
-      the version of the model. A correction to one line then re-makes one line.
-- [ ] A retry for an engine that can fail, with a limit, because a model that
-      generates one word at a time sometimes repeats itself or stops early.
+- An engine interface, so that a character can use a different engine from
+  the narrator.
+- The Kokoro engine.
+- Voice blending, both for a unison line and to widen the set of voices
+  past the ones the model ships.
+- A cache that keys on the text, the voice, the engine, its settings, and
+  the version of the model. A correction to one line then re-makes one line.
+- A retry for an engine that can fail, with a limit, because a model that
+  generates one word at a time sometimes repeats itself or stops early.
 
 ## Stage: audio and packaging
 
 Mostly done. The M4B is written with its chapter marks. Loudness levelling and the per-chapter Opus are not.
 
-- [ ] Join the pieces with the silences that the plan asks for.
+- Join the pieces with the silences that the plan asks for.
 - [ ] Level the loudness to the audiobook standard.
-- [ ] Write one M4B file for each volume, with a chapter mark for each chapter.
+- Write one M4B file for each volume, with a chapter mark for each chapter.
 - [ ] Take the cover and the author out of the EPUB metadata for the file tags.
-- [ ] Name the file from the pattern in the configuration.
+- Name the file from the pattern in the configuration.
 
 ## Review
 
 - [ ] A page, written after a render, that lists every piece of speech with its
-      chapter, speaker, voice, text, and a button to hear it.
+  chapter, speaker, voice, text, and a button to hear it.
 - [ ] A list of the pieces worth looking at first: the long ones, a speaker
-      code seen for the first time, a line with digits or capitals, and a word
-      that the lexicon does not have.
+  code seen for the first time, a line with digits or capitals, and a word
+  that the lexicon does not have.
 - [ ] A file of corrections that the render reads, so that a marked line is
-      made again and nothing else is.
+  made again and nothing else is.
 
 ## The website
 
@@ -120,12 +120,12 @@ both, so the words on the page and the words in the audio cannot disagree.
 - [ ] A player beside the text, with one file for each chapter.
 - [ ] Remember where a person stopped, in their own browser.
 - [ ] Move the text with the audio, at least by paragraph, because the parse
-      already knows where each piece of speech starts.
+  already knows where each piece of speech starts.
 - [ ] A page for each volume, and a way to reach any chapter.
 - [ ] A link to download the M4B of a volume, for a person who wants it in an
-      audiobook application.
+  audiobook application.
 - [ ] Build with no framework. The pages are made from data that this project
-      already holds.
+  already holds.
 
 ### The two audio formats
 
@@ -134,9 +134,9 @@ about nine hours in one file, and a browser must fetch a large part of it to
 start in the middle.
 
 - [ ] Write one Opus file for each chapter, beside the M4B of each volume.
-      Opus at about 32 kbit for one channel is good for speech, and the whole
-      book is then near 680 MB. The player fetches one chapter, seeks in it
-      quickly, and loads nothing else.
+  Opus at about 32 kbit for one channel is good for speech, and the whole
+  book is then near 680 MB. The player fetches one chapter, seeks in it
+  quickly, and loads nothing else.
 
 ### Where to host it
 
@@ -177,5 +177,5 @@ second home, but it gives no control over the player.
 ## Repository
 
 - [ ] Move the test count in the readme when the number changes. A test should
-      check it, so that the badge cannot go stale on its own.
+  check it, so that the badge cannot go stale on its own.
 - [ ] Decide whether the project goes to PyPI. If it does, a release workflow.
