@@ -92,6 +92,32 @@ def youtube_description(
     return "\n".join(lines).strip() + "\n"
 
 
+def opening_words(chapter, count: int) -> str:
+    """The first words of a volume, for a sneak peek in the description.
+
+    Taken from the opening and not from anywhere later, so it cannot give away
+    something a listener has not reached. It ends at the end of a sentence
+    rather than in the middle of one.
+    """
+    from ..parse import Narration
+
+    said = " ".join(
+        segment.text for segment in chapter.segments if isinstance(segment, Narration)
+    )
+    words = said.split()
+    if not words or count <= 0:
+        return ""
+
+    piece = " ".join(words[:count])
+    # Back up to the last sentence that finished, so the peek does not stop in
+    # the middle of a thought.
+    for mark in (". ", "! ", "? "):
+        if mark in piece:
+            piece = piece[: piece.rfind(mark) + 1]
+            break
+    return piece.strip()
+
+
 def mix_music(speech: Path, music: Music, out: Path) -> Path:
     """Put a bed under the speech, and make it move out of the way.
 

@@ -58,6 +58,8 @@ class Style:
     title_size: int = 190
     body_size: int = 64
     faint_size: int = 40
+    volume_size: int = 50
+    volume_colour: str = "#9C8FD6"
 
     def __post_init__(self) -> None:
         for path in (self.title_font, self.body_font, self.title_back_font):
@@ -89,9 +91,19 @@ def wrap(draw, text: str, font, limit: int) -> list[str]:
 
 
 def make_card(
-    style: Style, out: Path, *, chapter: str = "", subtitle: str = ""
+    style: Style,
+    out: Path,
+    *,
+    volume: str = "",
+    chapter: str = "",
+    subtitle: str = "",
 ) -> Path:
-    """Draw one card: the name of the work, and what is playing under it."""
+    """Draw one card: the name of the work, and what is playing under it.
+
+    The volume is shown on the first card of each volume and left off the rest.
+    A listener needs telling once which volume they are in, and a line that
+    never changes stops being read after the first time it does not change.
+    """
     pillow = _pillow()
 
     canvas = pillow.image.new("RGB", (style.width, style.height), style.background)
@@ -112,6 +124,8 @@ def make_card(
 
     gap = style.body_size * 0.9
     block = title_height + gap
+    if volume:
+        block += style.volume_size * 1.7
     if chapter:
         block += style.faint_size * 1.9
     block += len(lines) * style.body_size * 1.35
@@ -127,6 +141,17 @@ def make_card(
     draw.text((x, y), style.title, font=title_font, fill=style.title_colour)
 
     below = top + title_height + gap
+    if volume:
+        volume_font = pillow.font.truetype(str(style.body_font), style.volume_size)
+        width = draw.textbbox((0, 0), volume, font=volume_font)[2]
+        draw.text(
+            ((style.width - width) / 2, below),
+            volume,
+            font=volume_font,
+            fill=style.volume_colour,
+        )
+        below += style.volume_size * 1.7
+
     if chapter:
         width = draw.textbbox((0, 0), chapter, font=faint_font)[2]
         draw.text(
@@ -159,6 +184,7 @@ def make_chapter_cards(
     *,
     total: float | None = None,
     labels: list[str] | None = None,
+    volumes: list[str] | None = None,
 ) -> list[tuple[Path, float]]:
     """Draw one card for each chapter, and say how long each is shown.
 
@@ -182,7 +208,16 @@ def make_chapter_cards(
             if labels is not None
             else f"Chapter {index + 1} of {len(marks)}"
         )
-        make_card(style, path, chapter=label, subtitle=mark.title)
+        # The volume is named on its first card only. A line that repeats on
+        # every card stops being read.
+        volume = ""
+        if volumes is not None:
+            volume = (
+                volumes[index]
+                if index == 0 or volumes[index] != volumes[index - 1]
+                else ""
+            )
+        make_card(style, path, volume=volume, chapter=label, subtitle=mark.title)
         cards.append((path, max(0.04, until - mark.start)))
     return cards
 

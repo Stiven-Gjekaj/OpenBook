@@ -17,7 +17,8 @@ from .errors import OpenBookError
 from .lexicon import Lexicon, load_lexicon
 from .parse import Note, ParsedChapter, parse_chapter
 from .plan.planner import Plan, plan_chapter, plan_volume
-from .source.epub import Chapter, read_book
+from .source.epub import Chapter, read_book, read_file
+from .volumes import Volume, read_volumes
 
 
 @dataclass
@@ -63,6 +64,18 @@ class Project:
 
     def volume_of(self, chapter: ParsedChapter) -> str:
         return self.grammar.output.group_of(chapter.volume)
+
+    def volumes(self) -> dict[str, Volume]:
+        """The name of each volume, out of the archive chapters.
+
+        Each file is read on its own. Both archive chapters are numbered -1, so
+        reading the book as a whole keeps the first and drops the second, and
+        the second is the one that names the last three volumes.
+        """
+        found: dict[str, Volume] = {}
+        for path in self.files:
+            found |= read_volumes(read_file(path, self.grammar.source, skipped=True))
+        return found
 
 
 @dataclass

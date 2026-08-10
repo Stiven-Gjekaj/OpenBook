@@ -253,3 +253,41 @@ def test_a_card_is_held_until_the_next_chapter_starts(tmp_path):
     cards = make_chapter_cards(gapped, style, tmp_path / "c", total=300.0)
     assert [round(seconds) for _, seconds in cards] == [101, 100, 99]
     assert round(sum(seconds for _, seconds in cards)) == 300
+
+
+class FakeChapterWithText:
+    def __init__(self, texts):
+        from openbook.parse import Narration
+
+        self.segments = [Narration(text=t) for t in texts]
+
+
+def test_a_peek_comes_from_the_opening_of_the_volume():
+    # From the opening and nowhere later, so it cannot give away something a
+    # listener has not reached.
+    from openbook.speech.video import opening_words
+
+    chapter = FakeChapterWithText(["One two three. Four five six. Seven eight."])
+    assert opening_words(chapter, 6) == "One two three."
+
+
+def test_a_peek_ends_at_the_end_of_a_sentence():
+    from openbook.speech.video import opening_words
+
+    chapter = FakeChapterWithText(
+        ["A short one. And then a much longer one that runs on"]
+    )
+    peek = opening_words(chapter, 8)
+    assert peek.endswith(".")
+
+
+def test_no_peek_is_asked_for():
+    from openbook.speech.video import opening_words
+
+    assert opening_words(FakeChapterWithText(["Words here."]), 0) == ""
+
+
+def test_a_chapter_with_no_narration_gives_no_peek():
+    from openbook.speech.video import opening_words
+
+    assert opening_words(FakeChapterWithText([]), 50) == ""

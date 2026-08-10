@@ -291,6 +291,7 @@ def _video(options) -> int:
     from .speech.video import (
         Music,
         mix_music,
+        opening_words,
         write_video,
         write_video_from_cards,
         youtube_description,
@@ -324,11 +325,23 @@ def _video(options) -> int:
     )
     print(f"{captions}")
 
+    # The name of the volume comes from the archive chapters, so it is written
+    # in one place and read from there rather than typed again here.
+    named = project.volumes().get(volume.name)
+    heading = f"Soultale, {named.written}" if named else f"Soultale, {volume.name}"
+
+    before = settings.description.strip() if settings else ""
+    if settings and settings.peek_words and volume.chapters:
+        peek = opening_words(volume.chapters[0], settings.peek_words)
+        if peek:
+            before = f"{before}\n\n{peek}".strip()
+
     description = out.with_suffix(".txt")
     description.write_text(
         youtube_description(
             marks,
-            title=f"Soultale, {volume.name}",
+            title=heading,
+            before=before,
             credits=list(settings.credits) if settings else None,
         ),
         encoding="utf-8",
@@ -376,8 +389,22 @@ def _video(options) -> int:
                 body_font=here / settings.body_font,
                 background=settings.background,
             )
+            volumes = project.volumes()
+            names = [
+                (
+                    volumes[chapter.volume].full.upper()
+                    if chapter.volume in volumes
+                    else chapter.volume.upper()
+                )
+                for chapter in volume.chapters
+            ]
             cards = make_chapter_cards(
-                marks, style, project.output_directory / ".cards"
+                marks,
+                style,
+                project.output_directory / ".cards",
+                total=audio.seconds,
+                labels=labels,
+                volumes=names,
             )
             check_cards_against_time(cards, marks, audio.seconds)
             listing = write_concat_list(cards, project.output_directory / ".cards.txt")

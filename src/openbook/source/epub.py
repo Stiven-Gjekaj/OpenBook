@@ -54,19 +54,25 @@ class Chapter:
         return f"(Chapter {self.number} || {self.volume}) {self.title}"
 
 
-def read_book(paths: list[Path], source: Source) -> tuple[Chapter, ...]:
+def read_book(
+    paths: list[Path], source: Source, *, skipped: bool = False
+) -> tuple[Chapter, ...]:
     """Read every chapter of a book, in the order it is read in.
 
-    A chapter whose volume the configuration skips does not come back.
+    A chapter whose volume the configuration skips does not come back, unless
+    skipped is asked for. The archive chapters are skipped for audio and still
+    hold the names of the volumes, so something has to be able to read them.
     """
     chapters: dict[int, Chapter] = {}
     for path in paths:
-        for chapter in read_file(path, source):
+        for chapter in read_file(path, source, skipped=skipped):
             chapters.setdefault(chapter.number, chapter)
     return tuple(chapters[number] for number in sorted(chapters))
 
 
-def read_file(path: Path, source: Source) -> tuple[Chapter, ...]:
+def read_file(
+    path: Path, source: Source, *, skipped: bool = False
+) -> tuple[Chapter, ...]:
     """Read every chapter of one EPUB file, in spine order."""
     if not path.exists():
         raise SourceError(f"{path}: the file does not exist")
@@ -81,7 +87,9 @@ def read_file(path: Path, source: Source) -> tuple[Chapter, ...]:
         found: list[Chapter] = []
         for name in documents:
             chapter = _read_chapter(archive, name, source, path)
-            if chapter is not None and not source.is_skipped(chapter.volume):
+            if chapter is not None and (
+                skipped or not source.is_skipped(chapter.volume)
+            ):
                 found.append(chapter)
     return tuple(found)
 

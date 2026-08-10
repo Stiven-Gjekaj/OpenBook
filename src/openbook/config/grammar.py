@@ -110,6 +110,8 @@ class Video:
     body_font: str
     background: str
     credits: tuple[str, ...]
+    description: str
+    peek_words: int
 
     @property
     def draws_cards(self) -> bool:
@@ -312,6 +314,8 @@ def _read_video(table: Table) -> Video:
         body_font=table.string("body_font", ""),
         background=table.string("background", "#12101F"),
         credits=table.strings("credits", ()),
+        description=table.string("description", ""),
+        peek_words=table.integer("peek_words", 0),
     )
     if "{VOLUME}" not in video.file_name:
         raise ConfigError(
