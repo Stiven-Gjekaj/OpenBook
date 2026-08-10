@@ -313,3 +313,25 @@ def test_a_matched_mix_needs_no_ffmpeg_when_the_lengths_already_agree():
         SilentEngine(), "one two three", MixedVoice(parts=("a", "b"), matched=True)
     )
     assert audio.seconds > 0
+
+
+def test_the_key_an_ordinary_engine_makes_did_not_change():
+    """The engine names the voice now. For every engine but one, that is the
+    name the voice already had, and audio made before the change must not be
+    thrown away by it."""
+    engine = SilentEngine()
+    said = Utterance(text="one two", voice=Voice("af_heart"), kind="narration")
+    assert key_of(said, engine) == key_for(
+        "one two", Voice("af_heart"), engine.name, engine.version
+    )
+
+
+def test_the_cache_asks_the_engine_what_to_call_a_voice():
+    # An engine whose voice lives in a file says so, and the cache follows it
+    # rather than the name alone.
+    class Fingerprinting(SilentEngine):
+        def voice_key(self, voice):
+            return f"{voice.key()}#take-two"
+
+    said = Utterance(text="one two", voice=Voice("ivy.wav"), kind="narration")
+    assert key_of(said, Fingerprinting()) != key_of(said, SilentEngine())

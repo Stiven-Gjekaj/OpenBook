@@ -49,6 +49,16 @@ class Engine(Protocol):
 
     def speak(self, text: str, voice: VoiceRef) -> Audio: ...
 
+    def voice_key(self, voice: VoiceRef) -> str:
+        """What the cache should call this voice.
+
+        Nearly always the name of the voice, and that is what every engine
+        here returns except one. An engine that reads a voice out of a
+        recording has a name that is a file path, and the sound is the file
+        rather than the path, so it puts the recording into the name as well.
+        """
+        ...
+
 
 class SilentEngine:
     """Gives back quiet of the length the words would take.
@@ -87,6 +97,9 @@ class SilentEngine:
     @property
     def max_characters(self) -> int | None:
         return self._max
+
+    def voice_key(self, voice: VoiceRef) -> str:
+        return voice.key()
 
     def speak(self, text: str, voice: VoiceRef) -> Audio:
         if not text.strip():

@@ -22,21 +22,40 @@ from ..cast.utterance import Utterance, VoiceRef
 from .audio import Audio
 
 
-def key_for(text: str, voice: VoiceRef, engine_name: str, engine_version: str) -> str:
+def key_for(
+    text: str, voice: VoiceRef | str, engine_name: str, engine_version: str
+) -> str:
     """The name under which one piece of audio is kept.
 
     Every part is written with its length in front of it, so that no two
     different sets of parts can join into the same line of text. Without that,
     a voice called "a" with text "bc" and a voice called "ab" with text "c"
     would share one piece of audio.
+
+    The voice arrives either as itself or as the name an engine gives it. See
+    key_of for why an engine gets a say in that.
     """
-    parts = (engine_name, engine_version, voice.key(), text)
+    named = voice if isinstance(voice, str) else voice.key()
+    parts = (engine_name, engine_version, named, text)
     joined = "\x1f".join(f"{len(part)}:{part}" for part in parts)
     return hashlib.sha256(joined.encode("utf-8")).hexdigest()
 
 
 def key_of(utterance: Utterance, engine) -> str:
-    return key_for(utterance.text, utterance.voice, engine.name, engine.version)
+    """The key for one utterance, spoken by one engine.
+
+    The engine names the voice rather than the voice naming itself, because for
+    an engine that reads a voice out of a recording the name is a file path and
+    the sound is the file. Two different recordings under one path are two
+    different voices, and a cache that could not tell them apart would hand
+    back the old voice for ever without saying anything.
+    """
+    return key_for(
+        utterance.text,
+        engine.voice_key(utterance.voice),
+        engine.name,
+        engine.version,
+    )
 
 
 @dataclass

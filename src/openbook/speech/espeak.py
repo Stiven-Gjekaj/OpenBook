@@ -79,6 +79,9 @@ class EspeakEngine:
     def max_characters(self) -> int | None:
         return self._max
 
+    def voice_key(self, voice: VoiceRef) -> str:
+        return voice.key()
+
     def speak(self, text: str, voice: VoiceRef) -> Audio:
         if not text.strip():
             raise OpenBookError("a speech engine was given nothing to say")
