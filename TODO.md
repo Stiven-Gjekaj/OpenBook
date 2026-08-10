@@ -100,6 +100,8 @@ Mostly done. The M4B is written with its chapter marks. Loudness levelling and t
 
 ## Review
 
+The largest piece still missing.
+
 - [ ] A page, written after a render, that lists every piece of speech with its
   chapter, speaker, voice, text, and a button to hear it.
 - [ ] A list of the pieces worth looking at first: the long ones, a speaker
@@ -110,41 +112,46 @@ Mostly done. The M4B is written with its chapter marks. Loudness levelling and t
 
 ## Release on YouTube
 
-One video for each volume. The website is not being built.
+Built. One video for each volume, with a card for each chapter, a description
+carrying a time for each chapter, and captions.
 
-YouTube takes video and not audio, so a volume becomes a still picture with the
-sound behind it. The cover of the book is inside each EPUB file already, so
-nothing new has to be drawn.
+- Writes an MP4 of a still card per chapter, with the volume named above the
+  work and the chapter below it.
+- Puts music under the speech and compresses it against the voice, so the bed
+  drops where somebody talks.
+- Writes the description with a time for each chapter, the words of the author,
+  an optional sneak peek from the opening, and the credits a licence asks for.
+- Writes captions from the render itself. Nothing listens to the audio, so the
+  invented names are spelled correctly and every line carries the name of who
+  says it.
+- The narrator reads an intro and an outro, in the words of the author, each
+  taking a chapter mark of its own.
+- Refuses before encoding when a card and the narration disagree, when the
+  cards drift from the chapters, or when a volume is longer than YouTube takes.
 
-- [ ] A command that writes one video for each volume: the cover held still,
-      with the audio of the volume behind it.
-- [ ] Encode as H.264 in MP4, with the picture at one frame each second and the
-      encoder told it is a still. A nine hour video of one picture is then
-      small and quick to make.
-- [ ] Give the sound at 48000 samples a second, in two channels. Kokoro makes
-      24000 in one channel, and YouTube changes whatever it is given. Doing the
-      change here means it happens once and well, rather than twice.
-- [ ] Write the description of the video beside it, with a time for each
-      chapter. YouTube reads those times and makes its own chapter list from
-      them. The first one has to be 0:00, there have to be at least three, and
-      each has to last at least ten seconds. The render already knows where
-      every chapter starts, so this is only a change of form.
-- [ ] Check the length of each volume against the twelve hour limit of a
-      video. Volume 9 is the longest at about nine hours, so all of them fit,
-      but the check should exist before one of them does not.
+Measured on volume 1: 3 hours 49 minutes, 214 MB, two minutes to encode.
 
-The M4B stays. It is what a person downloads for an audiobook application, and
-it is where the video takes its sound from.
+### Still to do here
 
-The per-chapter Opus files are no longer needed. They existed so a browser
-could start in the middle of a volume without fetching all of it, and there is
-no browser now.
+- [ ] Level the loudness to the audiobook standard. Nothing does this yet, and
+      a volume that is quieter than the one before it is the first thing a
+      listener notices.
+- [ ] Put the cover and the author from the EPUB metadata into the M4B tags.
+- [ ] Give the MP4 its own chapter marks. YouTube reads the description
+      instead, so this is only for a player that is not YouTube.
+- [ ] Write captions beside the M4B as well, not only beside the video.
+- [ ] Divide a volume into parts of about two hours. The grouping already
+      lives in configuration, so this extends merge_volumes to named spans of
+      chapters rather than adding anything new. Arc boundaries beat the two
+      hours whenever the two disagree.
 
 ## Documents
 
 - [ ] `docs/architecture.md`: the stages, and what each one hands to the next.
 - [ ] `docs/configuration.md`: every key of both files, and what it does.
 - [ ] `CHANGELOG.md`, once there is a release to write in it.
+- [ ] A starter lexicon written by the tool, holding the words it found and
+      leaving the sound of each one blank, the way the cast file was made.
 - [ ] A note in the readme about which speech models work, once one does.
 
 ## Repository

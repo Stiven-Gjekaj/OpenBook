@@ -9,7 +9,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
   <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
-  <img src="https://img.shields.io/badge/tests-256_passing-427819?style=for-the-badge" alt="256 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-336_passing-427819?style=for-the-badge" alt="336 tests passing"/>
 </p>
 
 <p align="center">
@@ -68,8 +68,9 @@ marks, in a real voice. What is left is the review page and the reading site.
 | Find the words needing a pronunciation | Built. 539 words, most frequent first |
 | Speak, through a cache | Built. Kokoro, and a silent engine for checking timing |
 | Write an M4B with chapter marks | Built |
+| One video for each volume, for YouTube | Built. Cards, description, captions |
+| Level the loudness | Not built |
 | Review page | Not built |
-| One video for each volume, for YouTube | Not built |
 
 [TODO.md](TODO.md) holds every task that is left, with the reason for each.
 
