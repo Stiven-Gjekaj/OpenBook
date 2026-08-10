@@ -81,9 +81,24 @@ def test_a_chapter_is_announced_in_the_narrator_voice(grammar, cast):
     )
 
 
-def test_a_volume_that_is_a_word_uses_the_other_announcement(grammar, cast):
-    # A prologue chapter opens with "Prologue." and not with "Chapter 0."
+def test_a_prologue_chapter_is_announced_by_its_number(grammar, cast):
+    # Soultale gives both announcement forms the same words, so that the card
+    # under the title can say the same number the narrator says.
     result = items("<p>Text.</p>", grammar, cast, number=0, volume="Prologue")
+    assert result[0].text == "Chapter 0. A Title."
+
+
+def test_a_volume_that_is_a_word_can_use_its_own_announcement(grammar, cast, tmp_path):
+    # The mechanism is still there for a book that wants it.
+    text = (EXAMPLES / "grammar.toml").read_text(encoding="utf-8")
+    text = text.replace(
+        'chapter_announcement_named = "Chapter {NUMBER}. {TITLE}"',
+        'chapter_announcement_named = "{VOLUME}. {TITLE}"',
+    )
+    path = tmp_path / "grammar.toml"
+    path.write_text(text, encoding="utf-8")
+    other = load_grammar(path)
+    result = items("<p>Text.</p>", other, cast, number=0, volume="Prologue")
     assert result[0].text == "Prologue. A Title."
 
 

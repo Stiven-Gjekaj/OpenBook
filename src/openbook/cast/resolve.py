@@ -191,6 +191,28 @@ def volume_is_numbered(volume: str) -> bool:
     return any(part.isdigit() for part in volume.split())
 
 
-def chapter_label(number: int, volume: str) -> str:
-    """What to call a chapter, in the words the narrator uses for it."""
-    return f"Chapter {number}" if volume_is_numbered(volume) else volume
+def chapter_label(number: int, last_in_volume: int) -> str:
+    """What a card calls a chapter.
+
+    The number is the one the book gives, and the second number is the last
+    chapter of the volume this one belongs to, so a listener sees how far
+    through that volume they are. The prologue runs 0 to 2 and volume 1 runs
+    3 to 22, so the two do not share a count.
+
+    The narrator says the same number, because the announcement uses it too.
+    """
+    return f"Chapter {number} of {last_in_volume}"
+
+
+def last_chapters(chapters) -> dict[str, int]:
+    """The last chapter number of each volume of the book.
+
+    This looks at the volume a chapter was written in, and not the file it ends
+    up in. The prologue is put into the first file, and still counts to 2.
+    """
+    last: dict[str, int] = {}
+    for chapter in chapters:
+        last[chapter.volume] = max(
+            last.get(chapter.volume, chapter.number), chapter.number
+        )
+    return last

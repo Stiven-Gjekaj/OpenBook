@@ -33,8 +33,13 @@ skip_volume_pattern = '^Archive'
 
 # The narrator says this at the start of a chapter. The raw title contains two
 # vertical bars, and the speech engine speaks them.
+#
+# The second form is for a volume whose name holds no number. Soultale gives it
+# the same words as the first, so that a prologue chapter is announced as
+# "Chapter 0." and the card under the title can say the same number. Give it
+# "{VOLUME}. {TITLE}" instead to hear "Prologue." there.
 chapter_announcement       = "Chapter {NUMBER}. {TITLE}"
-chapter_announcement_named = "{VOLUME}. {TITLE}"
+chapter_announcement_named = "Chapter {NUMBER}. {TITLE}"
 
 
 [grammar]

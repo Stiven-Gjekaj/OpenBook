@@ -15,6 +15,7 @@ from pathlib import Path
 
 from . import __version__
 from .build import Project, build_volume, render_volume, volume_names
+from .cast import chapter_label, last_chapters
 from .errors import OpenBookError
 from .speech import Cache, SilentEngine
 from .speech.package import have_ffmpeg, write_m4b
@@ -282,6 +283,10 @@ def _render(options) -> int:
 
 def _video(options) -> int:
     from .speech.cards import Style, make_chapter_cards, write_concat_list
+    from .speech.verify import (
+        check_cards_against_speech,
+        check_cards_against_time,
+    )
     from .speech.video import (
         Music,
         mix_music,
@@ -343,6 +348,12 @@ def _video(options) -> int:
             "channels": settings.channels if settings else 2,
         }
         if options.visual is None and settings is not None and settings.draws_cards:
+            last = last_chapters(project.parsed())
+            labels = [
+                chapter_label(chapter.number, last[chapter.volume])
+                for chapter in volume.chapters
+            ]
+            check_cards_against_speech(volume, labels)
             here = project.directory
             style = Style(
                 title=settings.title,
@@ -358,6 +369,7 @@ def _video(options) -> int:
             cards = make_chapter_cards(
                 marks, style, project.output_directory / ".cards"
             )
+            check_cards_against_time(cards, marks, audio.seconds)
             listing = write_concat_list(cards, project.output_directory / ".cards.txt")
             print(f"  {len(cards)} cards drawn")
             write_video_from_cards(listing, work, out, **shape)
