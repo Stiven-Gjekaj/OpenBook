@@ -9,7 +9,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
   <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
-  <img src="https://img.shields.io/badge/tests-78_passing-427819?style=for-the-badge" alt="78 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-99_passing-427819?style=for-the-badge" alt="99 tests passing"/>
 </p>
 
 <p align="center">
@@ -62,8 +62,8 @@ and tested. Nothing makes audio yet.
 | ----- | ----- |
 | Read chapters from EPUB | Built. Reads all 325 chapters of Soultale, across two files |
 | Read and check the configuration | Built |
-| Parse a chapter into segments | Not built. This is next |
-| Give each segment a voice | Not built |
+| Parse a chapter into segments | Built. 7163 lines of dialogue, 186 speaker codes |
+| Give each segment a voice | Not built. This is next |
 | Plan the pauses | Not built |
 | Speak, cache, and package | Not built |
 
