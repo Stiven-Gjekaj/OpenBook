@@ -31,6 +31,11 @@ class RenderReport:
     seconds: float = 0.0
     keys: set[str] = field(default_factory=set)
 
+    # Where each utterance sits in the finished audio. This is measured and
+    # not guessed: each piece is made on its own, so its length is known
+    # exactly. Captions built from this need no speech recognition.
+    timeline: list[tuple[Utterance, float, float]] = field(default_factory=list)
+
     @property
     def utterances(self) -> int:
         return self.made + self.reused
@@ -47,10 +52,12 @@ def render_plan(
     """Make the audio for a plan, taking what the cache already holds."""
     report = RenderReport()
     pieces: list[Audio] = []
+    at = 0.0
 
     for item in plan.items:
         if isinstance(item, Silence):
             pieces.append(Audio.silence(seconds=item.seconds, rate=engine.rate))
+            at += item.seconds
             continue
 
         key = key_of(item, engine)
@@ -64,6 +71,8 @@ def render_plan(
             report.reused += 1
         if on_utterance is not None:
             on_utterance(item, key)
+        report.timeline.append((item, at, at + audio.seconds))
+        at += audio.seconds
         pieces.append(audio)
 
     joined = join_all(pieces, engine.rate)

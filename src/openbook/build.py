@@ -168,6 +168,13 @@ def render_volume(volume: VolumePlan, engine, cache):
         total.reused += report.reused
         total.retried += report.retried
         total.keys |= report.keys
+        # Each chapter is made on its own and starts at zero, so its places
+        # move to where the chapter sits in the volume.
+        start = at - audio.seconds
+        total.timeline += [
+            (utterance, start + begins, start + ends)
+            for utterance, begins, ends in report.timeline
+        ]
 
     joined = join_all(pieces, engine.rate)
     total.seconds = joined.seconds

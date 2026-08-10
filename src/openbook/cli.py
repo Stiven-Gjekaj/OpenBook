@@ -282,6 +282,7 @@ def _render(options) -> int:
 
 
 def _video(options) -> int:
+    from .speech.captions import cues_from_timeline, names_from_cast, to_srt
     from .speech.cards import Style, make_chapter_cards, write_concat_list
     from .speech.verify import (
         check_cards_against_speech,
@@ -313,6 +314,15 @@ def _video(options) -> int:
     )
     out = project.output_directory / name
     out.parent.mkdir(parents=True, exist_ok=True)
+
+    captions = out.with_suffix(".srt")
+    captions.write_text(
+        to_srt(
+            cues_from_timeline(report.timeline, names=names_from_cast(project.cast))
+        ),
+        encoding="utf-8",
+    )
+    print(f"{captions}")
 
     description = out.with_suffix(".txt")
     description.write_text(
