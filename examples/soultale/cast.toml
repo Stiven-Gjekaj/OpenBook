@@ -50,7 +50,7 @@
 # A Kokoro name while the cast is being tried out, because it needs no
 # recording. Put the path of a recording here and render with
 # '--engine chatterbox' when the real voice is ready.
-voice = "af_heart"
+voice = "voices/narrator.wav"
 
 
 # LEADS
@@ -66,10 +66,14 @@ voice = ""
 # 54 lines. First in chapter 0.
 [cast.INK]
 name  = ""
-voice = "am_adam"
+voice = "voices/ink.wav"
 
 
 # RECURRING
+#
+# The four below still hold Kokoro names, which are not recordings. They are
+# for chapters 1 and 2 and chapter 0 does not reach them, so a chapter 0 render
+# with Chatterbox works and 'check --engine chatterbox' still names them.
 #
 # These codes have 5 to 39 lines each. Give each one a voice. Two of them can
 # share a voice when they never appear in the same chapter, though a listener
@@ -86,7 +90,7 @@ voice = ""
 # 35 lines. First in chapter 0.
 [cast.ZER]
 name  = ""
-voice = "bm_george"
+voice = "voices/zero.wav"
 
 # 36 lines. First in chapter 4.
 [cast.GBR]
@@ -214,7 +218,7 @@ voice = ""
 # voice whenever ZER changes, or the two come apart.
 [cast."///"]
 name  = ""
-voice = "bm_george"
+voice = "voices/zero.wav"
 
 # 3 lines. First in chapter 12.
 [cast.VNT]
