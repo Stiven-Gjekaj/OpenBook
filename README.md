@@ -9,7 +9,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
   <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
-  <img src="https://img.shields.io/badge/tests-99_passing-427819?style=for-the-badge" alt="99 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-256_passing-427819?style=for-the-badge" alt="256 tests passing"/>
 </p>
 
 <p align="center">
@@ -55,17 +55,21 @@ code, so a fork describes a different book by writing a different grammar file.
 
 ## Status
 
-Early, and honest about it. The stages from EPUB to a checked cast are built
-and tested. Nothing makes audio yet.
+The pipeline runs end to end. `openbook render` writes a real M4B with chapter
+marks, in a real voice. What is left is the review page and the reading site.
 
 | Stage | State |
 | ----- | ----- |
-| Read chapters from EPUB | Built. Reads all 325 chapters of Soultale, across two files |
+| Read chapters from EPUB | Built. All 325 chapters of Soultale, across two files |
 | Read and check the configuration | Built |
 | Parse a chapter into segments | Built. 7163 lines of dialogue, 186 speaker codes |
-| Give each segment a voice | Not built. This is next |
-| Plan the pauses | Not built |
-| Speak, cache, and package | Not built |
+| Give each segment a voice | Built. Unison lines get one blended voice |
+| Plan the pauses and divide long lines | Built. 16,905 utterances, none over the engine limit |
+| Find the words needing a pronunciation | Built. 539 words, most frequent first |
+| Speak, through a cache | Built. Kokoro, and a silent engine for checking timing |
+| Write an M4B with chapter marks | Built |
+| Review page | Not built |
+| The reading and listening site | Not built |
 
 [TODO.md](TODO.md) holds every task that is left, with the reason for each.
 
@@ -218,6 +222,11 @@ src/openbook/       the pipeline
   config/           reads and checks the configuration files
   source/           reads chapters out of EPUB files
   parse/            turns a chapter into typed segments
+  cast/             gives each segment a voice
+  plan/             puts the silences in and divides long lines
+  speech/           engines, the cache, and the audio
+  lexicon.py        how a word is said
+  build.py          runs the stages in order
   cli.py            the command line
 tests/              the tests
 examples/soultale/  the configuration for Soultale

@@ -43,6 +43,8 @@ matter.
 
 ## Stage: cast and plan
 
+Done.
+
 - [ ] Give every segment a voice, through the cast file.
 - [ ] Stop the build on a speaker code with no entry, and on an entry with no
       voice, and name the chapter.
@@ -58,6 +60,8 @@ matter.
 
 ## Stage: lexicon
 
+Done. The finder reports 539 words over the whole book.
+
 - [ ] Read `lexicon.toml`.
 - [ ] Find the words that need an entry: compare every word of the book against
       the dictionary of the phonemizer, and report what is missing, most
@@ -72,6 +76,8 @@ that.
 
 ## Stage: speech
 
+Done. Kokoro speaks, and a silent engine gives the right timing without a model.
+
 - [ ] An engine interface, so that a character can use a different engine from
       the narrator.
 - [ ] The Kokoro engine.
@@ -83,6 +89,8 @@ that.
       generates one word at a time sometimes repeats itself or stops early.
 
 ## Stage: audio and packaging
+
+Mostly done. The M4B is written with its chapter marks. Loudness levelling and the per-chapter Opus are not.
 
 - [ ] Join the pieces with the silences that the plan asks for.
 - [ ] Level the loudness to the audiobook standard.
