@@ -2,7 +2,13 @@ import json
 
 from openbook.cast.utterance import Utterance, Voice
 from openbook.lexicon import EMPTY, Lexicon
-from openbook.review import LONG_CHARACTERS, reasons_to_hear, rows_from, write_page
+from openbook.review import (
+    LONG_CHARACTERS,
+    Row,
+    reasons_to_hear,
+    rows_from,
+    write_page,
+)
 from openbook.speech.package import Mark
 
 VOICE = Voice("af_heart")
@@ -134,3 +140,44 @@ def test_a_title_with_markup_in_it_cannot_reach_the_page(tmp_path):
         [], tmp_path / "r.html", title="<script>bad()</script>", cache=tmp_path / "c"
     )
     assert "<script>bad()" not in out.read_text(encoding="utf-8")
+
+
+def test_one_control_starts_and_stops_a_line(tmp_path):
+    """One button, not two. It says play, and says pause while that line
+    sounds, so a person reviewing has one thing to aim at."""
+    rows = [
+        Row(
+            order=0,
+            chapter=1,
+            chapter_title="One.",
+            speaker="Ink",
+            voice="am_adam",
+            kind="dialogue",
+            text="A line.",
+            start=0.0,
+            audio="abcdef",
+        ),
+        Row(
+            order=1,
+            chapter=1,
+            chapter_title="One.",
+            speaker="Zero",
+            voice="bm_george",
+            kind="dialogue",
+            text="Another.",
+            start=2.0,
+            audio="123456",
+        ),
+    ]
+    out = write_page(
+        rows, tmp_path / "review.html", title="T", cache=tmp_path / "cache"
+    )
+    page = out.read_text(encoding="utf-8")
+
+    # One control for hearing a line, and it carries both words.
+    assert page.count('play.className = "hear"') == 1
+    assert '"pause" : "play"' in page
+    # Starting a second line stops the first, or two lines say nothing about
+    # either.
+    assert "function silence()" in page
+    assert "sounding = row.n" in page

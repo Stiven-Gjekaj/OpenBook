@@ -168,6 +168,9 @@ _TEMPLATE = """<!doctype html>
         border:1px solid var(--edge); border-radius:5px; padding:5px 8px;
         font:inherit; }
  button { cursor:pointer; }
+ /* One width for play and for pause, so a row does not move under the
+    pointer when the word changes. */
+ .hear { width:64px; }
  .bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
  .count { color:var(--dim); margin-left:auto; }
  table { width:100%; border-collapse:collapse; }
@@ -195,6 +198,34 @@ _TEMPLATE = """<!doctype html>
 <script>
 const ROWS = __ROWS__, CACHE = "__CACHE__";
 const marked = new Set(JSON.parse(localStorage.getItem("openbook-marked") || "[]"));
+
+// One line sounds at a time. Reviewing means starting a line, hearing enough,
+// and stopping, and two lines at once tells you nothing about either. The row
+// is held by its number and not by its button, so filtering the table while a
+// line plays leaves the sound alone and the button comes back in the right
+// state.
+let sound = null, sounding = null;
+
+function silence() {
+  if (sound) { sound.pause(); sound.currentTime = 0; }
+  sound = null; sounding = null;
+}
+
+function hear(row) {
+  if (sounding === row.n && sound) {
+    if (sound.paused) sound.play(); else sound.pause();
+    draw();
+    return;
+  }
+  silence();
+  sound = new Audio(`${CACHE}/${row.a.slice(0,2)}/${row.a}.wav`);
+  sounding = row.n;
+  sound.onended = () => { silence(); draw(); };
+  sound.onpause = draw;
+  sound.onplay = draw;
+  sound.play();
+  draw();
+}
 const body = document.getElementById("body");
 const pad = n => String(Math.floor(n)).padStart(2, "0");
 const at = s => `${pad(s/3600)}:${pad((s/60)%60)}:${pad(s%60)}`;
@@ -225,8 +256,10 @@ function draw() {
     if (r.r.length) tr.className = "suspect";
     if (marked.has(r.n)) tr.classList.add("flagged");
     const play = document.createElement("button");
-    play.textContent = "play"; play.disabled = !r.a;
-    play.onclick = () => new Audio(`${CACHE}/${r.a.slice(0,2)}/${r.a}.wav`).play();
+    play.className = "hear";
+    play.textContent = (sounding === r.n && sound && !sound.paused) ? "pause" : "play";
+    play.disabled = !r.a;
+    play.onclick = () => hear(r);
     const mark = document.createElement("button");
     mark.textContent = marked.has(r.n) ? "marked" : "mark";
     mark.onclick = () => { marked.has(r.n) ? marked.delete(r.n) : marked.add(r.n);
