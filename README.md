@@ -170,6 +170,11 @@ Changing a voice makes one character again. This is what lets the narrator and
 the cast use different speech models, and it is why the cache comes first
 rather than last.
 
+On an Apple M5, Kokoro makes about **10.6 seconds of speech for each second it
+runs**. A four hour volume takes about twenty minutes, and the whole of
+Soultale, at 47 hours, takes about four and a half. The second render of
+anything takes seconds, because only what changed is made again.
+
 See [docs/architecture.md](docs/architecture.md) for the whole picture.
 
 ## Configuration
