@@ -17,6 +17,7 @@ from __future__ import annotations
 from ..cast.utterance import BlendedVoice, Voice, VoiceRef
 from ..errors import OpenBookError
 from .audio import Audio
+from .engine import MAX_CHARACTERS
 
 RATE = 24000
 
@@ -27,7 +28,9 @@ LANGUAGES = {"a": "a", "b": "b"}
 class KokoroEngine:
     """Speaks with Kokoro."""
 
-    def __init__(self, *, speed: float = 1.0, max_characters: int | None = 480) -> None:
+    def __init__(
+        self, *, speed: float = 1.0, max_characters: int | None = MAX_CHARACTERS
+    ) -> None:
         if speed <= 0:
             raise ValueError("a speed must be above zero")
         self._speed = speed

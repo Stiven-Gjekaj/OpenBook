@@ -24,6 +24,12 @@ from .audio import Audio
 # silent engine uses to decide how long a piece of quiet must be.
 WORDS_EACH_MINUTE = 155
 
+# How much text an engine is handed at once. Every engine here takes the same
+# amount, and it is named once because the number decides where a long line is
+# divided, and a piece of a divided line is what a correction names. Two
+# engines that disagreed about it would disagree about what a correction means.
+MAX_CHARACTERS = 480
+
 
 @runtime_checkable
 class Engine(Protocol):
@@ -56,7 +62,7 @@ class SilentEngine:
         *,
         rate: int = 24000,
         words_each_minute: int = WORDS_EACH_MINUTE,
-        max_characters: int | None = 480,
+        max_characters: int | None = MAX_CHARACTERS,
     ) -> None:
         if words_each_minute <= 0:
             raise ValueError("a pace must be above zero")

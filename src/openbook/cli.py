@@ -41,7 +41,13 @@ def build_parser() -> argparse.ArgumentParser:
     chapters = commands.add_parser("chapters", help="list the chapters of the book")
     chapters.add_argument("--volume", default=None, help="one volume only")
 
-    commands.add_parser("check", help="read the configuration and say what is missing")
+    check = commands.add_parser(
+        "check", help="read the configuration and say what is missing"
+    )
+    # A correction names a piece of a divided line, and where a line divides
+    # depends on how much the engine takes at once, so the check has to be told
+    # which engine the render will use.
+    check.add_argument("--engine", choices=ENGINES, default="silent")
 
     plan = commands.add_parser("plan", help="print every line and the voice it takes")
     plan.add_argument("--volume", required=True)
@@ -124,39 +130,89 @@ def _chapters(options) -> int:
 
 def _check(options) -> int:
     project = Project.open(options.project)
-    print(f"grammar  reads {len(project.grammar.source.files)} book file(s)")
+    print(f"grammar      reads {len(project.grammar.source.files)} book file(s)")
 
     ready = True
     try:
         chapters = project.chapters()
         print(
-            f"book     {len(chapters)} chapters in {len(volume_names(project))} volumes"
+            f"book         {len(chapters)} chapters in "
+            f"{len(volume_names(project))} volumes"
         )
     except OpenBookError as error:
-        print(f"book     {error}", file=sys.stderr)
+        print(f"book         {error}", file=sys.stderr)
         ready = False
 
     uncast = project.cast.uncast()
-    print(f"cast     {len(project.cast.codes())} speaker codes")
+    print(f"cast         {len(project.cast.codes())} speaker codes")
     if not project.cast.narrator:
-        print("         the narrator has no voice yet")
+        print("             the narrator has no voice yet")
         ready = False
     if uncast:
-        print(f"         {len(uncast)} of them have no voice yet")
+        print(f"             {len(uncast)} of them have no voice yet")
         for entry in uncast[:10]:
-            print(f"           {entry.code}")
+            print(f"               {entry.code}")
         if len(uncast) > 10:
-            print(f"           and {len(uncast) - 10} more")
+            print(f"               and {len(uncast) - 10} more")
+        ready = False
+
+    if not _corrections_match(project, _engine_for(options)):
         ready = False
 
     print(
-        f"ffmpeg   {'found' if have_ffmpeg() else 'not found, needed to write an M4B'}"
+        f"ffmpeg       {'found' if have_ffmpeg() else 'not found, needed for an M4B'}"
     )
     if not have_ffmpeg():
         ready = False
 
     print("ready" if ready else "not ready")
     return 0 if ready else 1
+
+
+def _corrections_match(project, engine) -> bool:
+    """Say whether every correction has a line in the book to change.
+
+    A correction that matches nothing is the worst kind of mistake this file
+    can hold, because the render says nothing, the audio does not change, and
+    the only way left to find it is to listen to the line again.
+
+    The lines are compared against the whole book and not one volume, so a
+    correction for volume 4 is not called a mistake while volume 1 is checked.
+    """
+    corrections = project.corrections
+    if not len(corrections) and not corrections.waiting:
+        return True
+
+    print(f"corrections  {len(corrections) + len(corrections.waiting)} in the file")
+    if corrections.waiting:
+        print(f"             {len(corrections.waiting)} still waiting for words")
+
+    try:
+        used: set[str] = set()
+        for name in volume_names(project):
+            volume = build_volume(project, name, max_characters=engine.max_characters)
+            used |= set(volume.plan.corrected)
+    except OpenBookError as error:
+        # The cast is unfinished, or the book cannot be read. Both are already
+        # reported above, and neither is a fault of this file.
+        print(f"             not checked against the book: {error}")
+        return True
+
+    missing = [line for line in corrections.entries if line not in used]
+    if not missing:
+        return True
+
+    print(f"             {len(missing)} match no line in the book")
+    for line in missing[:5]:
+        print(f"               {_short(line)}")
+    if len(missing) > 5:
+        print(f"               and {len(missing) - 5} more")
+    return False
+
+
+def _short(line: str) -> str:
+    line = " ".join(line.split())
+    return line if len(line) <= 60 else f"{line[:60]}..."
 
 
 def _plan(options) -> int:
@@ -278,10 +334,11 @@ def _render(options) -> int:
     if options.dry_run:
         held = sum(1 for u in volume.plan.utterances if cache.holds(_key(u, engine)))
         total = len(volume.plan.utterances)
-        print(f"volume     {volume.name}, {len(volume.chapters)} chapters")
-        print(f"utterances {total}, of which {held} are already made")
-        print(f"words      {volume.plan.words():,}")
-        print(f"silence    {volume.plan.silent_seconds:.0f}s")
+        print(f"volume      {volume.name}, {len(volume.chapters)} chapters")
+        print(f"utterances  {total}, of which {held} are already made")
+        print(f"words       {volume.plan.words():,}")
+        print(f"silence     {volume.plan.silent_seconds:.0f}s")
+        _report_corrections(project, volume, lead="")
         return 0
 
     named = project.volumes().get(volume.name)
@@ -313,6 +370,7 @@ def _render(options) -> int:
         f"{report.reused} from the cache"
     )
     print(f"  {len(marks)} chapters, {audio.seconds / 3600:.2f} hours")
+    _report_corrections(project, volume)
     return 0
 
 
@@ -442,7 +500,32 @@ def _video(options) -> int:
         f"  {len(marks)} chapters, {audio.seconds / 3600:.2f} hours, "
         f"{report.made} made, {report.reused} from the cache"
     )
+    _report_corrections(project, volume)
     return 0
+
+
+def _report_corrections(project, volume, *, lead: str = "  ") -> None:
+    """Say what the corrections file did to this render.
+
+    A file that is read and changes nothing looks exactly like a file that is
+    not read at all, so this is printed whenever the file exists, including
+    when the count is zero.
+    """
+    said = _corrections_said(project.corrections, len(volume.plan.corrected))
+    if said:
+        print(f"{lead}corrections {said}")
+
+
+def _corrections_said(corrections, used: int) -> str:
+    if not len(corrections) and not corrections.waiting:
+        return ""
+    said = [f"{used} used"]
+    elsewhere = len(corrections) - used
+    if elsewhere:
+        said.append(f"{elsewhere} for no line in this volume")
+    if corrections.waiting:
+        said.append(f"{len(corrections.waiting)} still waiting for words")
+    return ", ".join(said)
 
 
 def _starter_lexicon(unknown) -> str:

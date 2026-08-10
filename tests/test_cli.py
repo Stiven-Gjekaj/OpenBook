@@ -280,3 +280,77 @@ def test_a_lexicon_that_exists_is_not_written_over(project, capsys):
     assert main(["-C", str(project), "words", "--write"]) == 2
     assert "exists already" in capsys.readouterr().err
     assert "Nee-lah" in (project / "lexicon.toml").read_text(encoding="utf-8")
+
+
+def corrections(project, text):
+    (project / "corrections.toml").write_text(text, encoding="utf-8")
+    return project
+
+
+def test_a_render_says_how_many_corrections_it_used(project, capsys):
+    cast_with_voices(project)
+    corrections(project, '[corrections]\n"two" = "too"\n"absent" = "gone"\n')
+    assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
+    out = capsys.readouterr().out
+    assert "corrections 1 used, 1 for no line in this volume" in out
+
+
+def test_a_render_with_a_correction_speaks_the_corrected_words(project, capsys):
+    cast_with_voices(project)
+    corrections(project, '[corrections]\n"two" = "too"\n')
+    assert main(["-C", str(project), "plan", "--volume", "Volume 1"]) == 0
+    out = capsys.readouterr().out
+    assert "]  too" in out
+    assert "]  two" not in out
+
+
+def test_a_dry_run_says_how_many_corrections_it_would_use(project, capsys):
+    cast_with_voices(project)
+    corrections(project, '[corrections]\n"two" = "too"\n')
+    assert (
+        main(["-C", str(project), "render", "--volume", "Volume 1", "--dry-run"]) == 0
+    )
+    assert "corrections 1 used" in capsys.readouterr().out
+
+
+def test_a_render_says_nothing_when_there_is_no_corrections_file(project, capsys):
+    cast_with_voices(project)
+    assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
+    assert "corrections" not in capsys.readouterr().out
+
+
+def test_a_line_still_waiting_for_words_is_counted(project, capsys):
+    cast_with_voices(project)
+    corrections(project, '[corrections]\n"two" = ""\n')
+    assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
+    assert "corrections 0 used, 1 still waiting for words" in capsys.readouterr().out
+
+
+def test_check_refuses_a_correction_that_matches_no_line_in_the_book(project, capsys):
+    # The mistake this file is most likely to hold. Nothing else finds it: the
+    # render says nothing, the audio does not change, and the only way left is
+    # to listen to the line again.
+    cast_with_voices(project)
+    corrections(project, '[corrections]\n"nobody says this" = "x"\n')
+    assert main(["-C", str(project), "check"]) == 1
+    out = capsys.readouterr().out
+    assert "1 match no line in the book" in out
+    assert "nobody says this" in out
+
+
+def test_check_accepts_a_correction_for_another_volume(project, capsys):
+    # The book is read whole, so a correction for volume 2 is not a mistake
+    # while volume 1 is being made.
+    cast_with_voices(project)
+    corrections(project, '[corrections]\n"three" = "iii"\n')
+    assert main(["-C", str(project), "check"]) in (0, 1)
+    out = capsys.readouterr().out
+    assert "match no line in the book" not in out
+
+
+def test_check_does_not_blame_the_corrections_for_an_unfinished_cast(project, capsys):
+    corrections(project, '[corrections]\n"nobody says this" = "x"\n')
+    assert main(["-C", str(project), "check"]) == 1
+    out = capsys.readouterr().out
+    assert "not checked against the book" in out
+    assert "match no line in the book" not in out
