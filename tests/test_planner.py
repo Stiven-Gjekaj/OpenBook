@@ -138,16 +138,22 @@ def test_sentences_are_grouped_up_to_the_limit(grammar):
 def test_single_letters_are_initials_and_not_sentences(grammar):
     # "A. B. C." is a name. The divider must not make three pieces of it and
     # then speak each letter as though it ended a thought.
-    plan = plan_chapter((narration("A. B. C. D."),), grammar, max_characters=8)
+    plan = plan_chapter((narration("A. B. C. D."),), grammar, max_characters=40)
     assert [u.text for u in plan.utterances] == ["A. B. C. D."]
 
 
-def test_a_single_sentence_longer_than_the_limit_stays_whole(grammar):
-    # Cutting inside a sentence does more harm than handing an engine more than
-    # it asked for, and an engine that truly cannot take it should say so.
-    text = "One long sentence with no stop inside it at all"
-    plan = plan_chapter((narration(text),), grammar, max_characters=10)
-    assert [u.text for u in plan.utterances] == [text]
+def test_no_piece_is_ever_longer_than_the_limit(grammar):
+    # The engine cuts anything over its limit wherever that limit lands, which
+    # can be inside a word. Every path here must get under it first.
+    text = (
+        "The drill left his arm with a sound like tearing metal, crossing the "
+        "open ground between the rogue and the boy with a speed that compressed "
+        "the distance into something far too small, and nobody moved."
+    )
+    for limit in (20, 40, 80, 200):
+        plan = plan_chapter((narration(text),), grammar, max_characters=limit)
+        assert all(len(u.text) <= limit for u in plan.utterances), limit
+        assert " ".join(u.text for u in plan.utterances) == text
 
 
 def test_nothing_is_divided_without_a_limit(grammar):
@@ -179,3 +185,20 @@ def test_the_plan_counts_its_words_and_its_silence(grammar):
     plan = plan_chapter((narration("One two three."), dialogue("Four five.")), grammar)
     assert plan.words() == 5
     assert plan.silent_seconds == 0.6
+
+
+def test_a_sentence_longer_than_the_limit_divides_at_a_comma(grammar):
+    # 34 sentences in the book are longer on their own than an engine accepts.
+    # Handing one over whole means the engine cuts it wherever its own limit
+    # lands, and nothing chooses that place.
+    text = "He ran fast, she followed him, and the heavy door closed behind them."
+    plan = plan_chapter((narration(text),), grammar, max_characters=30)
+    assert all(len(u.text) <= 30 for u in plan.utterances)
+    assert " ".join(u.text for u in plan.utterances) == text
+
+
+def test_a_clause_with_no_mark_divides_between_words_as_a_last_resort(grammar):
+    text = "one two three four five six seven eight nine ten eleven twelve"
+    plan = plan_chapter((narration(text),), grammar, max_characters=20)
+    assert all(len(u.text) <= 20 for u in plan.utterances)
+    assert " ".join(u.text for u in plan.utterances) == text

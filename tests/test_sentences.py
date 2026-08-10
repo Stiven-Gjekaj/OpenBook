@@ -105,3 +105,31 @@ def test_one_sentence_stays_one():
 )
 def test_real_sentences_from_the_book(text, count):
     assert len(split_sentences(text)) == count
+
+
+def test_clauses_divide_at_a_comma_and_keep_it():
+    from openbook.plan import split_clauses
+
+    assert split_clauses("He ran, she followed, the door closed.") == (
+        "He ran,",
+        "she followed,",
+        "the door closed.",
+    )
+
+
+def test_clauses_divide_at_a_semicolon_and_a_colon():
+    from openbook.plan import split_clauses
+
+    assert split_clauses("One; two: three.") == ("One;", "two:", "three.")
+
+
+def test_a_clause_with_no_mark_stays_whole():
+    from openbook.plan import split_clauses
+
+    assert split_clauses("No marks here at all") == ("No marks here at all",)
+
+
+def test_clauses_of_nothing_give_nothing():
+    from openbook.plan import split_clauses
+
+    assert split_clauses("") == ()

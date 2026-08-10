@@ -66,6 +66,10 @@ _INITIAL = re.compile(r"(?:\A|\s)[A-Za-z]\Z")
 # A number with a full stop inside it.
 _DECIMAL = re.compile(r"\d\Z")
 
+# Where a reader takes a breath inside a sentence. The mark is captured so that
+# it can stay with the words before it.
+_CLAUSE = re.compile(r"([;:,])\s+")
+
 
 def split_sentences(text: str) -> tuple[str, ...]:
     """Divide text into sentences, keeping every character.
@@ -90,6 +94,30 @@ def split_sentences(text: str) -> tuple[str, ...]:
     if tail:
         sentences.append(tail)
     return tuple(sentences)
+
+
+def split_clauses(text: str) -> tuple[str, ...]:
+    """Divide one sentence at the places a reader would take a breath.
+
+    This is the second choice, for a sentence that is longer on its own than an
+    engine accepts. 34 sentences in Soultale are, and the longest holds 1059
+    characters and 17 commas. Handing one of those to an engine whole means it
+    cuts the sentence where its own limit falls, which is worse than cutting it
+    at a comma, because nothing chooses where that cut lands.
+
+    The mark stays with the piece before it, the way it is written.
+    """
+    text = " ".join(text.split())
+    if not text:
+        return ()
+    pieces = [piece.strip() for piece in _CLAUSE.split(text)]
+    joined: list[str] = []
+    for index in range(0, len(pieces), 2):
+        body = pieces[index]
+        mark = pieces[index + 1] if index + 1 < len(pieces) else ""
+        if body:
+            joined.append(f"{body}{mark}")
+    return tuple(joined) or (text,)
 
 
 def _is_end_of_sentence(text: str, start: int, found: re.Match[str]) -> bool:

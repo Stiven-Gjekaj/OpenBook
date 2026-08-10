@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 from ..cast.utterance import ANNOUNCEMENT, DIALOGUE, Item, Silence, Utterance
 from ..config.grammar import Grammar
-from .sentences import split_sentences
+from .sentences import split_clauses, split_sentences
 
 NARRATION_TO_DIALOGUE = "narration to dialogue"
 DIALOGUE_TO_NARRATION = "dialogue to narration"
@@ -149,20 +149,59 @@ def _divide_long(items: tuple[Item, ...], max_characters: int | None) -> list[It
 def _pieces(text: str, limit: int) -> list[str]:
     """Group sentences into pieces no longer than the limit.
 
-    A single sentence longer than the limit stays whole. Cutting it would do
-    more harm than giving the engine more than it asked for, and an engine that
-    truly cannot take it should say so itself.
+    A sentence that is longer than the limit on its own divides again, at the
+    places a reader would take a breath. Soultale has 34 of those, and the
+    longest holds 1059 characters. Handing one to an engine whole means the
+    engine cuts it where its own limit falls, and nothing chooses where that
+    lands.
+    """
+    return _group(_units(text, limit), limit)
+
+
+def _units(text: str, limit: int) -> list[str]:
+    """The smallest pieces to build from: sentences, divided again if long."""
+    units: list[str] = []
+    for sentence in split_sentences(text):
+        if len(sentence) <= limit:
+            units.append(sentence)
+            continue
+        for clause in split_clauses(sentence):
+            units.extend(_words(clause, limit) if len(clause) > limit else [clause])
+    return units
+
+
+def _words(text: str, limit: int) -> list[str]:
+    """The last choice. A clause with no mark in it, longer than the limit.
+
+    Cutting between two words is bad. Letting the engine cut inside a word is
+    worse, and that is the only other option left here.
     """
     pieces: list[str] = []
     current = ""
-    for sentence in split_sentences(text):
+    for word in text.split():
         if not current:
-            current = sentence
-        elif len(current) + 1 + len(sentence) <= limit:
-            current = f"{current} {sentence}"
+            current = word
+        elif len(current) + 1 + len(word) <= limit:
+            current = f"{current} {word}"
         else:
             pieces.append(current)
-            current = sentence
+            current = word
     if current:
         pieces.append(current)
-    return pieces or [text]
+    return pieces
+
+
+def _group(units: list[str], limit: int) -> list[str]:
+    pieces: list[str] = []
+    current = ""
+    for unit in units:
+        if not current:
+            current = unit
+        elif len(current) + 1 + len(unit) <= limit:
+            current = f"{current} {unit}"
+        else:
+            pieces.append(current)
+            current = unit
+    if current:
+        pieces.append(current)
+    return pieces
