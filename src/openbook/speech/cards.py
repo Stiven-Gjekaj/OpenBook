@@ -158,7 +158,7 @@ def make_chapter_cards(
     directory: Path,
     *,
     total: float | None = None,
-    numbers: list[int] | None = None,
+    labels: list[str] | None = None,
 ) -> list[tuple[Path, float]]:
     """Draw one card for each chapter, and say how long each is shown.
 
@@ -174,13 +174,14 @@ def make_chapter_cards(
     cards: list[tuple[Path, float]] = []
     for index, (mark, until) in enumerate(zip(marks, ends, strict=True)):
         path = directory / f"card-{index:03d}.png"
-        # The number the book gives the chapter, and not its place in the
-        # volume. The narrator says the number of the book, and a card that
-        # disagrees with the voice is worse than a card with no number.
-        if numbers is not None:
-            label = f"Chapter {numbers[index]}"
-        else:
-            label = f"Chapter {index + 1} of {len(marks)}"
+        # The words the narrator uses for this chapter. A prologue chapter is
+        # announced as "Prologue" and not as "Chapter 0", and a card that
+        # disagrees with the voice is worse than a card with no label at all.
+        label = (
+            labels[index]
+            if labels is not None
+            else f"Chapter {index + 1} of {len(marks)}"
+        )
         make_card(style, path, chapter=label, subtitle=mark.title)
         cards.append((path, max(0.04, until - mark.start)))
     return cards

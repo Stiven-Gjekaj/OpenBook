@@ -1,6 +1,6 @@
 """Gives each segment a voice."""
 
-from .resolve import resolve_chapter
+from .resolve import chapter_label, resolve_chapter
 from .utterance import BlendedVoice, Item, Silence, Utterance, Voice, VoiceRef
 
 __all__ = [
@@ -10,5 +10,6 @@ __all__ = [
     "Utterance",
     "Voice",
     "VoiceRef",
+    "chapter_label",
     "resolve_chapter",
 ]

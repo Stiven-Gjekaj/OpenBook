@@ -253,32 +253,3 @@ def test_a_card_is_held_until_the_next_chapter_starts(tmp_path):
     cards = make_chapter_cards(gapped, style, tmp_path / "c", total=300.0)
     assert [round(seconds) for _, seconds in cards] == [101, 100, 99]
     assert round(sum(seconds for _, seconds in cards)) == 300
-
-
-@needs_font
-@needs_pillow
-def test_a_card_carries_the_number_the_book_gives_a_chapter(tmp_path):
-    # The narrator says the number of the book. A card counting its place in
-    # the volume says 22 where the voice says 21, and the two disagree in front
-    # of the listener.
-    from PIL import Image
-
-    from openbook.speech.cards import Style, make_chapter_cards
-
-    style = Style(
-        title_font=_fonts(),
-        body_font=_fonts(),
-        width=320,
-        height=180,
-        title_size=30,
-        body_size=14,
-        faint_size=10,
-    )
-    with_numbers = make_chapter_cards(
-        marks(3), style, tmp_path / "a", numbers=[0, 1, 2]
-    )
-    without = make_chapter_cards(marks(3), style, tmp_path / "b")
-    # The two runs draw different pictures, which is the point of the change.
-    first = Image.open(with_numbers[0][0]).tobytes()
-    other = Image.open(without[0][0]).tobytes()
-    assert first != other

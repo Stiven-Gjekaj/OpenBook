@@ -168,8 +168,7 @@ def _announcement(chapter: ParsedChapter, grammar: Grammar) -> str:
     source = grammar.source
     template = (
         source.announcement
-        if chapter.volume.strip().lstrip("-").isdigit()
-        or _volume_is_numbered(chapter.volume)
+        if volume_is_numbered(chapter.volume)
         else source.announcement_named
     )
     text = template.source
@@ -182,5 +181,16 @@ def _announcement(chapter: ParsedChapter, grammar: Grammar) -> str:
     return text
 
 
-def _volume_is_numbered(volume: str) -> bool:
+def volume_is_numbered(volume: str) -> bool:
+    """True when the name of a volume holds a number.
+
+    "Volume 7" does. "Prologue" does not, and a chapter in it is announced by
+    the name of the volume rather than by its number. The card asks this same
+    question, so the picture and the voice cannot say different things.
+    """
     return any(part.isdigit() for part in volume.split())
+
+
+def chapter_label(number: int, volume: str) -> str:
+    """What to call a chapter, in the words the narrator uses for it."""
+    return f"Chapter {number}" if volume_is_numbered(volume) else volume
