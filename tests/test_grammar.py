@@ -181,10 +181,10 @@ def test_the_intro_and_outro_are_empty_unless_asked_for(tmp_path):
 
 
 def test_the_intro_and_outro_are_the_words_the_author_wrote(tmp_path):
-    text = MINIMAL.replace(
-        'action = "pause"',
-        'action = "pause"\nintro = "Welcome to {VOLUME}."\noutro = "That was {VOLUME}."',
+    added = (
+        'action = "pause"\nintro = "Welcome to {VOLUME}."\noutro = "That was {VOLUME}."'
     )
+    text = MINIMAL.replace('action = "pause"', added)
     grammar = load_grammar(write(tmp_path, text))
     assert grammar.render.intro == "Welcome to {VOLUME}."
     assert grammar.render.outro == "That was {VOLUME}."
