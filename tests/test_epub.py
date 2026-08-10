@@ -204,7 +204,10 @@ def test_a_file_that_is_not_a_zip_gives_empty_details(tmp_path):
 def test_a_cover_named_by_properties_is_found(tmp_path):
     from openbook.source.epub import _cover_name
 
-    raw = '<item href="cover.jpg" id="c" properties="cover-image" media-type="image/jpeg"/>'
+    raw = (
+        '<item href="cover.jpg" id="c" properties="cover-image" '
+        'media-type="image/jpeg"/>'
+    )
     assert _cover_name(raw) == "cover.jpg"
 
 
