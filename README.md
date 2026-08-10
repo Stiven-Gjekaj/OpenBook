@@ -9,7 +9,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
   <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
-  <img src="https://img.shields.io/badge/tests-336_passing-427819?style=for-the-badge" alt="336 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-426_passing-427819?style=for-the-badge" alt="426 tests passing"/>
 </p>
 
 <p align="center">
@@ -330,6 +330,10 @@ it breaks the tool.
 The test that reads an EPUB builds its archive backwards, so a reader that
 trusts the order of the files inside the zip instead of the spine gets the book
 in reverse and the test says so.
+
+One test counts the tests and compares the answer with the badge at the top of
+this page. A badge is a claim, and a claim that nothing checks goes stale the
+first time somebody adds a test.
 
 The same checks run in the workflow, on Linux, Windows, and macOS, against
 Python 3.12 and 3.13, together with `ruff format --check` and `ruff check`.
