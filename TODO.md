@@ -4,158 +4,96 @@
 
 # What is left to build
 
-This file holds every task that OpenBook still needs. The first goal is one
-volume of Soultale, made into an audiobook from end to end, with nothing wrong
-in it. Volume 1 is that volume: 23 chapters, about four hours, and 46 speaker
-codes.
-
 A task with a box is not built. A task without one is done.
 
-## Built already
+## Where things are
 
-- The project, the pinned interpreter, and the tools.
-- A workflow that tests on three systems and two versions of Python.
-- The errors, and the template compiler that turns a template into a regular
-  expression.
-- The configuration reader, which refuses a key that nothing reads.
-- The grammar file and the cast file, with chapter groups for an unknown
-  speaker.
-- The EPUB reader. It follows the spine, joins more than one file, drops a
-  chapter it already has, and passes over the volumes that the configuration
-  skips. It reads all 325 chapters of Soultale.
-- The commands `chapters` and `check`.
+The chain runs from end to end. One command reads the EPUB files and writes a
+levelled M4B with chapter marks and a cover, a video for YouTube with a card
+for each chapter, a description carrying the time of each chapter, captions,
+and a page for checking the result by ear.
 
-## Stage: parse
+Measured on Volume 1 of Soultale, which is 23 chapters and 3 hours 49 minutes:
 
-Done. Over the whole book it finds 7163 lines of dialogue, 186 speaker codes,
-48 actions, 3 lines that two characters say together, and 665 pieces of end
-matter.
+| | |
+| --- | --- |
+| Reading and parsing the whole book | under a second, 325 chapters |
+| Speaking it with Kokoro | 23 minutes, about ten times faster than real time |
+| Speaking it again after a change | seconds, from the cache |
+| Levelling | -25.2 LUFS raw, -19.1 after |
+| Encoding the video | 2 minutes, 214 MB |
 
-- Turns the body of a chapter into typed segments: narration, dialogue,
-  action, scene break, end matter.
-- Divides a paragraph at every line break before it looks for a speaker.
-- Removes the elements that carry only style, and keeps the text in them.
-- Decodes the entities, so that the unison separator is found.
-- Takes an action out of a line of dialogue and keeps it as a piece of that
-  line, because the words on both sides belong to one breath.
-- Reports an asterisk with no pair, in narration as well as dialogue. The book
-  has one, in chapter 314.
+Built: the EPUB reader, the parser, the cast, the planner, the lexicon and its
+word finder, the Kokoro and silent engines, the cache, loudness, the M4B, the
+video with its cards and description and captions, the review page, and the
+checks that refuse a video whose picture and sound disagree.
 
-## Stage: cast and plan
+## Still to build
 
-Done.
+### The other half of the review loop
 
-- Give every segment a voice, through the cast file.
-- Stop the build on a speaker code with no entry, and on an entry with no
-  voice, and name the chapter.
-- Speak a unison line with one voice made from the two style vectors.
-- Put a pause only where the kind of the text changes. Two dialogue lines
-  together get none, and two narration paragraphs together get none.
-- Divide a long segment at a sentence end, so that no single piece is
-  longer than the engine accepts. Use a real sentence splitter and not a
-  full stop.
-- Write the plan out as a manifest that the cache can key on.
-- A command that prints the plan for a chapter, so a person can read every
-  line and its voice before any audio exists.
+The page marks a line and copies out a block of corrections. Nothing reads that
+block back, so a marked line is not yet remade.
 
-## Stage: lexicon
+- [ ] Read `corrections.toml` when planning, and use the corrected words in
+      place of the original.
+- [ ] Put the correction into the cache key, so a marked line is made again and
+      nothing else is.
+- [ ] Report how many corrections were used, so a person can see that the file
+      is being read at all.
 
-Done. The finder reports 539 words over the whole book.
+### Speaking
 
-- Read `lexicon.toml`.
-- Find the words that need an entry: compare every word of the book against
-  the dictionary of the phonemizer, and report what is missing, most
-  frequent first, with a chapter that holds it.
-- Put the entries into the text at plan time, so that the manuscript stays
-  clean.
-- A command that prints the report.
+- [ ] The `mix` mode for a line two characters say together. It refuses with a
+      reason today. `voice_blend` covers the three lines in this book, so this
+      only matters for a book that needs the two voices kept apart.
+- [ ] A second engine, so a character can be spoken by something other than
+      Kokoro. The interface is there and nothing else uses it yet.
 
-This is the largest quality problem in the whole project. A fixed voice says an
-invented name the same wrong way for 47 hours, and no casting decision repairs
-that.
+### Repository
 
-## Stage: speech
-
-Done. Kokoro speaks, and a silent engine gives the right timing without a model.
-
-- An engine interface, so that a character can use a different engine from
-  the narrator.
-- The Kokoro engine.
-- Voice blending, both for a unison line and to widen the set of voices
-  past the ones the model ships.
-- A cache that keys on the text, the voice, the engine, its settings, and
-  the version of the model. A correction to one line then re-makes one line.
-- A retry for an engine that can fail, with a limit, because a model that
-  generates one word at a time sometimes repeats itself or stops early.
-
-## Stage: audio and packaging
-
-Mostly done. The M4B is written with its chapter marks. Loudness levelling and the per-chapter Opus are not.
-
-- Join the pieces with the silences that the plan asks for.
-- [ ] Level the loudness to the audiobook standard.
-- Write one M4B file for each volume, with a chapter mark for each chapter.
-- [ ] Take the cover and the author out of the EPUB metadata for the file tags.
-- Name the file from the pattern in the configuration.
-
-## Review
-
-The largest piece still missing.
-
-- [ ] A page, written after a render, that lists every piece of speech with its
-  chapter, speaker, voice, text, and a button to hear it.
-- [ ] A list of the pieces worth looking at first: the long ones, a speaker
-  code seen for the first time, a line with digits or capitals, and a word
-  that the lexicon does not have.
-- [ ] A file of corrections that the render reads, so that a marked line is
-  made again and nothing else is.
-
-## Release on YouTube
-
-Built. One video for each volume, with a card for each chapter, a description
-carrying a time for each chapter, and captions.
-
-- Writes an MP4 of a still card per chapter, with the volume named above the
-  work and the chapter below it.
-- Puts music under the speech and compresses it against the voice, so the bed
-  drops where somebody talks.
-- Writes the description with a time for each chapter, the words of the author,
-  an optional sneak peek from the opening, and the credits a licence asks for.
-- Writes captions from the render itself. Nothing listens to the audio, so the
-  invented names are spelled correctly and every line carries the name of who
-  says it.
-- The narrator reads an intro and an outro, in the words of the author, each
-  taking a chapter mark of its own.
-- Refuses before encoding when a card and the narration disagree, when the
-  cards drift from the chapters, or when a volume is longer than YouTube takes.
-
-Measured on volume 1: 3 hours 49 minutes, 214 MB, two minutes to encode.
-
-### Still to do here
-
-- [ ] Level the loudness to the audiobook standard. Nothing does this yet, and
-      a volume that is quieter than the one before it is the first thing a
-      listener notices.
-- [ ] Put the cover and the author from the EPUB metadata into the M4B tags.
-- [ ] Give the MP4 its own chapter marks. YouTube reads the description
-      instead, so this is only for a player that is not YouTube.
-- [ ] Write captions beside the M4B as well, not only beside the video.
-- [ ] Divide a volume into parts of about two hours. The grouping already
-      lives in configuration, so this extends merge_volumes to named spans of
-      chapters rather than adding anything new. Arc boundaries beat the two
-      hours whenever the two disagree.
-
-## Documents
-
-- [ ] `docs/architecture.md`: the stages, and what each one hands to the next.
-- [ ] `docs/configuration.md`: every key of both files, and what it does.
+- [ ] A test that checks the number in the readme badge against the number of
+      tests, so the badge cannot go stale on its own.
 - [ ] `CHANGELOG.md`, once there is a release to write in it.
-- [ ] A starter lexicon written by the tool, holding the words it found and
-      leaving the sound of each one blank, the way the cast file was made.
-- [ ] A note in the readme about which speech models work, once one does.
+- [ ] Decide whether this goes to PyPI, and add a release workflow if it does.
 
-## Repository
+## Dropped
 
-- [ ] Move the test count in the readme when the number changes. A test should
-  check it, so that the badge cannot go stale on its own.
-- [ ] Decide whether the project goes to PyPI. If it does, a release workflow.
+- **A website.** The audiobooks go to YouTube instead.
+- **One Opus file for each chapter.** It existed so a browser could start in
+  the middle of a volume without fetching all of it, and there is no browser.
+- **Cloudflare Pages and R2.** They went with the website.
+
+## Waiting on the author
+
+None of this is work the tool can do. All of it blocks a real release.
+
+- [ ] **A voice for each of the 44 codes in Volume 1**, with the gender and the
+      accent of each. The current audio uses placeholders handed out in order,
+      so it proves the pipeline and nothing else.
+- [ ] **The 539 pronunciations.** `openbook words --write` has already written
+      them into `lexicon.toml` with each sound left blank, most frequent first.
+      Vazroth alone is said 273 times. The first twenty entries cover most of
+      what a listener would notice.
+- [ ] **The licence of the MonsterFriend font.** The Determination font is
+      CC BY 3.0 and its credit is already written into every description. The
+      logo face came with no licence file.
+- [ ] **Music, and clearing it.** A bed is mixed and ducked when one is named.
+      Whatever is chosen has to survive Content ID, because a claim against the
+      music affects the whole video.
+- [ ] **Uploading.**
+
+## Rules this project holds to
+
+Written down because each one was learned from something that went wrong.
+
+- **Check the thing that was made, not only the test.** Every fault in the
+  video path was found by probing the finished file. None of them raised
+  anything.
+- **Check the caller's situation before the machine's.** A missing picture was
+  twice reported as a missing tool. The caller can see their own problem.
+- **A tool must read what it writes.** The first lexicon it wrote would not
+  parse, because a word holding an apostrophe is not a name TOML accepts.
+- **A rule about the book lives in configuration, never in the code.**
+- **A refusal is better than a guess** wherever a wrong answer would only be
+  found by listening.
