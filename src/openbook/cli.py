@@ -281,7 +281,14 @@ def _render(options) -> int:
 
 
 def _video(options) -> int:
-    from .speech.video import Music, mix_music, write_video, youtube_description
+    from .speech.cards import Style, make_chapter_cards, write_concat_list
+    from .speech.video import (
+        Music,
+        mix_music,
+        write_video,
+        write_video_from_cards,
+        youtube_description,
+    )
 
     project = Project.open(options.project)
     settings = project.grammar.video
@@ -304,13 +311,17 @@ def _video(options) -> int:
 
     description = out.with_suffix(".txt")
     description.write_text(
-        youtube_description(marks, title=f"Soultale, {volume.name}"), encoding="utf-8"
+        youtube_description(
+            marks,
+            title=f"Soultale, {volume.name}",
+            credits=list(settings.credits) if settings else None,
+        ),
+        encoding="utf-8",
     )
     print(f"{description}")
     if options.description_only:
         return 0
 
-    visual = options.visual or (project.directory / settings.visual)
     music_path = options.music or (
         project.directory / settings.music if settings and settings.music else None
     )
@@ -324,16 +335,35 @@ def _video(options) -> int:
             mix_music(work, Music(path=music_path, level=level), mixed)
             work.unlink(missing_ok=True)
             work = mixed
-        write_video(
-            work,
-            visual,
-            out,
-            marks=marks,
-            framerate=settings.framerate if settings else 1,
-            bitrate=settings.bitrate if settings else "128k",
-            sample_rate=settings.sample_rate if settings else 48000,
-            channels=settings.channels if settings else 2,
-        )
+        shape = {
+            "marks": marks,
+            "framerate": settings.framerate if settings else 1,
+            "bitrate": settings.bitrate if settings else "128k",
+            "sample_rate": settings.sample_rate if settings else 48000,
+            "channels": settings.channels if settings else 2,
+        }
+        if options.visual is None and settings is not None and settings.draws_cards:
+            here = project.directory
+            style = Style(
+                title=settings.title,
+                title_font=here / settings.title_font,
+                title_back_font=(
+                    here / settings.title_back_font
+                    if settings.title_back_font
+                    else None
+                ),
+                body_font=here / settings.body_font,
+                background=settings.background,
+            )
+            cards = make_chapter_cards(
+                marks, style, project.output_directory / ".cards"
+            )
+            listing = write_concat_list(cards, project.output_directory / ".cards.txt")
+            print(f"  {len(cards)} cards drawn")
+            write_video_from_cards(listing, work, out, **shape)
+        else:
+            visual = options.visual or (project.directory / settings.visual)
+            write_video(work, visual, out, **shape)
     finally:
         work.unlink(missing_ok=True)
 

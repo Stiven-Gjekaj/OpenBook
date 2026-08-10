@@ -119,3 +119,110 @@ def test_a_still_picture_and_sound_become_one_file(tmp_path):
     out = write_video(sound, picture, tmp_path / "v.mp4", marks=marks())
     assert out.exists()
     assert out.stat().st_size > 0
+
+
+def _fonts():
+    """A font that every machine has, so the tests do not need the real ones."""
+    from pathlib import Path
+
+    for candidate in (
+        Path("/System/Library/Fonts/Supplemental/Arial.ttf"),
+        Path("/System/Library/Fonts/Helvetica.ttc"),
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+    ):
+        if candidate.exists():
+            return candidate
+    return None
+
+
+needs_font = pytest.mark.skipif(_fonts() is None, reason="no system font to draw with")
+needs_pillow = pytest.mark.skipif(
+    __import__("importlib").util.find_spec("PIL") is None, reason="Pillow not installed"
+)
+
+
+def test_a_font_that_is_not_there_is_named(tmp_path):
+    from openbook.speech.cards import Style
+
+    with pytest.raises(OpenBookError, match="the font file does not exist"):
+        Style(title_font=tmp_path / "absent.ttf", body_font=tmp_path / "absent.ttf")
+
+
+@needs_font
+def test_a_card_of_an_odd_size_is_refused():
+    from openbook.speech.cards import Style
+
+    with pytest.raises(OpenBookError, match="even width and height"):
+        Style(title_font=_fonts(), body_font=_fonts(), width=1921, height=1080)
+
+
+@needs_font
+@needs_pillow
+def test_a_card_is_drawn_at_the_size_asked_for(tmp_path):
+    from PIL import Image
+
+    from openbook.speech.cards import Style, make_card
+
+    style = Style(
+        title_font=_fonts(),
+        body_font=_fonts(),
+        width=640,
+        height=360,
+        title_size=60,
+        body_size=24,
+        faint_size=16,
+    )
+    path = make_card(
+        style, tmp_path / "c.png", chapter="Chapter 1 of 3", subtitle="A Title."
+    )
+    with Image.open(path) as image:
+        assert image.size == (640, 360)
+
+
+@needs_font
+@needs_pillow
+def test_one_card_is_drawn_for_each_chapter(tmp_path):
+    from openbook.speech.cards import Style, make_chapter_cards
+
+    style = Style(
+        title_font=_fonts(),
+        body_font=_fonts(),
+        width=320,
+        height=180,
+        title_size=30,
+        body_size=14,
+        faint_size=10,
+    )
+    cards = make_chapter_cards(marks(4), style, tmp_path / "cards")
+    assert len(cards) == 4
+    assert all(path.exists() for path, _ in cards)
+    assert [round(seconds) for _, seconds in cards] == [600, 600, 600, 600]
+
+
+def test_the_concat_list_repeats_the_last_card(tmp_path):
+    # The concat reader of ffmpeg drops the final card without this.
+    from openbook.speech.cards import write_concat_list
+
+    one, two = tmp_path / "a.png", tmp_path / "b.png"
+    one.touch()
+    two.touch()
+    path = write_concat_list([(one, 5.0), (two, 7.5)], tmp_path / "list.txt")
+    lines = path.read_text().splitlines()
+    assert lines[-1].endswith("b.png'")
+    assert "duration 7.500" in lines
+    assert lines.count("file '" + two.resolve().as_posix() + "'") == 2
+
+
+def test_a_list_with_no_cards_is_refused(tmp_path):
+    from openbook.speech.cards import write_concat_list
+
+    with pytest.raises(OpenBookError, match="no cards to show"):
+        write_concat_list([], tmp_path / "list.txt")
+
+
+def test_the_description_carries_the_credits():
+    text = youtube_description(
+        marks(3), title="Volume 1", credits=["A font, CC BY 3.0."]
+    )
+    assert "Credits" in text
+    assert "A font, CC BY 3.0." in text

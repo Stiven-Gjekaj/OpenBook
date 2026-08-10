@@ -55,7 +55,13 @@ def timestamp(seconds: float) -> str:
     return f"{minutes}:{second:02d}"
 
 
-def youtube_description(marks: list[Mark], *, title: str, before: str = "") -> str:
+def youtube_description(
+    marks: list[Mark],
+    *,
+    title: str,
+    before: str = "",
+    credits: list[str] | None = None,
+) -> str:
     """Write the description, with a time for each chapter.
 
     The first time has to be 0:00 or YouTube makes no chapter list at all, so
@@ -77,6 +83,12 @@ def youtube_description(marks: list[Mark], *, title: str, before: str = "") -> s
     for index, mark in enumerate(marks):
         at = 0.0 if index == 0 else mark.start
         lines.append(f"{timestamp(at)} {mark.title}")
+
+    # A font or a piece of music can carry a condition that the work is named.
+    # Putting the credits in here means they cannot be forgotten on the ninth
+    # volume after being remembered on the first.
+    if credits:
+        lines += ["", "Credits", *credits]
     return "\n".join(lines).strip() + "\n"
 
 
@@ -148,11 +160,7 @@ def write_video(
 
     # Before the encode and not after it. Learning that a volume is too long
     # once an hour of encoding has gone by helps nobody.
-    if marks and marks[-1].end > YOUTUBE_LIMIT_SECONDS:
-        raise OpenBookError(
-            f"this volume runs {marks[-1].end / 3600:.1f} hours, and YouTube "
-            f"takes {YOUTUBE_LIMIT_SECONDS / 3600:.0f} at the most. Divide it"
-        )
+    _refuse_if_too_long(marks)
     out.parent.mkdir(parents=True, exist_ok=True)
 
     still = visual.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
@@ -208,6 +216,80 @@ def write_video(
     )
 
     return out
+
+
+def write_video_from_cards(
+    concat_list: Path,
+    audio: Path,
+    out: Path,
+    *,
+    marks: list[Mark] | None = None,
+    framerate: int = 1,
+    bitrate: str = "128k",
+    sample_rate: int = 48000,
+    channels: int = 2,
+) -> Path:
+    """Join a list of cards and the sound into one file.
+
+    Each card is held for the length of its chapter. The output is given a
+    steady frame rate, because the concat reader gives an uneven one and
+    YouTube would have to correct it.
+    """
+    require_ffmpeg()
+    _refuse_if_too_long(marks)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    run_ffmpeg(
+        [
+            "ffmpeg",
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(concat_list),
+            "-i",
+            str(audio),
+            "-map",
+            "0:v:0",
+            "-map",
+            "1:a:0",
+            "-vf",
+            f"fps={framerate},format=yuv420p",
+            "-c:v",
+            "libx264",
+            "-tune",
+            "stillimage",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "23",
+            "-c:a",
+            "aac",
+            "-b:a",
+            bitrate,
+            "-ar",
+            str(sample_rate),
+            "-ac",
+            str(channels),
+            "-movflags",
+            "+faststart",
+            "-shortest",
+            str(out),
+        ]
+    )
+    return out
+
+
+def _refuse_if_too_long(marks: list[Mark] | None) -> None:
+    if marks and marks[-1].end > YOUTUBE_LIMIT_SECONDS:
+        raise OpenBookError(
+            f"this volume runs {marks[-1].end / 3600:.1f} hours, and YouTube "
+            f"takes {YOUTUBE_LIMIT_SECONDS / 3600:.0f} at the most. Divide it"
+        )
 
 
 def probe_seconds(path: Path) -> float:

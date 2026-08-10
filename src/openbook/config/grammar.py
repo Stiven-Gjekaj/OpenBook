@@ -104,6 +104,17 @@ class Video:
     bitrate: str
     sample_rate: int
     channels: int
+    title: str
+    title_font: str
+    title_back_font: str
+    body_font: str
+    background: str
+    credits: tuple[str, ...]
+
+    @property
+    def draws_cards(self) -> bool:
+        """True when the fonts are named, so a card is drawn for each chapter."""
+        return bool(self.title_font and self.body_font)
 
 
 @dataclass(frozen=True)
@@ -288,13 +299,19 @@ def _read_output(table: Table) -> Output:
 def _read_video(table: Table) -> Video:
     video = Video(
         file_name=table.string("file_name"),
-        visual=table.string("visual"),
+        visual=table.string("visual", ""),
         music=table.string("music", ""),
         music_level=float(table.string("music_level", "0.15")),
         framerate=table.integer("framerate", 1),
         bitrate=table.string("bitrate", "128k"),
         sample_rate=table.integer("sample_rate", 48000),
         channels=table.integer("channels", 2),
+        title=table.string("title", "SOULTALE"),
+        title_font=table.string("title_font", ""),
+        title_back_font=table.string("title_back_font", ""),
+        body_font=table.string("body_font", ""),
+        background=table.string("background", "#12101F"),
+        credits=table.strings("credits", ()),
     )
     if "{VOLUME}" not in video.file_name:
         raise ConfigError(
@@ -302,6 +319,13 @@ def _read_video(table: Table) -> Video:
             "over the one before it",
             path=table.path,
             key="video.file_name",
+        )
+    if not video.visual and not video.draws_cards:
+        raise ConfigError(
+            "name a picture with 'visual', or name the fonts with 'title_font' "
+            "and 'body_font' so that a card is drawn for each chapter",
+            path=table.path,
+            key="video",
         )
     if video.framerate < 1:
         raise ConfigError(
