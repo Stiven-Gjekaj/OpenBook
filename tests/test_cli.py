@@ -271,7 +271,9 @@ def test_the_lexicon_it_writes_is_one_it_can_read(project, capsys):
 
 
 def test_a_lexicon_that_exists_is_not_written_over(project, capsys):
-    # Whatever is in there was written by hand and must not be lost.
+    # Whatever is in there was written by hand and must not be lost. This is
+    # checked before anything about the machine, so a person whose real problem
+    # is a file they wrote is not told about a missing word list.
     (project / "lexicon.toml").write_text(
         '[words]\nNilah = "Nee-lah"\n', encoding="utf-8"
     )

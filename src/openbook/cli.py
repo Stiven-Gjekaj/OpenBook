@@ -228,6 +228,17 @@ def _words(options) -> int:
     from .parse import Dialogue, Narration
 
     project = Project.open(options.project)
+
+    # Whether a file is already there is the caller's situation and is checked
+    # before anything about the machine. Reporting a missing word list to
+    # somebody whose real problem is a file they wrote is the wrong answer.
+    written = project.directory / "lexicon.toml"
+    if options.write and written.exists():
+        raise OpenBookError(
+            f"{written} exists already. Move it out of the way, or add the "
+            "words by hand, so that nothing you have written is lost"
+        )
+
     if not have_dictionary():
         raise OpenBookError(
             "there is no word list on this machine to compare against, so every "
@@ -244,14 +255,8 @@ def _words(options) -> int:
     ]
     unknown = find_unknown(spoken, lexicon)
     if options.write:
-        path = project.directory / "lexicon.toml"
-        if path.exists():
-            raise OpenBookError(
-                f"{path} exists already. Move it out of the way, or add the "
-                "words by hand, so that nothing you have written is lost"
-            )
-        path.write_text(_starter_lexicon(unknown), encoding="utf-8")
-        print(f"{path}")
+        written.write_text(_starter_lexicon(unknown), encoding="utf-8")
+        print(f"{written}")
         print(f"  {len(unknown)} words, each with its sound left blank")
         return 0
 
