@@ -106,6 +106,20 @@ class Cast:
             if not entry.is_cast
         )
 
+    def voices(self) -> tuple[str, ...]:
+        """Every voice this cast asks for, the narrator first, said once each.
+
+        What a voice is depends on the engine. It is a name to Kokoro and a
+        path to a recording to Chatterbox, and this does not know or care
+        which. It answers what was written down.
+        """
+        found = [self.narrator] if self.narrator else []
+        for group in self.entries.values():
+            for entry in group:
+                if entry.is_cast and entry.voice not in found:
+                    found.append(entry.voice)
+        return tuple(found)
+
 
 def parse_chapters(text: str, *, key: str, path: str) -> Chapters:
     """Turn 38, or 115-120, or 38, 115-120 into the chapters it names."""

@@ -21,7 +21,10 @@ from .source.epub import BookDetails, read_details
 from .speech import Cache, SilentEngine
 from .speech.package import have_ffmpeg, write_m4b
 
-ENGINES = ("silent", "espeak", "kokoro")
+# chatterbox is the engine a book ships in and kokoro is the one to fall
+# back to. silent stays the default of the commands, because it needs
+# nothing installed and answers the questions about timing.
+ENGINES = ("silent", "espeak", "kokoro", "chatterbox")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -165,7 +168,10 @@ def _check(options) -> int:
             print(f"               and {len(uncast) - 10} more")
         ready = False
 
-    if not _corrections_match(project, _engine_for(options)):
+    engine = _engine_for(options)
+    if not _voices_are_there(project, engine):
+        ready = False
+    if not _corrections_match(project, engine):
         ready = False
 
     print(
@@ -176,6 +182,37 @@ def _check(options) -> int:
 
     print("ready" if ready else "not ready")
     return 0 if ready else 1
+
+
+def _voices_are_there(project, engine) -> bool:
+    """Say whether the engine can find every voice the cast asks for.
+
+    This matters for an engine whose voices are recordings. Forty odd files
+    are named in the cast, and finding out that one of them was never recorded
+    after twenty minutes of rendering is the wrong time to find out.
+
+    The engine is asked what it calls each voice, which is the same question
+    the cache asks. An engine that only needs a name answers without touching
+    the disk and nothing is reported.
+    """
+    from .cast.utterance import Voice
+
+    missing: list[str] = []
+    for name in project.cast.voices():
+        try:
+            engine.voice_key(Voice(name))
+        except OpenBookError:
+            missing.append(name)
+
+    if not missing:
+        return True
+
+    print(f"voices       {len(missing)} the {engine.name} engine cannot find")
+    for name in missing[:10]:
+        print(f"               {name}")
+    if len(missing) > 10:
+        print(f"               and {len(missing) - 10} more")
+    return False
 
 
 def _corrections_match(project, engine) -> bool:
@@ -281,6 +318,12 @@ def _engine_for(options):
     captions and the cards of a whole volume in seconds.
     """
     asked = getattr(options, "engine", "silent")
+    if asked == "chatterbox":
+        from .speech.chatterbox import ChatterboxEngine
+
+        # The voices are recordings named in cast.toml and read from the
+        # project directory, so the engine has to be told where that is.
+        return ChatterboxEngine(directory=Path(options.project))
     if asked == "espeak":
         from .speech.espeak import EspeakEngine
 

@@ -550,3 +550,28 @@ def test_a_merge_that_loses_an_entry_leaves_the_file_alone(tmp_path):
 
     with pytest.raises(OpenBookError, match="where 3 were meant"):
         _readable('[words]\n"a" = ""\n', tmp_path / "lexicon.toml", 3)
+
+
+def test_check_finds_a_voice_recording_that_was_never_made(project, capsys):
+    # Chatterbox takes a voice from a recording. Forty of them are named in a
+    # cast, and finding out after twenty minutes of rendering is too late.
+    import re
+
+    path = project / "cast.toml"
+    text = path.read_text(encoding="utf-8")
+    path.write_text(
+        re.sub(r'voice = ""', 'voice = "voices/nobody.wav"', text, count=3),
+        encoding="utf-8",
+    )
+    assert main(["-C", str(project), "check", "--engine", "chatterbox"]) == 1
+    out = capsys.readouterr().out
+    assert "cannot find" in out
+    assert "voices/nobody.wav" in out
+
+
+def test_check_says_nothing_about_voices_an_engine_reads_by_name(project, capsys):
+    # Kokoro takes a name and never touches the disk, so there is nothing to
+    # report and the check must not invent something.
+    cast_with_voices(project)
+    main(["-C", str(project), "check"])
+    assert "cannot find" not in capsys.readouterr().out

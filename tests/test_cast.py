@@ -146,3 +146,19 @@ voice = "am_onyx"
 """
     with pytest.raises(ConfigError, match="two brackets"):
         load_cast(write(tmp_path, text))
+
+
+def test_a_cast_says_every_voice_it_asks_for(tmp_path):
+    # What a voice is depends on the engine. This answers what was written.
+    path = tmp_path / "cast.toml"
+    path.write_text(
+        '[narrator]\nvoice = "voices/narrator.wav"\n\n'
+        '[cast.BLK]\nname = "Black"\nvoice = "voices/black.wav"\n\n'
+        '[cast.IVY]\nname = "Ivy"\nvoice = "voices/black.wav"\n\n'
+        '[cast.NEW]\nname = "New"\nvoice = ""\n',
+        encoding="utf-8",
+    )
+    voices = load_cast(path).voices()
+    assert voices[0] == "voices/narrator.wav", "the narrator comes first"
+    assert voices.count("voices/black.wav") == 1, "a shared voice is said once"
+    assert "" not in voices, "an entry with no voice yet asks for nothing"
