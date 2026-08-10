@@ -84,6 +84,9 @@ class Output:
     group_by: str
     file_name: str
     merge_volumes: dict[str, str]
+    bitrate: str
+    sample_rate: int | None
+    channels: int | None
 
     def group_of(self, volume: str) -> str:
         return self.merge_volumes.get(volume, volume)
@@ -249,6 +252,9 @@ def _read_output(table: Table) -> Output:
         group_by=table.one_of("group_by", ("volume",)),
         file_name=table.string("file_name"),
         merge_volumes=table.string_map("merge_volumes", optional=True),
+        bitrate=table.string("bitrate", "64k"),
+        sample_rate=table.integer("sample_rate", 0) or None,
+        channels=table.integer("channels", 0) or None,
     )
     if "{VOLUME}" not in output.file_name:
         raise ConfigError(

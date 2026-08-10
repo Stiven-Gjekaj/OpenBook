@@ -107,6 +107,9 @@ class Table:
     def boolean(self, key: str, default: Any = _MISSING) -> bool:
         return self._typed(key, default, bool, "true or false")
 
+    def integer(self, key: str, default: Any = _MISSING) -> int:
+        return self._typed(key, default, int, "a whole number")
+
     def duration(self, key: str, default: Any = _MISSING) -> float:
         value = self.string(key, default)
         if isinstance(value, float):

@@ -176,7 +176,24 @@ pause_at_action = "500ms"
 group_by  = "volume"
 file_name = "Soultale - {VOLUME}.m4b"
 
+# How the sound is written into the file.
+#
+# The engine makes 24000 samples a second in one channel, which is right for
+# speech and right for a download. These keys change that on the way out, and
+# they change nothing that the cache holds.
+#
+# Leave them at 0 for a download. Raising the rate adds no information to
+# speech and only makes the file larger.
+#
+# For YouTube, set them to 48000 and 2. YouTube changes whatever it is given,
+# and doing the change here means it happens one time and with a good filter
+# rather than twice.
+bitrate     = "64k"
+sample_rate = 0
+channels    = 0
+
 # The three prologue chapters are chapter 0, 1 and 2. They come before chapter
 # 3, so the order inside the file stays correct.
 [output.merge_volumes]
 "Prologue" = "Volume 1"
+

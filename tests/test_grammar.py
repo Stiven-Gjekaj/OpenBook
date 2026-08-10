@@ -149,3 +149,25 @@ def test_a_book_with_no_files_is_refused(tmp_path):
     text = MINIMAL.replace('files = ["book.epub"]', "files = []")
     with pytest.raises(ConfigError, match="name at least one book file"):
         load_grammar(write(tmp_path, text))
+
+
+def test_the_export_keeps_the_form_of_the_engine_by_default(tmp_path):
+    grammar = load_grammar(write(tmp_path, MINIMAL))
+    assert grammar.output.sample_rate is None
+    assert grammar.output.channels is None
+    assert grammar.output.bitrate == "64k"
+
+
+def test_the_export_can_be_asked_for_another_rate_and_channels(tmp_path):
+    # The keys go before [output.merge_volumes]. A bare key written after a
+    # sub-table header belongs to that sub-table, which is the easiest mistake
+    # to make in a TOML file and gives a puzzling error far from its cause.
+    text = MINIMAL.replace(
+        'file_name = "Soultale - {VOLUME}.m4b"',
+        'file_name = "Soultale - {VOLUME}.m4b"\n'
+        'bitrate = "128k"\nsample_rate = 48000\nchannels = 2',
+    )
+    grammar = load_grammar(write(tmp_path, text))
+    assert grammar.output.sample_rate == 48000
+    assert grammar.output.channels == 2
+    assert grammar.output.bitrate == "128k"

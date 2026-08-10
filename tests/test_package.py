@@ -71,3 +71,57 @@ def test_writing_leaves_no_working_files_behind(tmp_path):
         author="a",
     )
     assert [p.name for p in tmp_path.iterdir()] == ["v.m4b"]
+
+
+def test_no_conversion_is_asked_for_by_default():
+    from openbook.speech.package import audio_arguments
+
+    assert audio_arguments(None, None) == []
+    assert audio_arguments(0, 0) == []
+
+
+def test_a_rate_and_a_channel_count_reach_ffmpeg():
+    from openbook.speech.package import audio_arguments
+
+    assert audio_arguments(48000, 2) == ["-ar", "48000", "-ac", "2"]
+
+
+def test_one_of_the_two_alone_is_enough():
+    from openbook.speech.package import audio_arguments
+
+    assert audio_arguments(48000, None) == ["-ar", "48000"]
+    assert audio_arguments(None, 2) == ["-ac", "2"]
+
+
+@needs_ffmpeg
+def test_the_written_file_carries_the_rate_and_channels_asked_for(tmp_path):
+    import json
+    import subprocess
+
+    path = write_m4b(
+        Audio.silence(1.0, 24000),
+        [Mark("One.", 0.0, 1.0)],
+        tmp_path / "v.m4b",
+        title="t",
+        author="a",
+        sample_rate=48000,
+        channels=2,
+    )
+    out = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "stream=sample_rate,channels",
+            "-print_format",
+            "json",
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    stream = json.loads(out.stdout)["streams"][0]
+    assert stream["sample_rate"] == "48000"
+    assert stream["channels"] == 2

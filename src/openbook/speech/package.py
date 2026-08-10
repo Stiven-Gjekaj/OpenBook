@@ -61,6 +61,24 @@ def write_metadata(marks: list[Mark], *, title: str, author: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def audio_arguments(sample_rate: int | None, channels: int | None) -> list[str]:
+    """Tell ffmpeg to change the rate and the number of channels.
+
+    Nothing is added when neither is asked for, and the sound then keeps the
+    form the engine made it in.
+
+    Raising 24000 to 48000 adds no information to speech. It is worth doing on
+    the way to a place that will change the rate anyway, because the change
+    then happens one time and with a good filter, rather than twice.
+    """
+    arguments: list[str] = []
+    if sample_rate:
+        arguments += ["-ar", str(sample_rate)]
+    if channels:
+        arguments += ["-ac", str(channels)]
+    return arguments
+
+
 def write_m4b(
     audio: Audio,
     marks: list[Mark],
@@ -69,6 +87,8 @@ def write_m4b(
     title: str,
     author: str,
     bitrate: str = "64k",
+    sample_rate: int | None = None,
+    channels: int | None = None,
 ) -> Path:
     """Write one volume as an M4B with its chapters in it."""
     require_ffmpeg()
@@ -100,6 +120,7 @@ def write_m4b(
                 "aac",
                 "-b:a",
                 bitrate,
+                *audio_arguments(sample_rate, channels),
                 "-movflags",
                 "+faststart",
                 "-f",

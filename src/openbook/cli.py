@@ -247,7 +247,17 @@ def _render(options) -> int:
     audio, marks, report = render_volume(volume, engine, cache)
     name = project.grammar.output.file_name.replace("{VOLUME}", volume.name)
     path = project.output_directory / name
-    write_m4b(audio, marks, path, title=volume.name, author="")
+    output = project.grammar.output
+    write_m4b(
+        audio,
+        marks,
+        path,
+        title=volume.name,
+        author="",
+        bitrate=output.bitrate,
+        sample_rate=output.sample_rate,
+        channels=output.channels,
+    )
 
     print(f"{path}")
     print(
