@@ -55,8 +55,10 @@ code, so a fork describes a different book by writing a different grammar file.
 
 ## Status
 
-The pipeline runs end to end. `openbook render` writes a real M4B with chapter
-marks, in a real voice. What is left is the review page and the reading site.
+The pipeline runs end to end. One command reads the EPUB files and writes a
+levelled M4B with chapter marks and a cover, a video for YouTube with a card
+for each chapter, a description carrying the time of each chapter, captions,
+and a page for checking the result by ear.
 
 | Stage | State |
 | ----- | ----- |
@@ -67,12 +69,12 @@ marks, in a real voice. What is left is the review page and the reading site.
 | Plan the pauses and divide long lines | Built. 16,905 utterances, none over the engine limit |
 | Find the words needing a pronunciation | Built. 539 words, most frequent first |
 | Speak, through a cache | Built. Kokoro, and a silent engine for checking timing |
-| Write an M4B with chapter marks | Built |
+| Write an M4B with chapter marks | Built. Levelled to -19 LUFS, with a cover |
 | One video for each volume, for YouTube | Built. Cards, description, captions |
-| Level the loudness | Not built |
-| Review page | Not built |
+| Check the result by ear, and correct it | Built. A page to mark lines, and a file that remakes them |
 
-[TODO.md](TODO.md) holds every task that is left, with the reason for each.
+What is left is the author's own work: the voices, the pronunciations, and the
+music. [TODO.md](TODO.md) holds every task, with the reason for each.
 
 ## Features
 
@@ -133,11 +135,12 @@ uv run openbook -C ~/audiobook check
 ```
 
 ```
-grammar  reads 2 book file(s)
-book     325 chapters in 9 volumes
-cast     46 speaker codes
-         the narrator has no voice yet
-         46 of them have no voice yet
+grammar      reads 2 book file(s)
+book         325 chapters in 9 volumes
+cast         46 speaker codes
+             the narrator has no voice yet
+             46 of them have no voice yet
+ffmpeg       found
 not ready
 ```
 
@@ -221,6 +224,39 @@ group of chapters, and the chapter number chooses. A `???` line in a chapter
 that no group covers stops the build, because a new mystery character needs a
 new voice and the tool must ask rather than choose.
 
+Two more files are optional. **`lexicon.toml`** says how an invented name is
+said, everywhere in the book. **`corrections.toml`** says what one line should
+say instead. See [docs/configuration.md](docs/configuration.md) for every key
+of every file.
+
+## Checking it by ear
+
+A test can say a line was made. Only a person can say it sounds right, and
+nobody listens to forty seven hours to find the six lines that went wrong.
+
+```
+uv run openbook -C ~/audiobook render --volume "Volume 1" --review
+```
+
+That writes a page beside the audiobook listing every line with the voice it
+took and a button that plays it. The lines most likely to be wrong come first:
+the long ones, the first line each character speaks, the ones holding a number
+or a run of capitals, and the ones using a word with no pronunciation entry.
+
+Mark what sounds wrong, press **copy what I marked**, and paste the result into
+`corrections.toml`:
+
+```toml
+[corrections]
+"He turned to face the Vazroth." = "He turned to face the Vaz-roth."
+```
+
+Render again. The cache keys each piece of audio on its text, so a correction
+makes that one line again and takes every other line from the cache. A four
+hour volume comes back in seconds. `openbook check` refuses a correction that
+matches no line in the book, because a correction that quietly matches nothing
+is found only by listening to the same fault twice.
+
 ## Project structure
 
 ```
@@ -232,6 +268,8 @@ src/openbook/       the pipeline
   plan/             puts the silences in and divides long lines
   speech/           engines, the cache, and the audio
   lexicon.py        how a word is said
+  corrections.py    what to say instead, for a line that came out wrong
+  review.py         the page for checking a render by ear
   build.py          runs the stages in order
   cli.py            the command line
 tests/              the tests

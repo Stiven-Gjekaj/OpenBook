@@ -25,6 +25,9 @@ file and the key or the chapter. Two of these are common:
   the code you probably meant.
 - **A key that nothing reads.** A key in a configuration file is spelled wrong.
   The message names the key next to it.
+- **A correction that matches no line.** An entry in `corrections.toml` names a
+  line that the book does not have, most often because the words were changed
+  after they were copied. Write the line as the review page shows it.
 
 `openbook check` reads the configuration and the book, and says what is not
 finished, without making any audio.

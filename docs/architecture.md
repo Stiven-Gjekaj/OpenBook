@@ -106,6 +106,25 @@ The same reasoning gives the review page. A test says a line was made; only a
 person can say it sounds right, and the page exists so that finding the six
 lines that went wrong does not mean listening to forty seven hours.
 
+## The review loop
+
+The page is one half. It writes out the lines a person marked, and
+`corrections.toml` reads them back:
+
+```
+render --review  ->  a page  ->  mark and copy  ->  corrections.toml  ->  render
+```
+
+A correction lands at plan time, after the lexicon and after a long line is
+divided, because that is the text the page showed and the text the engine was
+given. Nothing after that stage is told about corrections at all. The cache
+keys on the text, a correction changes the text, and so the marked line is
+made again and the rest of the volume is not.
+
+This is the third thing the cache gives away, after a change of voice and a
+change of engine, and it is the reason the loop costs seconds rather than the
+twenty three minutes a volume takes to make.
+
 ## Errors
 
 An error that a person can correct is an `OpenBookError`. It names the file,

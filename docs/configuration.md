@@ -12,6 +12,7 @@ two are needed.
 | `grammar.toml` | What a chapter looks like, and what comes out | Yes |
 | `cast.toml` | Which voice each character takes | Yes |
 | `lexicon.toml` | How a word is said | No |
+| `corrections.toml` | What to say instead, for one line that came out wrong | No |
 
 The examples in [examples/soultale](../examples/soultale) carry a comment on
 every key and are the fastest way to start.
@@ -213,3 +214,51 @@ whole book, and no casting decision repairs it.
 `openbook words` finds the words that need an entry, most frequent first.
 `openbook words --write` writes this file with every one of them and their
 sounds left blank, and refuses to write over a file that is already there.
+
+---
+
+## corrections.toml
+
+A lexicon entry answers a word everywhere in the book. This answers one line.
+
+```toml
+[corrections]
+"He turned to face the Vazroth." = "He turned to face the Vaz-roth."
+"She read it out: 1874." = "She read it out: eighteen seventy four."
+```
+
+You do not write this file by hand. `openbook render --review` writes a page
+listing every line of the render with a button that plays it. Mark the ones
+that came out wrong, press **copy what I marked**, and paste the result here.
+Then fill in what each line should say and render again.
+
+**Write the line exactly as the page shows it.** That text is what the engine
+was given: after `lexicon.toml`, and after a line too long for the engine was
+divided, which is why the page sometimes shows a paragraph in two pieces. Runs
+of spaces and line breaks do not have to match, and capitals do.
+
+Two entries are refused rather than ignored:
+
+- **One whose answer repeats its own question.** It would make the same audio
+  under the same key, so nothing would change and it would look like a
+  correction that did not take.
+- **One that matches no line anywhere in the book.** `openbook check` finds
+  this, because nothing else can: the render says nothing, the audio does not
+  change, and the only way left is to listen to the line again.
+
+An entry with a blank answer, which is what the page writes, is a line waiting
+for words. It changes nothing and is counted apart.
+
+A render says what the file did:
+
+```
+  corrections 4 used, 1 for no line in this volume, 2 still waiting for words
+```
+
+Nothing puts a correction into the cache key. The key is made from the text
+and a correction changes the text, so only the marked line is made again and
+every other line in the volume still comes from the cache. The old audio stays
+in the cache, so taking a correction back out costs nothing either.
+
+Two lines with the same words in the same voice share one piece of audio, and
+a correction reaches both. That is the same rule the cache runs on.
