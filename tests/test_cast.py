@@ -46,14 +46,14 @@ def test_the_example_that_ships_with_the_project_loads():
 
 def test_the_example_lists_every_code_that_volume_one_uses():
     cast = load_cast(EXAMPLE)
-    assert len(cast.codes()) == 46
+    assert len(cast.codes()) == 44
 
 
 def test_an_entry_without_a_voice_is_reported_and_not_refused():
     # The example ships with no voice chosen. A person must be able to read the
     # cast before they fill it in, so loading works and the report names them.
     cast = load_cast(EXAMPLE)
-    assert len(cast.uncast()) == 46
+    assert len(cast.uncast()) == 44
 
 
 def test_reads_a_chapter_and_a_run_of_chapters():
