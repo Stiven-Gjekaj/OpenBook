@@ -12,13 +12,21 @@ build/
 /cache/
 /out/
 /.work/
+examples/soultale/cache/
+examples/soultale/out/
+examples/soultale/.work/
 
 # The recordings a voice is taken from. They are yours, they are large, and
 # they are not the tool.
 /voices/
+examples/soultale/voices/
 
-# The manuscript is not part of this project.
+# The manuscript of Soultale is in the repository on purpose, because this is
+# the working space of its author. See examples/soultale/book/NOTICE.md: the
+# book is not under the licence that covers the code. Any other EPUB is
+# somebody's working copy and stays out.
 *.epub
+!examples/soultale/book/*.epub
 
 # macOS writes these into every directory it looks at.
 .DS_Store

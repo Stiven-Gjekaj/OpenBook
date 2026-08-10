@@ -88,8 +88,12 @@ None of this is work the tool can do. All of it blocks a real release.
       Vazroth alone is said 273 times. The first twenty entries cover most of
       what a listener would notice.
 - [ ] **The licence of the MonsterFriend font.** The Determination font is
-      CC BY 3.0 and its credit is already written into every description. The
-      logo face came with no licence file.
+      CC BY 3.0, its credit is written into every description, and its licence
+      sits beside it in `examples/soultale/fonts/`. The logo face came with no
+      licence file and is a fan recreation of a face owned by Toby Fox. Both
+      files are in the repository and the open question is written down in
+      `examples/soultale/fonts/NOTICE.md`. Settle it, or replace the face,
+      before a volume goes up.
 - [ ] **Music, and clearing it.** A bed is mixed and ducked when one is named.
       Whatever is chosen has to survive Content ID, because a claim against the
       music affects the whole video.

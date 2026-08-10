@@ -14,15 +14,25 @@ needs_ffmpeg = pytest.mark.skipif(
 )
 
 
+def point_at_one_book(grammar: str) -> str:
+    """Aim the example grammar at the small book a test builds.
+
+    The names of the real files are matched by shape and not written out here,
+    so that renaming the manuscript, or moving it into a directory, does not
+    break every test that reads a book.
+    """
+    import re
+
+    made = re.sub(r"files = \[[^\]]*\]", 'files = ["book.epub"]', grammar, count=1)
+    assert made != grammar, "the example grammar no longer names its book files"
+    return made
+
+
 @pytest.fixture
 def project(tmp_path):
     """A project directory with the example configuration and a small book."""
     shutil.copy(EXAMPLES / "cast.toml", tmp_path / "cast.toml")
-    grammar = (EXAMPLES / "grammar.toml").read_text(encoding="utf-8")
-    grammar = grammar.replace(
-        'files = ["soultale-definitivus-pt-1.epub", "soultale-definitivus-pt-2.epub"]',
-        'files = ["book.epub"]',
-    )
+    grammar = point_at_one_book((EXAMPLES / "grammar.toml").read_text("utf-8"))
     (tmp_path / "grammar.toml").write_text(grammar, encoding="utf-8")
     make_epub(
         tmp_path / "book.epub",

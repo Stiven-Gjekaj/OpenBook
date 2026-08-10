@@ -10,7 +10,10 @@ format = "epub"
 # The book comes in more than one EPUB file. Each file contains the archive
 # chapter, so two files can hold the same chapter. The parser uses the chapter
 # number to find a chapter that it already has, and it keeps the first one.
-files = ["soultale-definitivus-pt-1.epub", "soultale-definitivus-pt-2.epub"]
+files = [
+  "book/soultale-definitivus-pt-1_394040019.epub",
+  "book/soultale-definitivus-pt-2_411510912.epub",
+]
 
 # The reading order comes from the spine of each EPUB. The parser does not sort
 # file names, because the file names contain a time value and not a chapter

@@ -299,7 +299,7 @@ src/openbook/       the pipeline
   build.py          runs the stages in order
   cli.py            the command line
 tests/              the tests
-examples/soultale/  the configuration for Soultale
+examples/soultale/  the working project: configuration, book, and fonts
 docs/               how the parts fit together
 assets/             the logo
 ```
