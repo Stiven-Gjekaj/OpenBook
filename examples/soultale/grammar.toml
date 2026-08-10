@@ -197,6 +197,14 @@ bitrate     = "64k"
 sample_rate = 0
 channels    = 0
 
+# Bring the speech to the loudness an audiobook is expected to have, which is
+# -19 LUFS with a true peak no higher than -3 dB.
+#
+# A volume quieter than the one before it means reaching for the dial at the
+# start of every part, and an uploaded file cannot be corrected. Turn this off
+# only if something else levels the audio later.
+level = true
+
 # The three prologue chapters are chapter 0, 1 and 2. They come before chapter
 # 3, so the order inside the file stays correct.
 [output.merge_volumes]

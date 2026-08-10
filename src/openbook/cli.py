@@ -356,6 +356,7 @@ def _video(options) -> int:
 
     work = project.output_directory / f".{out.stem}.wav"
     try:
+        audio = _levelled(audio, project, out.stem)
         audio.write(work)
         if music_path is not None:
             mixed = project.output_directory / f".{out.stem}.mixed.wav"
@@ -415,6 +416,33 @@ def _video(options) -> int:
         f"{report.made} made, {report.reused} from the cache"
     )
     return 0
+
+
+def _levelled(audio, project, stem: str):
+    """Bring the speech to the loudness an audiobook is expected to have.
+
+    A volume quieter than the one before it means reaching for the dial at the
+    start of every part, and an uploaded file cannot be corrected.
+    """
+    from .speech.audio import Audio
+    from .speech.loudness import level, measure
+    from .speech.package import have_ffmpeg
+
+    if not project.grammar.output.level or not have_ffmpeg():
+        return audio
+
+    project.output_directory.mkdir(parents=True, exist_ok=True)
+    before = project.output_directory / f".{stem}.raw.wav"
+    after = project.output_directory / f".{stem}.level.wav"
+    try:
+        audio.write(before)
+        measured = level(before, after)
+        levelled = Audio.read(after)
+        print(f"  loudness   {measured} -> {measure(after)}")
+        return levelled
+    finally:
+        before.unlink(missing_ok=True)
+        after.unlink(missing_ok=True)
 
 
 def _cache(options) -> int:

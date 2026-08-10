@@ -91,6 +91,7 @@ class Output:
     bitrate: str
     sample_rate: int | None
     channels: int | None
+    level: bool
 
     def group_of(self, volume: str) -> str:
         return self.merge_volumes.get(volume, volume)
@@ -294,6 +295,7 @@ def _read_output(table: Table) -> Output:
         bitrate=table.string("bitrate", "64k"),
         sample_rate=table.integer("sample_rate", 0) or None,
         channels=table.integer("channels", 0) or None,
+        level=table.boolean("level", True),
     )
     if "{VOLUME}" not in output.file_name:
         raise ConfigError(
