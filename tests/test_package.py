@@ -125,3 +125,58 @@ def test_the_written_file_carries_the_rate_and_channels_asked_for(tmp_path):
     stream = json.loads(out.stdout)["streams"][0]
     assert stream["sample_rate"] == "48000"
     assert stream["channels"] == 2
+
+
+@needs_ffmpeg
+def test_a_cover_reaches_the_file_as_a_picture():
+    """The artwork is copied and never encoded.
+
+    Left alone ffmpeg encodes a picture with the video codec of the container,
+    which for an M4B is h264, and then refuses its own choice, because an M4B
+    holds artwork as a picture and not as video. Nothing is written and the
+    reason names a codec nobody asked for. A test on the finished file is the
+    only thing that finds this: every argument is accepted.
+    """
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    from openbook.speech.audio import Audio
+
+    # A JPEG of one grey pixel, which is enough to be artwork.
+    jpeg = bytes.fromhex(
+        "ffd8ffe000104a46494600010100000100010000ffdb004300ffffffffffffffff"
+        "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0000b08"
+        "0001000101011100ffc40014000100000000000000000000000000000009ffc400"
+        "1410010000000000000000000000000000000000ffda0008010100003f0054df80"
+        "ffd9"
+    )
+    with tempfile.TemporaryDirectory() as directory:
+        out = Path(directory) / "book.m4b"
+        write_m4b(
+            Audio.silence(seconds=4.0, rate=24000),
+            [Mark(title="One.", start=0.0, end=4.0)],
+            out,
+            title="Book",
+            author="Somebody",
+            cover=jpeg,
+        )
+        assert out.exists() and out.stat().st_size > 0, "the file is not empty"
+        found = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "v",
+                "-show_entries",
+                "stream=codec_name",
+                "-of",
+                "csv=p=0",
+                str(out),
+            ],
+            capture_output=True,
+            text=True,
+        ).stdout
+        assert "mjpeg" in found, f"the cover is not a picture, it is {found!r}"

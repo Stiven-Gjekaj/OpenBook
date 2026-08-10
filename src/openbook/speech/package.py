@@ -110,8 +110,18 @@ def write_m4b(
             picture.write_bytes(cover)
         # The cover goes in as a stream of its own, marked as artwork, which is
         # how a player knows to show it rather than to play it.
+        #
+        # It is copied and not encoded. Left alone, ffmpeg encodes a picture
+        # with the video codec the container asks for, which for an M4B is
+        # h264, and then refuses its own choice: an M4B holds artwork as a
+        # picture and not as video. The file that comes out is empty, and the
+        # reason it gives names a codec nobody asked for.
         art = ["-i", str(picture)] if cover else []
-        art_map = ["-map", "2:v", "-disposition:v:0", "attached_pic"] if cover else []
+        art_map = (
+            ["-map", "2:v", "-c:v", "copy", "-disposition:v:0", "attached_pic"]
+            if cover
+            else []
+        )
         run_ffmpeg(
             [
                 "ffmpeg",
