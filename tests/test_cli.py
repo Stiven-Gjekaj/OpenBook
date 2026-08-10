@@ -188,3 +188,24 @@ def test_a_lexicon_entry_reaches_the_render(project, capsys):
     )
     assert main(["-C", str(project), "plan", "--volume", "Volume 1"]) == 0
     assert "Poynt" in capsys.readouterr().out
+
+
+def test_the_plan_totals_describe_what_was_printed(project, capsys):
+    # A person who asks for one chapter must not be given the number that
+    # belongs to the whole volume.
+    cast_with_voices(project)
+    main(["-C", str(project), "plan", "--volume", "Volume 1", "--chapter", "0"])
+    one = capsys.readouterr().err
+    main(["-C", str(project), "plan", "--volume", "Volume 1"])
+    whole = capsys.readouterr().err
+    assert "1 chapters" in one
+    assert "1 chapters" not in whole
+
+
+def test_a_chapter_that_is_not_in_the_volume_is_named(project, capsys):
+    cast_with_voices(project)
+    assert (
+        main(["-C", str(project), "plan", "--volume", "Volume 1", "--chapter", "99"])
+        == 2
+    )
+    assert "has no chapter 99" in capsys.readouterr().err

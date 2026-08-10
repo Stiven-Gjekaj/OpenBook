@@ -141,18 +141,32 @@ def _plan(options) -> int:
     engine = SilentEngine()
     volume = build_volume(project, options.volume, max_characters=engine.max_characters)
 
-    for chapter, plan in zip(volume.chapters, volume.chapter_plans, strict=True):
-        if options.chapter is not None and chapter.number != options.chapter:
-            continue
+    shown = [
+        (chapter, plan)
+        for chapter, plan in zip(volume.chapters, volume.chapter_plans, strict=True)
+        if options.chapter is None or chapter.number == options.chapter
+    ]
+    if not shown:
+        raise OpenBookError(
+            f"volume {volume.name!r} has no chapter {options.chapter}. It holds "
+            f"{volume.chapters[0].number} to {volume.chapters[-1].number}"
+        )
+
+    for chapter, plan in shown:
         print(f"\n=== chapter {chapter.number}: {chapter.title}")
         for item in plan.items:
             if hasattr(item, "seconds"):
                 print(f"     ~ {item.seconds:.2f}s  {item.reason}")
             else:
                 print(f"  {item.speaker:>10} [{item.voice.key()}]  {item.text[:70]}")
+
+    # The totals describe what was printed, and not the whole volume, or a
+    # person reading one chapter is given a number that belongs to 23.
+    utterances = sum(len(plan.utterances) for _, plan in shown)
+    silence = sum(plan.silent_seconds for _, plan in shown)
+    sys.stdout.flush()
     print(
-        f"\n{len(volume.plan.utterances)} utterances, "
-        f"{volume.plan.silent_seconds:.0f}s of silence",
+        f"\n{len(shown)} chapters, {utterances} utterances, {silence:.0f}s of silence",
         file=sys.stderr,
     )
     return 0
