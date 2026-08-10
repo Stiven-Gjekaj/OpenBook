@@ -227,3 +227,64 @@ level = true
 [output.merge_volumes]
 "Prologue" = "Volume 1"
 
+# THE VIDEO
+#
+# A card is drawn for each chapter, and the card names the volume above the
+# work and the chapter below it. Every colour is a default the drawing code
+# holds, so only the fonts and the words are named here.
+
+[video]
+file_name       = "Soultale - {VOLUME}.mp4"
+title           = "SOULTALE"
+
+# Two files draw one face. The back holds the pixels that sit behind the
+# letters and the fore holds the letters themselves.
+title_font      = "fonts/MonsterFriendFore.otf"
+title_back_font = "fonts/MonsterFriendBack.otf"
+body_font       = "fonts/determination.ttf"
+background      = "#12101F"
+
+# A still card each second is enough, because nothing on a card moves.
+framerate       = 1
+bitrate         = "192k"
+sample_rate     = 48000
+channels        = 2
+
+# What goes above the chapter times.
+#
+# YouTube shows about the first 150 characters before it folds the rest away,
+# so the line that has to earn a listener comes first and the housekeeping
+# comes last. The chapter times are added under this, one for each chapter,
+# and YouTube turns them into the chapter marks on the player itself. That
+# needs the first time to read 0:00, which the writer takes care of.
+#
+# The link is the series as a reader sees it. The address with /write/ in it
+# is the authoring view, which opens for the author and for nobody else, so a
+# reader who followed it from a video would arrive nowhere. Open the link in a
+# browser that is not signed in before a volume goes up.
+description = """
+True strength is not measured by who you can defeat. It is defined by who you
+choose not to destroy.
+
+Volume 1, The Ascension. A world begins again, and the people who will decide
+its shape arrive one at a time: a thread weaver, an oathkeeper, a doctor of
+lies. None of them yet knows what is going to be asked of them.
+
+Read Soultale on Wattpad: https://www.wattpad.com/series/163487
+Written by n1cetry.
+"""
+
+# How many words of the opening to quote under the description. About forty
+# runs to a few hundred characters, which is enough to catch somebody and
+# short enough to leave the chapter times visible without unfolding the rest.
+# The quote stops at the end of a sentence rather than in the middle of one,
+# and it is taken from the opening, so it can give nothing away.
+peek_words      = 45
+
+# The licence of the body face asks to be named, and this is where it is
+# named. Putting it here means it cannot be remembered on the first volume and
+# forgotten on the ninth.
+credits = [
+  "Determination by anonymous-1438277, licensed CC BY 3.0",
+  "https://fontstruct.com/fontstructions/show/2368299",
+]
