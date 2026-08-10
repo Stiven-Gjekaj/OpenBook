@@ -181,3 +181,55 @@ def test_one_control_starts_and_stops_a_line(tmp_path):
     # either.
     assert "function silence()" in page
     assert "sounding = row.n" in page
+
+
+def test_the_page_reaches_its_audio_from_wherever_it_is_opened(tmp_path):
+    """A relative path works both ways and an absolute one does not.
+
+    A page served over http cannot fetch an address beginning file: at all.
+    The browser refuses it, says nothing in the page, and every button does
+    nothing. Opened as a file, a relative path resolves to exactly the same
+    place the absolute form named.
+    """
+    from urllib.parse import urljoin
+
+    out = tmp_path / "out" / "review.html"
+    cache = tmp_path / "cache"
+    (cache / "ab").mkdir(parents=True)
+    (cache / "ab" / "abcdef.wav").write_bytes(b"RIFF")
+
+    rows = [
+        Row(
+            order=0,
+            chapter=1,
+            chapter_title="One.",
+            speaker="Ink",
+            voice="am_adam",
+            kind="dialogue",
+            text="A line.",
+            start=0.0,
+            audio="abcdef",
+        )
+    ]
+    write_page(rows, out, title="T", cache=cache)
+    page = out.read_text(encoding="utf-8")
+
+    assert 'CACHE = "../cache"' in page
+    assert "file:" not in page.split("const ROWS")[1][:200]
+
+    # What a browser makes of it when the page is opened as a file.
+    asked = urljoin(out.resolve().as_uri(), "../cache/ab/abcdef.wav")
+    assert asked == (cache / "ab" / "abcdef.wav").resolve().as_uri()
+
+
+def test_a_cache_on_another_disk_keeps_the_only_address_there_is(tmp_path, monkeypatch):
+    # No relative path exists between two drives on Windows. The file: form is
+    # worse, and it is better than nothing at all.
+    import openbook.review as review
+
+    def refuse(*_):
+        raise ValueError("paths are on different drives")
+
+    monkeypatch.setattr(review.os.path, "relpath", refuse)
+    said = review.where_the_audio_is(tmp_path / "review.html", tmp_path / "cache")
+    assert said.startswith("file:")

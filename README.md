@@ -9,7 +9,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
   <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
-  <img src="https://img.shields.io/badge/tests-485_passing-427819?style=for-the-badge" alt="485 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-487_passing-427819?style=for-the-badge" alt="487 tests passing"/>
 </p>
 
 <p align="center">

@@ -21,8 +21,10 @@ from __future__ import annotations
 
 import html
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import quote
 
 from .cast.utterance import DIALOGUE, Utterance
 from .lexicon import Lexicon, is_known, words_of
@@ -128,6 +130,27 @@ def _chapter_at(marks, start: float) -> tuple[int, str]:
     return found
 
 
+def where_the_audio_is(out: Path, cache: Path) -> str:
+    """How the page reaches the cache, from wherever the page is opened.
+
+    A path relative to the page works both ways. An address beginning file:
+    works only when the page is opened as a file: a page served over http
+    cannot fetch a file: address at all, and a browser refuses it without a
+    word anywhere in the page. Every button then does nothing, and nothing
+    says why.
+
+    The two are on one disk in every ordinary project, since both are made
+    inside the project directory. Where they are not, the address falls back
+    to the file: form, which is better than nothing at all.
+    """
+    try:
+        near = os.path.relpath(cache, out.parent)
+    except ValueError:
+        # Different drives on Windows. No relative path exists between them.
+        return cache.resolve().as_uri()
+    return quote(near.replace(os.sep, "/"), safe="/")
+
+
 def write_page(rows: list[Row], out: Path, *, title: str, cache: Path) -> Path:
     """Write the page, with everything it needs inside it."""
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -147,7 +170,7 @@ def write_page(rows: list[Row], out: Path, *, title: str, cache: Path) -> Path:
         for row in rows
     ]
     page = _TEMPLATE.replace("__TITLE__", html.escape(title))
-    page = page.replace("__CACHE__", html.escape(cache.resolve().as_uri()))
+    page = page.replace("__CACHE__", html.escape(where_the_audio_is(out, cache)))
     page = page.replace("__ROWS__", json.dumps(data))
     out.write_text(page, encoding="utf-8")
     return out

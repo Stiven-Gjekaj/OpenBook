@@ -32,6 +32,13 @@ file and the key or the chapter. Two of these are common:
 `openbook check` reads the configuration and the book, and says what is not
 finished, without making any audio.
 
+## When the review page plays nothing
+
+The page reaches its audio by a path relative to itself, so it works whether
+you open the file or serve the directory. Both need the `cache` directory to
+stay where it is, beside `out`. Moving the page on its own leaves it pointing
+at nothing.
+
 ## Ask a question or report a fault
 
 - Look through the
