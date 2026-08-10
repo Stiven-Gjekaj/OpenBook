@@ -13,6 +13,7 @@ from .cast import resolve_chapter
 from .cast.utterance import Item
 from .config.cast import Cast, load_cast
 from .config.grammar import Grammar, load_grammar
+from .corrections import Corrections, load_corrections
 from .errors import OpenBookError
 from .lexicon import Lexicon, load_lexicon
 from .parse import Note, ParsedChapter, parse_chapter
@@ -29,6 +30,7 @@ class Project:
     grammar: Grammar
     cast: Cast
     lexicon: Lexicon
+    corrections: Corrections
 
     @classmethod
     def open(cls, directory: Path) -> Project:
@@ -38,6 +40,7 @@ class Project:
             grammar=load_grammar(directory / "grammar.toml"),
             cast=load_cast(directory / "cast.toml"),
             lexicon=load_lexicon(directory / "lexicon.toml"),
+            corrections=load_corrections(directory / "corrections.toml"),
         )
 
     @property
@@ -112,14 +115,24 @@ def build_volume(
         )
         items.append(resolved)
         chapter_plans.append(
-            plan_chapter(resolved, project.grammar, max_characters=max_characters)
+            plan_chapter(
+                resolved,
+                project.grammar,
+                max_characters=max_characters,
+                corrections=project.corrections,
+            )
         )
         notes.extend(chapter.notes)
 
     return VolumePlan(
         name=name,
         chapters=tuple(chapters),
-        plan=plan_volume(items, project.grammar, max_characters=max_characters),
+        plan=plan_volume(
+            items,
+            project.grammar,
+            max_characters=max_characters,
+            corrections=project.corrections,
+        ),
         chapter_plans=tuple(chapter_plans),
         grammar=project.grammar,
         narrator=project.cast.narrator,

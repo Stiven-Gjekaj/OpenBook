@@ -4,6 +4,7 @@ import pytest
 
 from openbook.cast.utterance import Silence, Utterance, Voice
 from openbook.config.grammar import load_grammar
+from openbook.corrections import Corrections
 from openbook.plan.planner import Plan, plan_chapter, plan_volume
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples" / "soultale"
@@ -202,3 +203,58 @@ def test_a_clause_with_no_mark_divides_between_words_as_a_last_resort(grammar):
     plan = plan_chapter((narration(text),), grammar, max_characters=20)
     assert all(len(u.text) <= 20 for u in plan.utterances)
     assert " ".join(u.text for u in plan.utterances) == text
+
+
+def test_a_correction_changes_the_line_the_engine_is_given(grammar):
+    corrections = Corrections(entries={"He said Vazroth.": "He said Vaz-roth."})
+    plan = plan_chapter(
+        (narration("He said Vazroth."),), grammar, corrections=corrections
+    )
+    assert plan.utterances[0].text == "He said Vaz-roth."
+    assert plan.corrected == ("He said Vazroth.",)
+
+
+def test_a_correction_leaves_every_other_line_alone(grammar):
+    corrections = Corrections(entries={"One.": "Won."})
+    plan = plan_chapter(
+        (narration("One."), narration("Two.")), grammar, corrections=corrections
+    )
+    assert [u.text for u in plan.utterances] == ["Won.", "Two."]
+
+
+def test_a_correction_names_a_line_as_the_review_page_showed_it(grammar):
+    # The page shows the pieces of a long line, not the line, so an entry
+    # names a piece. This one is divided in two and the second half corrected.
+    long = narration("Alpha beta gamma. Delta epsilon zeta.")
+    corrections = Corrections(entries={"Delta epsilon zeta.": "Delta epsilon Zeta."})
+    plan = plan_chapter((long,), grammar, max_characters=20, corrections=corrections)
+    assert [u.text for u in plan.utterances] == [
+        "Alpha beta gamma.",
+        "Delta epsilon Zeta.",
+    ]
+
+
+def test_a_correction_that_grows_past_the_limit_is_divided_again(grammar):
+    # Nothing makes a correction the length of what it replaces, and a piece
+    # over the limit would be cut by the engine instead of here.
+    corrections = Corrections(entries={"Short.": "One two three. Four five six."})
+    plan = plan_chapter(
+        (narration("Short."),), grammar, max_characters=20, corrections=corrections
+    )
+    assert [u.text for u in plan.utterances] == ["One two three.", "Four five six."]
+
+
+def test_a_correction_for_no_line_here_is_not_reported_as_used(grammar):
+    corrections = Corrections(entries={"Absent.": "Present."})
+    plan = plan_chapter(
+        (narration("Something else."),), grammar, corrections=corrections
+    )
+    assert plan.corrected == ()
+
+
+def test_a_volume_reports_every_correction_its_chapters_used(grammar):
+    corrections = Corrections(entries={"One.": "Won.", "Two.": "Too."})
+    plan = plan_volume(
+        [(narration("One."),), (narration("Two."),)], grammar, corrections=corrections
+    )
+    assert sorted(plan.corrected) == ["One.", "Two."]

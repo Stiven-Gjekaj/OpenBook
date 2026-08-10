@@ -11,10 +11,11 @@ here is silence added on top of that stop.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from ..cast.utterance import ANNOUNCEMENT, DIALOGUE, Item, Silence, Utterance
 from ..config.grammar import Grammar
+from ..corrections import EMPTY, Corrections, used_by
 from .sentences import split_clauses, split_sentences
 
 NARRATION_TO_DIALOGUE = "narration to dialogue"
@@ -27,6 +28,10 @@ class Plan:
     """Everything a render does, in order."""
 
     items: tuple[Item, ...]
+
+    # Which corrections had a line here to change. The plan says what was done
+    # to make it, so a person can be told the file is being read at all.
+    corrected: tuple[str, ...] = ()
 
     @property
     def utterances(self) -> tuple[Utterance, ...]:
@@ -45,11 +50,16 @@ class Plan:
 
 
 def plan_chapter(
-    items: tuple[Item, ...], grammar: Grammar, *, max_characters: int | None = None
+    items: tuple[Item, ...],
+    grammar: Grammar,
+    *,
+    max_characters: int | None = None,
+    corrections: Corrections = EMPTY,
 ) -> Plan:
     """Add the silences to the utterances of one chapter."""
     divided = _divide_long(items, max_characters)
-    return Plan(items=tuple(_add_pauses(divided, grammar)))
+    divided, used = _correct(divided, corrections, max_characters)
+    return Plan(items=tuple(_add_pauses(divided, grammar)), corrected=used)
 
 
 def plan_volume(
@@ -57,6 +67,7 @@ def plan_volume(
     grammar: Grammar,
     *,
     max_characters: int | None = None,
+    corrections: Corrections = EMPTY,
 ) -> Plan:
     """Join the chapters of one volume into a single plan.
 
@@ -64,15 +75,45 @@ def plan_volume(
     next thing a listener hears is the name of the chapter that follows.
     """
     items: list[Item] = []
+    used: list[str] = []
     for index, chapter in enumerate(chapters):
         if index:
             items.append(
                 Silence(seconds=grammar.render.after_chapter_name, reason="new chapter")
             )
-        items.extend(
-            plan_chapter(chapter, grammar, max_characters=max_characters).items
+        plan = plan_chapter(
+            chapter, grammar, max_characters=max_characters, corrections=corrections
         )
-    return Plan(items=tuple(items))
+        items.extend(plan.items)
+        used.extend(line for line in plan.corrected if line not in used)
+    return Plan(items=tuple(items), corrected=tuple(used))
+
+
+def _correct(
+    items: list[Item], corrections: Corrections, max_characters: int | None
+) -> tuple[list[Item], tuple[str, ...]]:
+    """Put the corrected words in place of the ones that came out wrong.
+
+    This happens after a long line is divided, because the review page shows
+    the divided pieces and an entry names a line as the page showed it.
+
+    The corrected words are divided again. A correction is usually about the
+    same length as what it replaces, but nothing makes it so, and a piece that
+    grew past the limit of the engine would be cut by the engine instead.
+    """
+    used = used_by(
+        (item.text for item in items if isinstance(item, Utterance)), corrections
+    )
+    if not used:
+        return items, ()
+
+    changed: list[Item] = [
+        replace(item, text=corrections.apply(item.text))
+        if isinstance(item, Utterance)
+        else item
+        for item in items
+    ]
+    return _divide_long(tuple(changed), max_characters), used
 
 
 def _side(utterance: Utterance) -> str:

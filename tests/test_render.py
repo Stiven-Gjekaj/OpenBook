@@ -1,9 +1,14 @@
+from pathlib import Path
+
 import pytest
 
 from openbook.cast.utterance import Silence, Utterance, Voice
+from openbook.config.grammar import load_grammar
+from openbook.corrections import Corrections
 from openbook.errors import OpenBookError
-from openbook.plan.planner import Plan
+from openbook.plan.planner import Plan, plan_chapter
 from openbook.speech import Audio, Cache, SilentEngine
+from openbook.speech.cache import key_of
 from openbook.speech.render import render_plan
 
 VOICE = Voice("af_heart")
@@ -180,3 +185,38 @@ def test_audio_from_the_cache_matches_what_was_made(tmp_path):
     second, _ = render_plan(plan, engine, cache)
     assert first == second
     assert isinstance(first, Audio)
+
+
+def test_a_correction_makes_one_line_again_and_takes_the_rest_from_the_cache(tmp_path):
+    """The whole point of the review loop, checked on the cache itself.
+
+    Nothing puts a correction into the key. The key is made from the text, and
+    a correction changes the text, so this follows from the shape of the cache
+    rather than from any code that knows about corrections.
+    """
+    grammar = load_grammar(
+        Path(__file__).resolve().parent.parent
+        / "examples"
+        / "soultale"
+        / "grammar.toml"
+    )
+    engine = Counting()
+    cache = Cache(tmp_path / "cache")
+    chapter = (line("He said Vazroth."), line("She did not answer."))
+
+    render_plan(plan_chapter(chapter, grammar), engine, cache)
+    assert engine.calls == 2
+
+    corrected = plan_chapter(
+        chapter,
+        grammar,
+        corrections=Corrections(entries={"He said Vazroth.": "He said Vaz-roth."}),
+    )
+    _, report = render_plan(corrected, engine, cache)
+
+    assert engine.calls == 3, "only the corrected line is made again"
+    assert report.made == 1
+    assert report.reused == 1
+    # The audio made before the correction is still there, so going back to
+    # the original words costs nothing.
+    assert cache.holds(key_of(line("He said Vazroth."), engine))
