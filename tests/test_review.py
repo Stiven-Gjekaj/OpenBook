@@ -77,12 +77,12 @@ def test_a_row_carries_the_name_of_the_character_and_not_the_code():
     rows = rows_from(
         [(said, 0.0, 1.0)],
         [Mark("A.", 0.0, 1.0)],
-        names={"BLK": "Black"},
+        names={"BLK": "Blook"},
         lexicon=EMPTY,
         known=KNOWN,
         keys={},
     )
-    assert rows[0].speaker == "Black"
+    assert rows[0].speaker == "Blook"
 
 
 def test_a_row_knows_which_chapter_it_is_in():

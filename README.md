@@ -229,7 +229,7 @@ code.
 voice = "af_heart"
 
 [cast.BLK]
-name  = "Black"
+name  = "Blook"
 voice = "am_michael"
 
 [[cast_range."???"]]

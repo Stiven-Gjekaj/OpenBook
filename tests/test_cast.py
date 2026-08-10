@@ -12,7 +12,7 @@ BASE = """
 voice = "af_heart"
 
 [cast.BLK]
-name = "Black"
+name = "Blook"
 voice = "am_michael"
 
 [cast.INK]
@@ -126,7 +126,7 @@ def test_a_code_with_a_plain_entry_and_a_group_entry_is_refused(tmp_path):
 
 def test_an_alias_that_belongs_to_two_codes_is_refused(tmp_path):
     text = BASE.replace(
-        '[cast.BLK]\nname = "Black"', '[cast.BLK]\naliases = ["INKK"]\nname = "Black"'
+        '[cast.BLK]\nname = "Blook"', '[cast.BLK]\naliases = ["INKK"]\nname = "Blook"'
     )
     with pytest.raises(ConfigError, match="belongs to"):
         load_cast(write(tmp_path, text))
@@ -153,12 +153,12 @@ def test_a_cast_says_every_voice_it_asks_for(tmp_path):
     path = tmp_path / "cast.toml"
     path.write_text(
         '[narrator]\nvoice = "voices/narrator.wav"\n\n'
-        '[cast.BLK]\nname = "Black"\nvoice = "voices/black.wav"\n\n'
-        '[cast.IVY]\nname = "Ivy"\nvoice = "voices/black.wav"\n\n'
+        '[cast.BLK]\nname = "Blook"\nvoice = "voices/blook.wav"\n\n'
+        '[cast.IVY]\nname = "Ivy"\nvoice = "voices/blook.wav"\n\n'
         '[cast.NEW]\nname = "New"\nvoice = ""\n',
         encoding="utf-8",
     )
     voices = load_cast(path).voices()
     assert voices[0] == "voices/narrator.wav", "the narrator comes first"
-    assert voices.count("voices/black.wav") == 1, "a shared voice is said once"
+    assert voices.count("voices/blook.wav") == 1, "a shared voice is said once"
     assert "" not in voices, "an entry with no voice yet asks for nothing"

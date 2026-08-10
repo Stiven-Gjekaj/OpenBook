@@ -223,7 +223,7 @@ long before the end of a volume.
 voice = "af_heart"
 
 [cast.BLK]
-name  = "Black"
+name  = "Blook"
 voice = "am_michael"
 aliases = ["BLCK"]
 ```
@@ -232,7 +232,7 @@ aliases = ["BLCK"]
 
 | Engine | A voice is | Example |
 | ------ | ---------- | ------- |
-| `chatterbox` | A path to a recording of the character, read from the project directory | `"voices/black.wav"` |
+| `chatterbox` | A path to a recording of the character, read from the project directory | `"voices/blook.wav"` |
 | `kokoro` | One of its own voice names. The first letter is the accent | `"af_heart"` |
 | `espeak` | A language, and a variant after a plus | `"en-gb+Alicia"` |
 
@@ -243,7 +243,7 @@ recording that is not there, so a missing one is found before a render rather
 than twenty minutes into one.
 
 A recording is part of what the cache keys on, not only its path. Writing a
-better take over `voices/black.wav` makes every line Black has again. Without
+better take over `voices/blook.wav` makes every line Blook has again. Without
 that the path would not have changed, nothing would have been remade, and the
 old voice would have stayed in the book for ever with nothing said about it.
 
@@ -254,7 +254,7 @@ a token at a time is a different risk over a third of a million words.
 
 `name` is for you, for the reports, and for the speaker labels in the captions.
 A reader of the captions has never seen this file and cannot know that BLK is
-Black.
+Blook.
 
 A code with no entry stops the build and names the chapter. A code with an
 entry but no voice stops the build when the renderer reaches it, so a cast can
@@ -285,8 +285,8 @@ voice        = "voices/narrator.wav"
 exaggeration = 0.25
 
 [cast.BLK]
-name         = "Black"
-voice        = "voices/black.wav"
+name         = "Blook"
+voice        = "voices/blook.wav"
 exaggeration = 0.85
 ```
 

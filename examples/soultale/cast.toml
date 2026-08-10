@@ -13,7 +13,7 @@
 # What a voice is depends on the engine that speaks it:
 #
 #   chatterbox   A path to a recording of the character, read from this
-#                directory: "voices/black.wav". Ten to twenty seconds of clean
+#                directory: "voices/blook.wav". Ten to twenty seconds of clean
 #                speech is enough, and what is in the recording is what comes
 #                out, including the room it was recorded in.
 #   kokoro       One of its own names, such as "af_heart". The first letter
@@ -33,7 +33,7 @@
 # Add 'exaggeration' to an entry to say something else about one character:
 #
 #   [cast.BLK]
-#   voice        = "voices/black.wav"
+#   voice        = "voices/blook.wav"
 #   exaggeration = 0.85
 #
 # Leave it out and the kind of the line decides. It is part of the key of each
@@ -56,7 +56,7 @@ voice = ""
 
 # 160 lines. First in chapter 4.
 [cast.BLK]
-name  = ""
+name  = "Blook"
 voice = ""
 
 # 54 lines. First in chapter 0.

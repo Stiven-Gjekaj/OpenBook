@@ -19,7 +19,7 @@ needs_chatterbox = pytest.mark.skipif(
 def project(tmp_path):
     """A project directory holding one recording to take a voice from."""
     (tmp_path / "voices").mkdir()
-    (tmp_path / "voices" / "black.wav").write_bytes(b"RIFF....WAVEfmt the first take")
+    (tmp_path / "voices" / "blook.wav").write_bytes(b"RIFF....WAVEfmt the first take")
     return tmp_path
 
 
@@ -46,24 +46,24 @@ def test_the_recording_is_part_of_the_name_the_cache_uses(engine, project):
     # The name of a voice is a path and the sound is the file. Without the
     # file in the name, a better take written to the same path would be
     # ignored for ever and nothing would say so.
-    voice = Voice("voices/black.wav")
+    voice = Voice("voices/blook.wav")
     before = engine.voice_key(voice)
 
-    (project / "voices" / "black.wav").write_bytes(b"RIFF....WAVEfmt a better take")
+    (project / "voices" / "blook.wav").write_bytes(b"RIFF....WAVEfmt a better take")
     after = engine.voice_key(voice)
 
     assert before != after
-    assert before.startswith("voices/black.wav#")
+    assert before.startswith("voices/blook.wav#")
 
 
 def test_the_same_recording_gives_the_same_name(engine):
-    voice = Voice("voices/black.wav")
+    voice = Voice("voices/blook.wav")
     assert engine.voice_key(voice) == engine.voice_key(voice)
 
 
 def test_a_line_two_characters_share_names_both_recordings(engine, project):
     (project / "voices" / "ivy.wav").write_bytes(b"RIFF....WAVEfmt ivy")
-    mixed = MixedVoice(parts=("voices/black.wav", "voices/ivy.wav"), matched=True)
+    mixed = MixedVoice(parts=("voices/blook.wav", "voices/ivy.wav"), matched=True)
     made = engine.voice_key(mixed)
 
     assert made.count("#") == 2
@@ -90,7 +90,7 @@ def test_a_missing_recording_is_found_before_the_model_is_loaded(engine, monkeyp
 
 def test_nothing_to_say_is_refused(engine):
     with pytest.raises(OpenBookError, match="given nothing to say"):
-        engine.speak("   ", Voice("voices/black.wav"))
+        engine.speak("   ", Voice("voices/blook.wav"))
 
 
 def test_a_blended_voice_is_refused_with_what_to_use_instead(engine):
@@ -99,7 +99,7 @@ def test_a_blended_voice_is_refused_with_what_to_use_instead(engine):
         engine.speak(
             "Stop.",
             BlendedVoice(
-                parts=("voices/black.wav", "voices/ivy.wav"), weights=(0.5, 0.5)
+                parts=("voices/blook.wav", "voices/ivy.wav"), weights=(0.5, 0.5)
             ),
         )
 
@@ -140,7 +140,7 @@ def test_how_a_line_is_read_is_part_of_its_key_and_not_the_version(project):
     # the version. There it would remake three hundred thousand words of
     # narration every time somebody tuned the cast.
     engine = ChatterboxEngine(directory=project)
-    voice = Voice("voices/black.wav")
+    voice = Voice("voices/blook.wav")
     assert engine.voice_key(voice, kind="narration") != engine.voice_key(
         voice, kind="dialogue"
     )
@@ -152,7 +152,7 @@ def test_how_a_line_is_read_is_part_of_its_key_and_not_the_version(project):
 def test_tuning_the_cast_leaves_the_narration_alone(project):
     plain = ChatterboxEngine(directory=project)
     louder = ChatterboxEngine(directory=project, settings=Settings(dialogue=0.9))
-    voice = Voice("voices/black.wav")
+    voice = Voice("voices/blook.wav")
     assert plain.voice_key(voice, kind="narration") == louder.voice_key(
         voice, kind="narration"
     )

@@ -20,8 +20,8 @@ A voice is the path to a recording, written in cast.toml and read relative to
 the project directory:
 
     [cast.BLK]
-    name  = "Black"
-    voice = "voices/black.wav"
+    name  = "Blook"
+    voice = "voices/blook.wav"
 
 Ten to twenty seconds of clean speech is enough. What is in the recording is
 what comes out: the accent, the pace, the room it was recorded in, and any

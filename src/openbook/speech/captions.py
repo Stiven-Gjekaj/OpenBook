@@ -90,7 +90,7 @@ def label_for(utterance: Utterance, names: dict[str, str] | None) -> str:
     """What to put in front of a line, so a reader knows who says it.
 
     The name of the character and not the code. A reader has never seen the
-    cast file and cannot know that BLK is Black.
+    cast file and cannot know that BLK is Blook.
     """
     if utterance.kind != DIALOGUE or utterance.speaker == NARRATOR:
         return ""

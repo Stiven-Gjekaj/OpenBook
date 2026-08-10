@@ -48,9 +48,9 @@ def test_nothing_gives_nothing():
 
 
 def test_a_line_of_dialogue_carries_the_name_of_who_says_it():
-    # A reader has never seen the cast file and cannot know that BLK is Black.
+    # A reader has never seen the cast file and cannot know that BLK is Blook.
     said = line("No.", kind="dialogue", speaker="BLK")
-    assert label_for(said, {"BLK": "Black"}) == "[Black] "
+    assert label_for(said, {"BLK": "Blook"}) == "[Blook] "
 
 
 def test_a_code_with_no_name_falls_back_to_the_code():
@@ -88,9 +88,9 @@ def test_a_long_utterance_is_divided_and_shares_out_its_time():
 def test_only_the_first_piece_of_a_line_carries_the_name():
     text = "one two three four five six seven eight nine ten"
     said = Utterance(text=text, voice=VOICE, kind="dialogue", speaker="BLK")
-    cues = cues_from_timeline([(said, 0.0, 6.0)], names={"BLK": "Black"}, limit=20)
-    assert cues[0].text.startswith("[Black] ")
-    assert not cues[1].text.startswith("[Black]")
+    cues = cues_from_timeline([(said, 0.0, 6.0)], names={"BLK": "Blook"}, limit=20)
+    assert cues[0].text.startswith("[Blook] ")
+    assert not cues[1].text.startswith("[Blook]")
 
 
 def test_an_action_is_captioned_as_a_sound_and_not_as_speech():

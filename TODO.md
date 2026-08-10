@@ -78,7 +78,7 @@ None of this is work the tool can do. All of it blocks a real release.
 
       What is in the recording is what comes out, including the room it was
       recorded in and anything behind it. Two of these matter more than the
-      rest: the narrator reads 79 percent of the book, and Black has 160 lines.
+      rest: the narrator reads 79 percent of the book, and Blook has 160 lines.
 
       A recording of a real person is that person's voice. Recording them
       yourself, or taking one from the public domain, is the road with no
