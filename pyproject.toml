@@ -29,7 +29,15 @@ speech = ["kokoro>=0.9", "soundfile>=0.12", "numpy>=1.26"]
 # Chatterbox reads a book in the voice of a recording. It pins an older torch
 # than kokoro asks for, and kokoro runs on it, so the two share one group
 # rather than fighting over the version in two.
-chatterbox = ["chatterbox-tts>=0.1.7"]
+#
+# setuptools is here, and held below 81, because the watermarker inside
+# Chatterbox reaches for pkg_resources. Python stopped shipping that on its
+# own, and setuptools stopped carrying it in 81, so the newest one does not
+# help. Chatterbox and perth both fail to say any of this: perth catches the
+# import error and sets its watermarker to None, and the model then refuses to
+# load with a TypeError naming a NoneType. A quarter of an hour to find, and
+# one line to prevent.
+chatterbox = ["chatterbox-tts>=0.1.7", "setuptools>=70,<81"]
 video = ["pillow>=10.0"]
 
 [project.urls]
