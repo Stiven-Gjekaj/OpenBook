@@ -15,6 +15,7 @@ what ACX asks of an audiobook and is the usual place for speech.
 from __future__ import annotations
 
 import json
+import math
 import re
 import subprocess
 from dataclasses import dataclass
@@ -27,6 +28,14 @@ TARGET_LOUDNESS = -19.0
 TARGET_PEAK = -3.0
 TARGET_RANGE = 7.0
 
+# The shortest piece of audio worth measuring. The measurement is made over a
+# whole recording, and below about three seconds there is not enough of one to
+# say anything, so ffmpeg refuses rather than guessing.
+LEAST_SECONDS = 3.0
+
+# Below this there is no speech, only quiet.
+SILENCE_FLOOR = -70.0
+
 
 @dataclass(frozen=True)
 class Measurement:
@@ -38,7 +47,19 @@ class Measurement:
     threshold: float
     offset: float
 
+    @property
+    def silent(self) -> bool:
+        """True when there is nothing here to measure.
+
+        Quiet made by the silent engine is quiet exactly, and its loudness
+        comes back as minus infinity. Levelling that would be raising nothing
+        to a level, and ffmpeg refuses rather than trying.
+        """
+        return not math.isfinite(self.loudness) or self.loudness < SILENCE_FLOOR
+
     def __str__(self) -> str:
+        if self.silent:
+            return "silent"
         return f"{self.loudness:.1f} LUFS, peak {self.peak:.1f} dB"
 
 
@@ -88,6 +109,11 @@ def level(source: Path, out: Path, measured: Measurement | None = None) -> Measu
     """
     require_ffmpeg()
     measured = measured or measure(source)
+    if measured.silent:
+        raise OpenBookError(
+            f"{source}: this audio is silent, so there is no level to bring it "
+            "to. A render made with the silent engine cannot be levelled"
+        )
     out.parent.mkdir(parents=True, exist_ok=True)
 
     settings = ":".join(

@@ -77,8 +77,16 @@ class KokoroEngine:
                 "b for British English"
             )
         if language not in self._pipelines:
-            from kokoro import KPipeline
-
+            # Not installed is something a person fixes, not something that
+            # works on a second attempt. Without this it is tried three times
+            # and then reported as a fault in the line being spoken.
+            try:
+                from kokoro import KPipeline
+            except ImportError as error:
+                raise OpenBookError(
+                    "kokoro is not installed, so nothing can be spoken with it. "
+                    "Add it with 'uv sync --extra speech'"
+                ) from error
             self._pipelines[language] = KPipeline(lang_code=language)
         return self._pipelines[language]
 

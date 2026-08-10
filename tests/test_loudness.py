@@ -110,3 +110,33 @@ def test_a_file_that_is_not_audio_is_named(tmp_path):
     bad.write_text("not audio", encoding="utf-8")
     with pytest.raises(OpenBookError, match="measured no loudness"):
         measure(bad)
+
+
+@needs_ffmpeg
+def test_quiet_measures_as_silent(tmp_path):
+    # Quiet made by the silent engine is quiet exactly, and its loudness comes
+    # back as minus infinity.
+    from openbook.speech.audio import Audio
+
+    path = tmp_path / "silence.wav"
+    Audio.silence(seconds=20, rate=24000).write(path)
+    measured = measure(path)
+    assert measured.silent
+    assert str(measured) == "silent"
+
+
+@needs_ffmpeg
+def test_levelling_silence_is_refused_with_the_reason(tmp_path):
+    # Levelling quiet is raising nothing to a level. ffmpeg refuses with a
+    # message about a result being too large, which explains nothing.
+    from openbook.speech.audio import Audio
+
+    path = tmp_path / "silence.wav"
+    Audio.silence(seconds=20, rate=24000).write(path)
+    with pytest.raises(OpenBookError, match="this audio is silent"):
+        level(path, tmp_path / "out.wav")
+
+
+@needs_ffmpeg
+def test_a_tone_is_not_silent(tmp_path):
+    assert not measure(tone(tmp_path / "t.wav", volume=0.3)).silent

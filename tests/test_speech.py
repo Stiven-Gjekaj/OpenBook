@@ -189,3 +189,22 @@ def test_kokoro_refuses_to_say_nothing():
 
     with pytest.raises(OpenBookError, match="given nothing to say"):
         KokoroEngine().speak("  ", Voice("af_heart"))
+
+
+def test_kokoro_not_being_installed_is_reported_and_not_retried(monkeypatch):
+    # Not installed is something a person fixes. Without this it is tried three
+    # times and reported as a fault in whichever line was being spoken.
+    import builtins
+
+    from openbook.speech.kokoro import KokoroEngine
+
+    real = builtins.__import__
+
+    def refuse(name, *rest, **kw):
+        if name == "kokoro":
+            raise ImportError("No module named 'kokoro'")
+        return real(name, *rest, **kw)
+
+    monkeypatch.setattr(builtins, "__import__", refuse)
+    with pytest.raises(OpenBookError, match="uv sync --extra speech"):
+        KokoroEngine().speak("hello", Voice("af_heart"))

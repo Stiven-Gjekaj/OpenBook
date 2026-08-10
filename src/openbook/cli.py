@@ -60,6 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--speed", type=float, default=1.0, help="how fast a real voice reads"
     )
     render.add_argument(
+        "--review",
+        action="store_true",
+        help="write a page listing every line, to check the render by ear",
+    )
+    render.add_argument(
         "--dry-run",
         action="store_true",
         help="say what a render would do, and make nothing",
@@ -260,6 +265,10 @@ def _render(options) -> int:
     audio, marks, report = render_volume(volume, engine, cache, named=named)
     name = project.grammar.output.file_name.replace("{VOLUME}", volume.name)
     path = project.output_directory / name
+
+    if options.review:
+        print(f"{_review_page(project, volume, marks, report, engine)}")
+    audio = _levelled(audio, project, path.stem)
     output = project.grammar.output
     write_m4b(
         audio,
@@ -418,6 +427,28 @@ def _video(options) -> int:
     return 0
 
 
+def _review_page(project, volume, marks, report, engine):
+    """Write the page that makes a render checkable by ear."""
+    from .lexicon import known_words, load_lexicon
+    from .review import rows_from, write_page
+    from .speech.cache import key_of
+    from .speech.captions import names_from_cast
+
+    keys = {order: key_of(u, engine) for order, (u, _, _) in enumerate(report.timeline)}
+    rows = rows_from(
+        report.timeline,
+        marks,
+        names=names_from_cast(project.cast),
+        lexicon=load_lexicon(project.directory / "lexicon.toml"),
+        known=known_words(),
+        keys=keys,
+    )
+    out = project.output_directory / f"review - {volume.name}.html"
+    return write_page(
+        rows, out, title=f"Soultale, {volume.name}", cache=project.cache_directory
+    )
+
+
 def _levelled(audio, project, stem: str):
     """Bring the speech to the loudness an audiobook is expected to have.
 
@@ -425,10 +456,15 @@ def _levelled(audio, project, stem: str):
     start of every part, and an uploaded file cannot be corrected.
     """
     from .speech.audio import Audio
-    from .speech.loudness import level, measure
+    from .speech.loudness import LEAST_SECONDS, level, measure
     from .speech.package import have_ffmpeg
 
     if not project.grammar.output.level or not have_ffmpeg():
+        return audio
+    if audio.seconds < LEAST_SECONDS:
+        # Loudness is measured over a whole recording, and there is not enough
+        # of one here to measure. A piece this short is an excerpt or a test.
+        print(f"  loudness   not measured, only {audio.seconds:.1f}s of audio")
         return audio
 
     project.output_directory.mkdir(parents=True, exist_ok=True)
@@ -436,7 +472,12 @@ def _levelled(audio, project, stem: str):
     after = project.output_directory / f".{stem}.level.wav"
     try:
         audio.write(before)
-        measured = level(before, after)
+        measured = measure(before)
+        if measured.silent:
+            # A render made with the silent engine. There is nothing to raise.
+            print("  loudness   not measured, this audio is silent")
+            return audio
+        level(before, after, measured)
         levelled = Audio.read(after)
         print(f"  loudness   {measured} -> {measure(after)}")
         return levelled
