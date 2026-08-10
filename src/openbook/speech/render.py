@@ -88,9 +88,12 @@ def _say(engine, text: str, voice: VoiceRef) -> Audio:
     it happens here and every engine stays ignorant of it.
     """
     if isinstance(voice, MixedVoice):
-        return overlay(
-            [engine.speak(text, Voice(name=part)) for part in voice.parts], engine.rate
-        )
+        pieces = [engine.speak(text, Voice(name=part)) for part in voice.parts]
+        if voice.matched:
+            from .stretch import to_one_length
+
+            pieces = to_one_length(pieces)
+        return overlay(pieces, engine.rate)
     return engine.speak(text, voice)
 
 

@@ -109,16 +109,24 @@ separator = " & "
 #                comes out, and it is neither of them.
 #   mix          Speak the line one time for each character, and lay the two
 #                pieces of audio over each other. Both voices are heard, and
-#                both characters keep their own.
+#                both characters keep their own. The two start together and
+#                the shorter reading stops first.
+#   mix_matched  The same, with both readings brought to one length first, so
+#                they speak together from the first word to the last.
 #   primary      Use the voice of the first character only.
 #
-# mix does not stretch either piece to the length of the other, because that
-# would change the speed one of the characters speaks at. The two start
-# together and the shorter one stops first. Measured on Kokoro with af_heart
-# and am_michael: a one word line ends 0.07s apart, a six word line 0.35s, and
-# a fifteen word line 0.60s. Short lines sound like two people. Long ones
-# start to sound like a round.
-mode = "mix"
+# mix_matched changes how fast a character talks, which is why it is asked for
+# and never assumed. Measured on Kokoro with af_heart and am_michael, on lines
+# of one, six and fifteen words:
+#
+#   mix          the readings end 0.07s, 0.35s and 0.60s apart
+#   mix_matched  they end together, and no voice moves more than 8.7 percent
+#
+# The length they are brought to is the average of the two, so neither reading
+# carries the whole change. Moving one of them the whole way would move it
+# twice as far, and a tempo moved 7 percent is near the point where nobody
+# hears it while 14 percent is not.
+mode = "mix_matched"
 
 
 [grammar.structure]

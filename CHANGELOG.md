@@ -42,8 +42,9 @@ book it was written for has not been tested, whatever its tests say.
 - Gives each speaker code a voice, and stops the build when a code has none.
 - One code can be several characters, chosen by the chapter, for a character
   the story has not named.
-- A line two characters say together takes one blended voice, one mixed pair
-  of voices, or the voice of the first of them.
+- A line two characters say together takes one blended voice, both voices laid
+  over each other, both voices held in step with each other, or the voice of
+  the first of them.
 - Puts a silence only where the kind of the text changes, so a conversation
   keeps its speed.
 - Divides a line too long for the engine at the end of a sentence, then at a

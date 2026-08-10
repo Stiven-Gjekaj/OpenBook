@@ -280,3 +280,36 @@ def test_a_mix_and_a_blend_of_the_same_voices_are_different_audio():
 def test_a_mixed_voice_needs_two_parts():
     with pytest.raises(ValueError, match="at least two parts"):
         MixedVoice(parts=("a",))
+
+
+def test_a_matched_mix_is_not_the_same_audio_as_a_plain_one():
+    plain = MixedVoice(parts=("a", "b"))
+    matched = MixedVoice(parts=("a", "b"), matched=True)
+    assert key_for("x", plain, "e", "1") != key_for("x", matched, "e", "1")
+
+
+def test_a_plain_mix_asks_for_no_stretching(monkeypatch):
+    # ffmpeg is only needed by the mode that asks for it. A book using the
+    # plain mix must not start needing a program it never needed.
+    import openbook.speech.stretch as stretching
+    from openbook.speech.render import _say
+
+    def refuse(*_):
+        raise AssertionError("a plain mix must not stretch anything")
+
+    monkeypatch.setattr(stretching, "to_one_length", refuse)
+    audio = _say(SilentEngine(), "one two", MixedVoice(parts=("a", "b")))
+    assert audio.seconds > 0
+
+
+def test_a_matched_mix_needs_no_ffmpeg_when_the_lengths_already_agree():
+    # The silent engine gives back a length that depends on the words alone,
+    # so two readings of one line are already the same length and there is
+    # nothing to stretch. A quick check of the pauses and the chapter marks
+    # keeps working on a machine with nothing installed.
+    from openbook.speech.render import _say
+
+    audio = _say(
+        SilentEngine(), "one two three", MixedVoice(parts=("a", "b"), matched=True)
+    )
+    assert audio.seconds > 0

@@ -65,14 +65,39 @@ reads a paragraph as one unit gets most of the dialogue wrong.
 | `separator` | What divides two names in one code, such as `" & "` |
 | `mode` | `voice_blend`, `primary`, or `mix` |
 
-`voice_blend` averages the style of both voices and speaks the line once, so
-the two cannot drift apart. `primary` uses the voice of the first character
-named. `mix` speaks the line once in each voice and lays the readings over each
-other, which keeps the characters apart and lets their timing separate: two
-readings of the same words are two different lengths, so the longer one is
-still going when the shorter has stopped. Whether that sounds like a crowd or
-like an echo depends on the line, which is why the blend is the usual choice
-and this is the one you ask for.
+| Mode | What a listener hears |
+| ---- | --------------------- |
+| `voice_blend` | One voice, made from the average of the two. It belongs to neither character |
+| `mix` | Both voices. They start together and the shorter reading stops first |
+| `mix_matched` | Both voices, brought to one length, so they speak together throughout |
+| `primary` | The voice of the first character named |
+
+`mix` and `mix_matched` speak the line once in each voice and lay the readings
+over each other, so each character keeps their own voice. Two readings of the
+same words are two different lengths, which is what the two modes disagree
+about. Measured on Kokoro with `af_heart` and `am_michael`:
+
+| The line | `mix` ends apart by | `mix_matched` moves each voice by |
+| -------- | ------------------- | --------------------------------- |
+| One word | 0.07s | 4.4% |
+| Six words | 0.35s | 8.7% |
+| Fifteen words | 0.60s | 6.4% |
+
+A short line under `mix` sounds like two people. A long one starts to sound
+like a round.
+
+`mix_matched` changes how fast a character talks, which is why it is asked for
+and never assumed. It brings both readings to their average length rather than
+stretching one to meet the other, so neither carries the whole change: a tempo
+moved 7 percent is near the point where nobody hears it, and 14 percent is not.
+A reading that would have to move more than 25 percent stops at 25, because
+past that it is no longer the same performance.
+
+It needs ffmpeg, which holds the pitch while it moves the tempo. Playing a
+piece slower is one line of arithmetic and it drops the voice with it, which
+turns a character into somebody else. Nothing is stretched when the readings
+already agree on length, so a check with the silent engine still needs
+nothing installed.
 
 ### [grammar.structure]
 

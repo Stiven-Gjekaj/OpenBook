@@ -66,21 +66,26 @@ class MixedVoice:
     """Several voices, each saying the whole line, laid over each other.
 
     Unlike a blended voice this keeps the characters apart, because each one is
-    a separate piece of audio in its own voice. What it cannot keep is their
-    timing: two readings of the same words are two different lengths, so the
-    longer one is still going when the shorter has stopped. Whether that sounds
-    like a crowd or like an echo depends on the line, which is why the blend is
-    the usual choice and this is the one you ask for.
+    a separate piece of audio in its own voice. What it does not keep on its
+    own is their timing: two readings of the same words are two different
+    lengths, so the longer one is still going when the shorter has stopped.
+
+    matched brings the readings to one length first, so the two speak together
+    from the first word to the last. That is a change to how fast a character
+    talks, which is why it is asked for and not assumed.
     """
 
     parts: tuple[str, ...]
+    matched: bool = False
 
     def __post_init__(self) -> None:
         if len(self.parts) < 2:
             raise ValueError("a mixed voice needs at least two parts")
 
     def key(self) -> str:
-        return "&".join(self.parts)
+        # A different separator, because the two make different audio out of
+        # the same voices and must not share a piece of it in the cache.
+        return ("=" if self.matched else "&").join(self.parts)
 
 
 VoiceRef = Voice | BlendedVoice | MixedVoice

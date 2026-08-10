@@ -15,7 +15,7 @@ from .cast import Chapters, parse_chapters
 from .reader import Table, load_toml
 from .template import Template, compile_regex, compile_template
 
-UNISON_MODES = ("voice_blend", "mix", "primary")
+UNISON_MODES = ("voice_blend", "mix", "mix_matched", "primary")
 ACTION_MODES = ("pause", "narrator", "drop")
 
 

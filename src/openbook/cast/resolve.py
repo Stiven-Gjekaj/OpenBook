@@ -139,12 +139,15 @@ def _dialogue_voice(
             parts=tuple(entry.voice for entry in entries),
             weights=tuple(share for _ in entries),
         )
-    if mode == "mix":
-        return MixedVoice(parts=tuple(entry.voice for entry in entries))
+    if mode in ("mix", "mix_matched"):
+        return MixedVoice(
+            parts=tuple(entry.voice for entry in entries),
+            matched=mode == "mix_matched",
+        )
 
     raise OpenBookError(
         f"the unison mode {mode!r} is not one this cast stage knows. Use "
-        "voice_blend, mix, or primary"
+        "voice_blend, mix, mix_matched, or primary"
     )
 
 
