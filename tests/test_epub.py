@@ -171,3 +171,55 @@ def test_an_empty_spine_is_named(tmp_path, source):
     make_epub(bad, [])
     with pytest.raises(SourceError, match="empty spine"):
         read_file(bad, source)
+
+
+def test_the_details_of_a_book_are_read(tmp_path):
+    from openbook.source.epub import read_details
+
+    book = make_epub(
+        tmp_path / "a.epub",
+        [("one.xhtml", "(Chapter 1 || Volume 1) First.", "<p>one</p>")],
+    )
+    details = read_details(book)
+    assert details.title == "Book"
+
+
+def test_a_file_that_is_not_there_gives_empty_details(tmp_path):
+    # These are for the tags on a finished file, and a missing tag is not a
+    # reason to stop making one.
+    from openbook.source.epub import read_details
+
+    details = read_details(tmp_path / "absent.epub")
+    assert details.title == "" and details.author == "" and details.cover is None
+
+
+def test_a_file_that_is_not_a_zip_gives_empty_details(tmp_path):
+    from openbook.source.epub import read_details
+
+    bad = tmp_path / "bad.epub"
+    bad.write_text("not an epub", encoding="utf-8")
+    assert read_details(bad).cover is None
+
+
+def test_a_cover_named_by_properties_is_found(tmp_path):
+    from openbook.source.epub import _cover_name
+
+    raw = '<item href="cover.jpg" id="c" properties="cover-image" media-type="image/jpeg"/>'
+    assert _cover_name(raw) == "cover.jpg"
+
+
+def test_a_cover_named_the_older_way_is_found(tmp_path):
+    # An older book points at its cover through a meta element instead.
+    from openbook.source.epub import _cover_name
+
+    raw = (
+        '<meta name="cover" content="cover-img"/>'
+        '<item id="cover-img" href="art/cover.png" media-type="image/png"/>'
+    )
+    assert _cover_name(raw) == "art/cover.png"
+
+
+def test_a_book_with_no_cover_names_none():
+    from openbook.source.epub import _cover_name
+
+    assert _cover_name('<item href="one.xhtml" id="i1"/>') == ""

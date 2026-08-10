@@ -90,8 +90,9 @@ def write_m4b(
     bitrate: str = "64k",
     sample_rate: int | None = None,
     channels: int | None = None,
+    cover: bytes | None = None,
 ) -> Path:
-    """Write one volume as an M4B with its chapters in it."""
+    """Write one volume as an M4B with its chapters and its cover in it."""
     require_ffmpeg()
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -104,6 +105,13 @@ def write_m4b(
         metadata.write_text(
             write_metadata(marks, title=title, author=author), encoding="utf-8"
         )
+        picture = work / "cover.jpg"
+        if cover:
+            picture.write_bytes(cover)
+        # The cover goes in as a stream of its own, marked as artwork, which is
+        # how a player knows to show it rather than to play it.
+        art = ["-i", str(picture)] if cover else []
+        art_map = ["-map", "2:v", "-disposition:v:0", "attached_pic"] if cover else []
         run_ffmpeg(
             [
                 "ffmpeg",
@@ -115,6 +123,10 @@ def write_m4b(
                 str(source),
                 "-i",
                 str(metadata),
+                *art,
+                "-map",
+                "0:a",
+                *art_map,
                 "-map_metadata",
                 "1",
                 "-c:a",
@@ -130,7 +142,7 @@ def write_m4b(
             ]
         )
     finally:
-        for leftover in (source, metadata):
+        for leftover in (source, metadata, work / "cover.jpg"):
             leftover.unlink(missing_ok=True)
         if work.exists():
             work.rmdir()

@@ -94,6 +94,75 @@ def read_file(
     return tuple(found)
 
 
+@dataclass(frozen=True)
+class BookDetails:
+    """What the EPUB says about itself."""
+
+    title: str = ""
+    author: str = ""
+    cover: bytes | None = None
+    cover_type: str = ""
+
+
+def read_details(path: Path) -> BookDetails:
+    """Read the title, the author, and the cover out of an EPUB file.
+
+    A book with none of them gives an empty answer rather than failing. These
+    are for the tags on a finished file, and a missing tag is not a reason to
+    stop making one.
+    """
+    if not path.exists():
+        return BookDetails()
+    try:
+        archive = zipfile.ZipFile(path)
+    except zipfile.BadZipFile:
+        return BookDetails()
+
+    with archive:
+        package = _package_path(archive, path)
+        raw = archive.read(package).decode("utf-8", errors="replace")
+        base = package.rpartition("/")[0]
+        cover_name = _cover_name(raw)
+        cover = None
+        if cover_name:
+            full = f"{base}/{cover_name}" if base else cover_name
+            try:
+                cover = archive.read(full)
+            except KeyError:
+                cover = None
+        return BookDetails(
+            title=_first(raw, "title"),
+            author=_first(raw, "creator"),
+            cover=cover,
+            cover_type="image/jpeg"
+            if (cover_name or "").endswith((".jpg", ".jpeg"))
+            else "image/png",
+        )
+
+
+def _first(raw: str, name: str) -> str:
+    found = re.search(rf"<dc:{name}[^>]*>(.*?)</dc:{name}>", raw, re.S)
+    return _text(found.group(1)) if found else ""
+
+
+def _cover_name(raw: str) -> str:
+    """The file inside the archive that holds the cover picture."""
+    found = re.search(r'<item[^>]*properties="[^"]*cover-image[^"]*"[^>]*>', raw)
+    if found:
+        href = re.search(r'href="([^"]+)"', found.group(0))
+        if href:
+            return href.group(1)
+    # Older books name the cover through a meta element instead.
+    meta = re.search(r'<meta[^>]*name="cover"[^>]*content="([^"]+)"', raw)
+    if meta:
+        item = re.search(rf'<item[^>]*id="{re.escape(meta.group(1))}"[^>]*>', raw)
+        if item:
+            href = re.search(r'href="([^"]+)"', item.group(0))
+            if href:
+                return href.group(1)
+    return ""
+
+
 def _package_path(archive: zipfile.ZipFile, path: Path) -> str:
     try:
         container = archive.read(_CONTAINER)

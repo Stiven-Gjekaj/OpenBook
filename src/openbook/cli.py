@@ -16,6 +16,7 @@ from pathlib import Path
 from . import __version__
 from .build import Project, build_volume, render_volume, volume_names
 from .errors import OpenBookError
+from .source.epub import BookDetails, read_details
 from .speech import Cache, SilentEngine
 from .speech.package import have_ffmpeg, write_m4b
 
@@ -270,12 +271,14 @@ def _render(options) -> int:
         print(f"{_review_page(project, volume, marks, report, engine)}")
     audio = _levelled(audio, project, path.stem)
     output = project.grammar.output
+    details = read_details(project.files[0]) if project.files else BookDetails()
     write_m4b(
         audio,
         marks,
         path,
-        title=volume.name,
-        author="",
+        title=f"{details.title or 'Soultale'}, {volume.name}",
+        author=details.author,
+        cover=details.cover,
         bitrate=output.bitrate,
         sample_rate=output.sample_rate,
         channels=output.channels,
