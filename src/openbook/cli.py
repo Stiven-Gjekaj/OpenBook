@@ -48,6 +48,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     commands.add_parser("notes", help="print what the parser noticed in the book")
 
+    words = commands.add_parser(
+        "words", help="list the words that need a pronunciation entry"
+    )
+    words.add_argument("--limit", type=int, default=60, help="how many to show")
+
     render = commands.add_parser("render", help="make the audio for a volume")
     render.add_argument("--volume", required=True)
     render.add_argument("--engine", choices=ENGINES, default="silent")
@@ -181,6 +186,35 @@ def _engine_for(options):
     return SilentEngine()
 
 
+def _words(options) -> int:
+    from .lexicon import find_unknown, have_dictionary, load_lexicon
+    from .parse import Dialogue, Narration
+
+    project = Project.open(options.project)
+    if not have_dictionary():
+        raise OpenBookError(
+            "there is no word list on this machine to compare against, so every "
+            "word would look unknown. Install espeak-ng, or put a word list at "
+            "/usr/share/dict/words"
+        )
+
+    lexicon = load_lexicon(project.directory / "lexicon.toml")
+    spoken = [
+        (chapter.number, segment.text)
+        for chapter in project.parsed()
+        for segment in chapter.segments
+        if isinstance(segment, Narration | Dialogue)
+    ]
+    unknown = find_unknown(spoken, lexicon)
+    for entry in unknown[: options.limit]:
+        print(f"{entry.count:>6}  {entry.word:<24} first in chapter {entry.chapter}")
+    print(
+        f"\n{len(unknown)} words have no entry. {len(lexicon)} are answered already.",
+        file=sys.stderr,
+    )
+    return 0
+
+
 def _render(options) -> int:
     project = Project.open(options.project)
     engine = _engine_for(options)
@@ -236,6 +270,7 @@ _COMMANDS = {
     "check": _check,
     "plan": _plan,
     "notes": _notes,
+    "words": _words,
     "render": _render,
     "cache": _cache,
 }
