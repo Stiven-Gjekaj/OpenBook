@@ -191,7 +191,7 @@ def _corrections_match(project, engine) -> bool:
         used: set[str] = set()
         for name in volume_names(project):
             volume = build_volume(project, name, max_characters=engine.max_characters)
-            used |= set(volume.plan.corrected)
+            used |= set(volume.corrections_used(project.volumes().get(name)))
     except OpenBookError as error:
         # The cast is unfinished, or the book cannot be read. Both are already
         # reported above, and neither is a fault of this file.
@@ -347,7 +347,9 @@ def _render(options) -> int:
         print(f"utterances  {total}, of which {held} are already made")
         print(f"words       {volume.plan.words():,}")
         print(f"silence     {volume.plan.silent_seconds:.0f}s")
-        _report_corrections(project, volume, lead="")
+        _report_corrections(
+            project, volume, project.volumes().get(volume.name), lead=""
+        )
         return 0
 
     named = project.volumes().get(volume.name)
@@ -379,7 +381,7 @@ def _render(options) -> int:
         f"{report.reused} from the cache"
     )
     print(f"  {len(marks)} chapters, {audio.seconds / 3600:.2f} hours")
-    _report_corrections(project, volume)
+    _report_corrections(project, volume, named)
     return 0
 
 
@@ -509,18 +511,18 @@ def _video(options) -> int:
         f"  {len(marks)} chapters, {audio.seconds / 3600:.2f} hours, "
         f"{report.made} made, {report.reused} from the cache"
     )
-    _report_corrections(project, volume)
+    _report_corrections(project, volume, named)
     return 0
 
 
-def _report_corrections(project, volume, *, lead: str = "  ") -> None:
+def _report_corrections(project, volume, named=None, *, lead: str = "  ") -> None:
     """Say what the corrections file did to this render.
 
     A file that is read and changes nothing looks exactly like a file that is
     not read at all, so this is printed whenever the file exists, including
     when the count is zero.
     """
-    said = _corrections_said(project.corrections, len(volume.plan.corrected))
+    said = _corrections_said(project.corrections, len(volume.corrections_used(named)))
     if said:
         print(f"{lead}corrections {said}")
 

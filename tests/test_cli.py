@@ -339,3 +339,53 @@ def test_check_does_not_blame_the_corrections_for_an_unfinished_cast(project, ca
     out = capsys.readouterr().out
     assert "not checked against the book" in out
     assert "match no line in the book" not in out
+
+
+def with_intro(project, words):
+    """Give the example grammar an intro for the narrator to read.
+
+    The key goes inside the [render] table the example already has. A second
+    table of the same name is not valid TOML.
+    """
+    path = project / "grammar.toml"
+    text = path.read_text(encoding="utf-8")
+    assert "\n[render]\n" in text
+    path.write_text(
+        text.replace("\n[render]\n", f'\n[render]\nintro = "{words}"\n', 1),
+        encoding="utf-8",
+    )
+    return project
+
+
+@needs_ffmpeg
+def test_the_lexicon_reaches_the_intro(project, capsys):
+    # The intro names the book and its characters, so it was the one place a
+    # pronunciation entry was worth having and the one place it was ignored.
+    cast_with_voices(project)
+    with_intro(project, "Welcome to Vazroth.")
+    (project / "lexicon.toml").write_text(
+        '[words]\nVazroth = "Vaz-roth"\n', encoding="utf-8"
+    )
+    assert main(["-C", str(project), "render", "--volume", "Volume 1", "--review"]) == 0
+    page = (project / "out" / "review - Volume 1.html").read_text(encoding="utf-8")
+    assert "Vaz-roth" in page
+    assert "Welcome to Vazroth." not in page
+
+
+@needs_ffmpeg
+def test_a_correction_reaches_the_intro(project, capsys):
+    cast_with_voices(project)
+    with_intro(project, "Welcome along.")
+    corrections(project, '[corrections]\n"Welcome along." = "Welcome, along."\n')
+    assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
+    assert "corrections 1 used" in capsys.readouterr().out
+
+
+def test_check_accepts_a_correction_for_the_intro(project, capsys):
+    # The intro is made when the volume is spoken and not when it is planned,
+    # so a check that only looked at the plan called this a mistake.
+    cast_with_voices(project)
+    with_intro(project, "Welcome along.")
+    corrections(project, '[corrections]\n"Welcome along." = "Welcome, along."\n')
+    main(["-C", str(project), "check"])
+    assert "match no line in the book" not in capsys.readouterr().out

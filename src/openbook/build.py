@@ -13,8 +13,10 @@ from .cast import resolve_chapter
 from .cast.utterance import Item
 from .config.cast import Cast, load_cast
 from .config.grammar import Grammar, load_grammar
-from .corrections import Corrections, load_corrections
+from .corrections import EMPTY as EMPTY_CORRECTIONS
+from .corrections import Corrections, load_corrections, used_by
 from .errors import OpenBookError
+from .lexicon import EMPTY as EMPTY_LEXICON
 from .lexicon import Lexicon, load_lexicon
 from .parse import Note, ParsedChapter, parse_chapter
 from .plan.planner import Plan, plan_chapter, plan_volume
@@ -94,6 +96,39 @@ class VolumePlan:
     every: tuple[ParsedChapter, ...]
     notes: tuple[Note, ...] = field(default_factory=tuple)
 
+    # The intro and the outro are made when the volume is spoken, and not when
+    # it is planned, because their words need the details of the volume filled
+    # in. They still get everything the chapters get, so these come along.
+    lexicon: Lexicon = EMPTY_LEXICON
+    corrections: Corrections = EMPTY_CORRECTIONS
+
+    def as_spoken(self, text: str, named) -> str:
+        """One line the narrator reads outside the chapters, ready to say."""
+        return self.corrections.apply(self.as_marked(text, named))
+
+    def as_marked(self, text: str, named) -> str:
+        """The same line as the review page showed it, before any correction.
+
+        This is what a correction names. Asking whether a correction is used
+        against the corrected words would never find one.
+        """
+        return self.lexicon.apply(fill(text, self, named))
+
+    def announcements(self, named) -> tuple[str, ...]:
+        return tuple(
+            said
+            for said in (
+                self.as_marked(self.grammar.render.intro, named),
+                self.as_marked(self.grammar.render.outro, named),
+            )
+            if said
+        )
+
+    def corrections_used(self, named=None) -> tuple[str, ...]:
+        """Every correction this volume uses, the intro and the outro too."""
+        outside = used_by(self.announcements(named), self.corrections)
+        return tuple(dict.fromkeys(self.plan.corrected + outside))
+
 
 def build_volume(
     project: Project, name: str, *, max_characters: int | None = None
@@ -138,6 +173,8 @@ def build_volume(
         narrator=project.cast.narrator,
         every=project.parsed(),
         notes=tuple(notes),
+        lexicon=project.lexicon,
+        corrections=project.corrections,
     )
 
 
@@ -198,9 +235,15 @@ def render_volume(volume: VolumePlan, engine, cache, *, named=None):
     narrator = Voice(volume.narrator)
 
     def spoken(text: str, title: str) -> None:
-        """Put a piece the narrator reads before or after the chapters."""
+        """Put a piece the narrator reads before or after the chapters.
+
+        These words go through the lexicon and the corrections like any other,
+        which they did not until it was noticed that an intro naming the book
+        and its characters was the one place every pronunciation entry was
+        ignored.
+        """
         nonlocal at
-        words = fill(text, volume, named)
+        words = volume.as_spoken(text, named)
         if not words:
             return
         said = Utterance(text=words, voice=narrator, kind=ANNOUNCEMENT)

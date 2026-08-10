@@ -209,6 +209,8 @@ choose.
 
 Each entry replaces a word before it reaches a voice, and never touches the
 book. Whole words only, so a rule for "Ivy" does not reach inside "Ivory".
+It reaches the `intro` and the `outro` as well, which are the lines most
+likely to name the book and the people in it.
 
 **Every name is quoted.** A great many of these words hold an apostrophe, and
 TOML does not accept one in a bare name.
@@ -242,6 +244,11 @@ Then fill in what each line should say and render again.
 was given: after `lexicon.toml`, and after a line too long for the engine was
 divided, which is why the page sometimes shows a paragraph in two pieces. Runs
 of spaces and line breaks do not have to match, and capitals do.
+
+Because the lexicon comes first, **a new lexicon entry can leave a correction
+with nothing to match**, if the entry changes a word in the corrected line.
+That is not quiet: `openbook check` names the line, and the answer is to copy
+it again from a new review page.
 
 Two entries are refused rather than ignored:
 
