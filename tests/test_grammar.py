@@ -188,3 +188,41 @@ def test_the_intro_and_outro_are_the_words_the_author_wrote(tmp_path):
     grammar = load_grammar(write(tmp_path, text))
     assert grammar.render.intro == "Welcome to {VOLUME}."
     assert grammar.render.outro == "That was {VOLUME}."
+
+
+def test_a_book_with_no_parts_groups_by_volume(tmp_path):
+    grammar = load_grammar(write(tmp_path, MINIMAL))
+    assert grammar.output.parts == {}
+    assert grammar.output.group_for(5, "Volume 1") == "Volume 1"
+
+
+def test_a_named_span_of_chapters_becomes_its_own_file(tmp_path):
+    # A volume of four hours is a long listen and a long upload. Where a part
+    # ends is a decision about the story, so it is written down.
+    text = MINIMAL.replace(
+        'file_name = "Soultale - {VOLUME}.m4b"',
+        'file_name = "Soultale - {VOLUME}.m4b"\n\n[output.parts]\n'
+        '"Volume 1, Part 1" = "0-12"\n"Volume 1, Part 2" = "13-22"',
+    )
+    grammar = load_grammar(write(tmp_path, text))
+    assert grammar.output.group_for(0, "Prologue") == "Volume 1, Part 1"
+    assert grammar.output.group_for(12, "Volume 1") == "Volume 1, Part 1"
+    assert grammar.output.group_for(13, "Volume 1") == "Volume 1, Part 2"
+
+
+def test_a_chapter_outside_every_span_keeps_its_volume(tmp_path):
+    text = MINIMAL.replace(
+        'file_name = "Soultale - {VOLUME}.m4b"',
+        'file_name = "Soultale - {VOLUME}.m4b"\n\n[output.parts]\n"Early" = "0-12"',
+    )
+    grammar = load_grammar(write(tmp_path, text))
+    assert grammar.output.group_for(40, "Volume 2") == "Volume 2"
+
+
+def test_a_span_that_is_not_chapters_is_refused(tmp_path):
+    text = MINIMAL.replace(
+        'file_name = "Soultale - {VOLUME}.m4b"',
+        'file_name = "Soultale - {VOLUME}.m4b"\n\n[output.parts]\n"Bad" = "the middle"',
+    )
+    with pytest.raises(ConfigError, match="does not name a chapter"):
+        load_grammar(write(tmp_path, text))

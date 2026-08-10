@@ -63,7 +63,7 @@ class Project:
         return tuple(parse_chapter(c, self.grammar) for c in self.chapters())
 
     def volume_of(self, chapter: ParsedChapter) -> str:
-        return self.grammar.output.group_of(chapter.volume)
+        return self.grammar.output.group_for(chapter.number, chapter.volume)
 
     def volumes(self) -> dict[str, Volume]:
         """The name of each volume, out of the archive chapters.

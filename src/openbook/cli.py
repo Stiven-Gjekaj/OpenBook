@@ -107,7 +107,7 @@ def _chapters(options) -> int:
     wanted = options.volume
     shown = 0
     for chapter in project.chapters():
-        group = project.grammar.output.group_of(chapter.volume)
+        group = project.grammar.output.group_for(chapter.number, chapter.volume)
         if wanted and wanted not in (chapter.volume, group):
             continue
         print(f"{chapter.number:>4}  {group:<10}  {chapter.title}")

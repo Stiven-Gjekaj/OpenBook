@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..errors import ConfigError
+from .cast import Chapters, parse_chapters
 from .reader import Table, load_toml
 from .template import Template, compile_regex, compile_template
 
@@ -88,6 +89,7 @@ class Output:
     group_by: str
     file_name: str
     merge_volumes: dict[str, str]
+    parts: dict[str, Chapters]
     bitrate: str
     sample_rate: int | None
     channels: int | None
@@ -95,6 +97,19 @@ class Output:
 
     def group_of(self, volume: str) -> str:
         return self.merge_volumes.get(volume, volume)
+
+    def group_for(self, number: int, volume: str) -> str:
+        """Which file a chapter belongs in.
+
+        A named span of chapters wins over the volume it sits in. A volume of
+        four hours is a long listen and a long upload, and dividing it is a
+        decision about where a part should end rather than about the book, so
+        it is written down rather than worked out from the durations.
+        """
+        for name, chapters in self.parts.items():
+            if chapters.contains(number):
+                return name
+        return self.group_of(volume)
 
 
 @dataclass(frozen=True)
@@ -292,6 +307,10 @@ def _read_output(table: Table) -> Output:
         group_by=table.one_of("group_by", ("volume",)),
         file_name=table.string("file_name"),
         merge_volumes=table.string_map("merge_volumes", optional=True),
+        parts={
+            name: parse_chapters(span, key=f"output.parts.{name}", path=table.path)
+            for name, span in table.string_map("parts", optional=True).items()
+        },
         bitrate=table.string("bitrate", "64k"),
         sample_rate=table.integer("sample_rate", 0) or None,
         channels=table.integer("channels", 0) or None,
