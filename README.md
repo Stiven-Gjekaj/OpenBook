@@ -9,7 +9,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
   <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
-  <img src="https://img.shields.io/badge/tests-426_passing-427819?style=for-the-badge" alt="426 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-428_passing-427819?style=for-the-badge" alt="428 tests passing"/>
 </p>
 
 <p align="center">
@@ -104,7 +104,8 @@ music. [TODO.md](TODO.md) holds every task, with the reason for each.
 - A speaker code with no voice stops the build and names the chapter
 - One speaker code can be several characters, chosen by chapter, for a
   character whose name the story has not given yet
-- Two characters can share a line, and speak it in one blended voice
+- Two characters can share a line, in one blended voice or as two readings laid
+  over each other
 
 </td>
 </tr>
@@ -190,7 +191,7 @@ See [docs/architecture.md](docs/architecture.md) for the whole picture.
 
 ## Configuration
 
-Two files, both commented line by line.
+Two files are needed, and both are commented line by line.
 
 **[grammar.toml](examples/soultale/grammar.toml)** says what a chapter looks
 like: how a heading reads, how a line of dialogue is marked, which volumes to
@@ -289,30 +290,35 @@ assets/             the logo
 
 <table>
 <tr>
-<td align="center" width="20%" valign="top">
+<td align="center" width="16%" valign="top">
 <h3>Build</h3>
 <p>How the stages<br/>fit together</p>
 <a href="docs/architecture.md"><b>Architecture</b></a>
 </td>
-<td align="center" width="20%" valign="top">
+<td align="center" width="16%" valign="top">
 <h3>Configure</h3>
 <p>Every key of<br/>every file</p>
 <a href="docs/configuration.md"><b>Configuration</b></a>
 </td>
-<td align="center" width="20%" valign="top">
+<td align="center" width="16%" valign="top">
 <h3>Plan</h3>
 <p>Every task<br/>that is left</p>
 <a href="TODO.md"><b>Roadmap</b></a>
 </td>
-<td align="center" width="20%" valign="top">
+<td align="center" width="16%" valign="top">
 <h3>Help</h3>
 <p>When it refuses<br/>to run</p>
 <a href="SUPPORT.md"><b>Support</b></a>
 </td>
-<td align="center" width="20%" valign="top">
+<td align="center" width="16%" valign="top">
 <h3>Join in</h3>
 <p>How to work<br/>on this</p>
 <a href="CONTRIBUTING.md"><b>Contributing</b></a>
+</td>
+<td align="center" width="16%" valign="top">
+<h3>Follow</h3>
+<p>What changed,<br/>and when</p>
+<a href="CHANGELOG.md"><b>Changelog</b></a>
 </td>
 </tr>
 </table>

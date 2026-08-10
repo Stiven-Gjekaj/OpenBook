@@ -1,0 +1,73 @@
+<div align="center">
+  <a href="README.md"><img src="assets/openbook.svg" alt="OpenBook" height="44"></a>
+</div>
+
+# Changelog
+
+Every release is written here, newest first. A version is `MAJOR.MINOR.PATCH`.
+A change to the shape of a configuration file, or to what a command prints,
+raises the minor number while the major number is 0.
+
+A tag such as `v0.2.0` builds the package and attaches it to a release on
+GitHub. Nothing goes to PyPI yet, and [TODO.md](TODO.md) says why.
+
+## Unreleased
+
+Nothing is released. The whole list below is what is in the repository, and it
+waits on the first volume of Soultale: a tool that has not finished the one
+book it was written for has not been tested, whatever its tests say.
+
+### It reads a book
+
+- Reads one or more EPUB files as one book, in the order of the spine rather
+  than the order of the file names.
+- Keeps one copy of a chapter that two files both hold.
+- Passes over the volumes named in `skip_volume_pattern`, and over a cover and
+  a table of contents without being told to.
+- Reads the name of each volume out of the archive chapters, so a volume is
+  named in one place.
+
+### It parses a chapter
+
+- Divides narration from dialogue with the rules in `grammar.toml`, and holds
+  no rule about any one book in the code.
+- Divides a paragraph at every line break before looking for a speaker,
+  because two thirds of the dialogue in Soultale shares a paragraph.
+- Reads an action written in asterisks inside a line of dialogue, and makes it
+  a pause, gives it to the narrator, or drops it.
+- Says what it noticed and could not answer, rather than guessing.
+
+### It casts and plans
+
+- Gives each speaker code a voice, and stops the build when a code has none.
+- One code can be several characters, chosen by the chapter, for a character
+  the story has not named.
+- A line two characters say together takes one blended voice, one mixed pair
+  of voices, or the voice of the first of them.
+- Puts a silence only where the kind of the text changes, so a conversation
+  keeps its speed.
+- Divides a line too long for the engine at the end of a sentence, then at a
+  clause, then between two words, in that order.
+
+### It speaks
+
+- Kokoro, espeak-ng, and a silent engine that gives quiet of the right length.
+- Every piece of audio is kept under a key made from the text, the voice, the
+  engine, and the version of the engine. A correction makes one line again.
+- `lexicon.toml` says how an invented name is said, everywhere in the book.
+  `openbook words` finds the words that need an entry, most frequent first.
+
+### It writes files
+
+- An M4B with chapter marks, a cover, and the loudness an audiobook is
+  expected to have.
+- A video for each volume, with a card for each chapter, music ducked under
+  the speech, a description carrying the time of every chapter, and captions.
+- Refuses to encode a video whose cards and narration disagree.
+
+### It can be checked by ear
+
+- `--review` writes a page listing every line with a button that plays it, the
+  ones most likely to be wrong first.
+- Marked lines go into `corrections.toml`, and a render says how many were
+  used. `openbook check` refuses one that matches no line in the book.

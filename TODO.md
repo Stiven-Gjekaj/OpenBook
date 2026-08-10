@@ -52,10 +52,13 @@ block back, so a marked line is not yet remade.
 
 ### Repository
 
-- [ ] A test that checks the number in the readme badge against the number of
-      tests, so the badge cannot go stale on its own.
-- [ ] `CHANGELOG.md`, once there is a release to write in it.
-- [ ] Decide whether this goes to PyPI, and add a release workflow if it does.
+- [ ] Publish to PyPI. **Not yet, and here is the condition.** Publishing is a
+      promise that the command line and the shape of the configuration files
+      will not move under somebody, and neither has yet been through a real
+      release of a real book. A tag builds the package and attaches it to a
+      release on GitHub, and `uv add` installs from a git tag in one line, so
+      nothing is blocked by waiting. Publish once the first volume is out and
+      the configuration has survived it.
 
 ## Dropped
 

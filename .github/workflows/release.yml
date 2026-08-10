@@ -1,0 +1,65 @@
+name: Release
+
+# A tag such as v0.2.0 builds the package and attaches it to a release, so a
+# person can install one fixed version without cloning the repository.
+#
+# Nothing goes to PyPI. See TODO.md for the reason and for what would change
+# that.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and attach the package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install the project
+        run: uv sync
+
+      # The ordinary checks run on a push to a branch, and a tag is not a
+      # branch, so they have to run again here. A release built from a commit
+      # that fails its tests is worse than no release.
+      - name: Check formatting
+        run: uv run ruff format --check .
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Test
+        run: uv run pytest
+
+      - name: Check the tag against the version
+        run: |
+          version=$(uv run python -c "import openbook; print(openbook.__version__)")
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag" ]; then
+            echo "the tag is $tag and the package says $version." >&2
+            echo "Change the version in pyproject.toml and in" >&2
+            echo "src/openbook/__init__.py, or move the tag." >&2
+            exit 1
+          fi
+          echo "version $version"
+
+      - name: Build
+        run: uv build
+
+      - name: Attach the package to a release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "$GITHUB_REF_NAME" \
+            --notes "See CHANGELOG.md for what changed." \
+            --verify-tag
