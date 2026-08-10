@@ -151,3 +151,41 @@ def test_pruning_leaves_no_empty_directory(tmp_path):
     cache.put("drop", Audio.silence(0.1, 8000))
     cache.prune(set())
     assert list(tmp_path.iterdir()) == []
+
+
+def test_the_kokoro_engine_reports_itself_without_loading_a_model():
+    # Building the engine must not download anything. The model arrives the
+    # first time something is spoken, and not before.
+    from openbook.speech.kokoro import KokoroEngine
+
+    engine = KokoroEngine()
+    assert engine.name == "kokoro"
+    assert engine.rate == 24000
+    assert engine.max_characters == 480
+
+
+def test_the_speed_is_part_of_the_kokoro_version():
+    from openbook.speech.kokoro import KokoroEngine
+
+    assert KokoroEngine(speed=1.0).version != KokoroEngine(speed=1.1).version
+
+
+def test_a_speed_of_nothing_is_refused():
+    from openbook.speech.kokoro import KokoroEngine
+
+    with pytest.raises(ValueError, match="above zero"):
+        KokoroEngine(speed=0)
+
+
+def test_kokoro_refuses_a_voice_whose_language_it_cannot_tell():
+    from openbook.speech.kokoro import KokoroEngine
+
+    with pytest.raises(OpenBookError, match="names a language"):
+        KokoroEngine().speak("hello", Voice("zz_nobody"))
+
+
+def test_kokoro_refuses_to_say_nothing():
+    from openbook.speech.kokoro import KokoroEngine
+
+    with pytest.raises(OpenBookError, match="given nothing to say"):
+        KokoroEngine().speak("  ", Voice("af_heart"))

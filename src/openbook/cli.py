@@ -19,7 +19,7 @@ from .errors import OpenBookError
 from .speech import Cache, SilentEngine
 from .speech.package import have_ffmpeg, write_m4b
 
-ENGINES = ("silent",)
+ENGINES = ("silent", "kokoro")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -51,6 +51,9 @@ def build_parser() -> argparse.ArgumentParser:
     render = commands.add_parser("render", help="make the audio for a volume")
     render.add_argument("--volume", required=True)
     render.add_argument("--engine", choices=ENGINES, default="silent")
+    render.add_argument(
+        "--speed", type=float, default=1.0, help="how fast a real voice reads"
+    )
     render.add_argument(
         "--dry-run",
         action="store_true",
@@ -159,9 +162,28 @@ def _notes(options) -> int:
     return 0
 
 
+def _engine_for(options):
+    """Build the engine the person asked for.
+
+    The silent engine is the default. It gives quiet of the right length, so a
+    person can hear where the pauses fall and check the chapter marks without
+    waiting for a real render.
+    """
+    if getattr(options, "engine", "silent") == "kokoro":
+        try:
+            from .speech.kokoro import KokoroEngine
+        except ImportError as error:
+            raise OpenBookError(
+                "the kokoro engine is not installed. Add it with "
+                "'uv sync --extra speech'"
+            ) from error
+        return KokoroEngine(speed=getattr(options, "speed", 1.0))
+    return SilentEngine()
+
+
 def _render(options) -> int:
     project = Project.open(options.project)
-    engine = SilentEngine()
+    engine = _engine_for(options)
     cache = Cache(project.cache_directory)
     volume = build_volume(project, options.volume, max_characters=engine.max_characters)
 
