@@ -34,6 +34,20 @@ class Project:
     lexicon: Lexicon
     corrections: Corrections
 
+    # Reading and parsing a book is the same answer every time within one
+    # command, and several commands ask for it more than once. A check on a
+    # book of 325 chapters asked thirty times and took five seconds where it
+    # takes a quarter of one. Nothing on disk changes while a command runs.
+    _read: tuple[Chapter, ...] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+    _parsed: tuple[ParsedChapter, ...] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+    _volumes: dict[str, Volume] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+
     @classmethod
     def open(cls, directory: Path) -> Project:
         directory = Path(directory)
@@ -58,14 +72,23 @@ class Project:
         return self.directory / "out"
 
     def chapters(self) -> tuple[Chapter, ...]:
+        # The files are looked for every time, and only the reading is kept.
+        # A file that went missing is the caller's situation and has to be
+        # reported whenever it is asked about.
         missing = [path for path in self.files if not path.exists()]
         if missing:
             names = ", ".join(str(path) for path in missing)
             raise OpenBookError(f"these book files are missing: {names}")
-        return read_book(self.files, self.grammar.source)
+        if self._read is None:
+            self._read = read_book(self.files, self.grammar.source)
+        return self._read
 
     def parsed(self) -> tuple[ParsedChapter, ...]:
-        return tuple(parse_chapter(c, self.grammar) for c in self.chapters())
+        if self._parsed is None:
+            self._parsed = tuple(
+                parse_chapter(c, self.grammar) for c in self.chapters()
+            )
+        return self._parsed
 
     def volume_of(self, chapter: ParsedChapter) -> str:
         return self.grammar.output.group_for(chapter.number, chapter.volume)
@@ -77,9 +100,12 @@ class Project:
         reading the book as a whole keeps the first and drops the second, and
         the second is the one that names the last three volumes.
         """
+        if self._volumes is not None:
+            return self._volumes
         found: dict[str, Volume] = {}
         for path in self.files:
             found |= read_volumes(read_file(path, self.grammar.source, skipped=True))
+        self._volumes = found
         return found
 
 

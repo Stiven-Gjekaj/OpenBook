@@ -389,3 +389,27 @@ def test_check_accepts_a_correction_for_the_intro(project, capsys):
     corrections(project, '[corrections]\n"Welcome along." = "Welcome, along."\n')
     main(["-C", str(project), "check"])
     assert "match no line in the book" not in capsys.readouterr().out
+
+
+def test_a_book_is_read_and_parsed_once_for_one_command(project):
+    # A check on 325 chapters asked thirty times and took five seconds where
+    # it takes a quarter of one.
+    from openbook.build import Project
+
+    opened = Project.open(project)
+    assert opened.chapters() is opened.chapters()
+    assert opened.parsed() is opened.parsed()
+    assert opened.volumes() is opened.volumes()
+
+
+def test_a_book_file_that_goes_missing_is_still_reported(project):
+    # Only the reading is kept. Whether the file is there is the caller's
+    # situation and has to be answered whenever it is asked.
+    from openbook.build import Project
+    from openbook.errors import OpenBookError
+
+    opened = Project.open(project)
+    assert opened.chapters()
+    (project / "book.epub").unlink()
+    with pytest.raises(OpenBookError, match="missing"):
+        opened.chapters()
