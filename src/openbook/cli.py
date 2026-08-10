@@ -53,6 +53,11 @@ def build_parser() -> argparse.ArgumentParser:
         "words", help="list the words that need a pronunciation entry"
     )
     words.add_argument("--limit", type=int, default=60, help="how many to show")
+    words.add_argument(
+        "--write",
+        action="store_true",
+        help="write lexicon.toml with the words found and their sound left blank",
+    )
 
     render = commands.add_parser("render", help="make the audio for a volume")
     render.add_argument("--volume", required=True)
@@ -238,6 +243,18 @@ def _words(options) -> int:
         if isinstance(segment, Narration | Dialogue)
     ]
     unknown = find_unknown(spoken, lexicon)
+    if options.write:
+        path = project.directory / "lexicon.toml"
+        if path.exists():
+            raise OpenBookError(
+                f"{path} exists already. Move it out of the way, or add the "
+                "words by hand, so that nothing you have written is lost"
+            )
+        path.write_text(_starter_lexicon(unknown), encoding="utf-8")
+        print(f"{path}")
+        print(f"  {len(unknown)} words, each with its sound left blank")
+        return 0
+
     for entry in unknown[: options.limit]:
         print(f"{entry.count:>6}  {entry.word:<24} first in chapter {entry.chapter}")
     print(
@@ -269,6 +286,7 @@ def _render(options) -> int:
 
     if options.review:
         print(f"{_review_page(project, volume, marks, report, engine)}")
+    print(f"{_write_captions(project, path, report, announcements=True)}")
     audio = _levelled(audio, project, path.stem)
     output = project.grammar.output
     details = read_details(project.files[0]) if project.files else BookDetails()
@@ -294,7 +312,6 @@ def _render(options) -> int:
 
 
 def _video(options) -> int:
-    from .speech.captions import cues_from_timeline, names_from_cast, to_srt
     from .speech.cards import Style, make_chapter_cards, write_concat_list
     from .speech.verify import (
         check_cards_against_time,
@@ -329,14 +346,7 @@ def _video(options) -> int:
     out = project.output_directory / name
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    captions = out.with_suffix(".srt")
-    captions.write_text(
-        to_srt(
-            cues_from_timeline(report.timeline, names=names_from_cast(project.cast))
-        ),
-        encoding="utf-8",
-    )
-    print(f"{captions}")
+    print(f"{_write_captions(project, out, report)}")
 
     # The name of the volume comes from the archive chapters, so it is written
     # in one place and read from there rather than typed again here.
@@ -428,6 +438,59 @@ def _video(options) -> int:
         f"{report.made} made, {report.reused} from the cache"
     )
     return 0
+
+
+def _starter_lexicon(unknown) -> str:
+    """A lexicon file holding the words found, with each sound left blank.
+
+    The same shape as the cast sheet: the work of finding what needs an answer
+    is done here, and the answers are yours.
+    """
+    lines = [
+        "# How a word is said.",
+        "#",
+        "# Each entry replaces a word before it reaches a voice. Write the",
+        "# spelling that the engine says correctly, and leave the manuscript",
+        "# alone. A blank one does nothing.",
+        "#",
+        f"# {len(unknown)} words in this book have no entry. They are in the",
+        "# order they appear in, most often first, because the one said most",
+        "# is the one worth getting right.",
+        "",
+        "[words]",
+    ]
+    for entry in unknown:
+        seen = f"{entry.count} times, first in chapter {entry.chapter}"
+        # Every key is quoted. A word holding an apostrophe, and there are many
+        # of those, is not a name TOML accepts on its own, and the file would
+        # not read back.
+        name = entry.word.replace("\\", "\\\\").replace('"', '\\"')
+        lines.append(f'"{name}" = ""  # {seen}')
+    return "\n".join(lines) + "\n"
+
+
+def _write_captions(project, beside, report, *, announcements: bool = False):
+    """Write the captions next to a finished file.
+
+    The video asks for no announcements, because its card already carries the
+    name of the chapter. Sound with no picture asks for them, because nothing
+    else marks where a chapter begins.
+    """
+    from .speech.captions import cues_from_timeline, names_from_cast, to_srt
+
+    path = beside.with_suffix(".srt")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        to_srt(
+            cues_from_timeline(
+                report.timeline,
+                names=names_from_cast(project.cast),
+                announcements=announcements,
+            )
+        ),
+        encoding="utf-8",
+    )
+    return path
 
 
 def _review_page(project, volume, marks, report, engine):

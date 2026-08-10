@@ -216,3 +216,65 @@ def test_a_chapter_that_is_not_in_the_volume_is_named(project, capsys):
         == 2
     )
     assert "has no chapter 99" in capsys.readouterr().err
+
+
+def test_a_render_writes_captions_beside_the_audiobook(project, capsys):
+    import shutil
+
+    if not shutil.which("ffmpeg"):
+        import pytest
+
+        pytest.skip("ffmpeg is not installed")
+
+    cast_with_voices(project)
+    assert main(["-C", str(project), "render", "--volume", "Volume 1"]) == 0
+    captions = project / "out" / "Soultale - Volume 1.srt"
+    assert captions.exists()
+    # Sound with no picture has nothing else marking where a chapter begins,
+    # so the announcements belong in these captions.
+    assert "Chapter 0." in captions.read_text(encoding="utf-8")
+
+
+def test_a_render_can_write_a_review_page(project, capsys):
+    import shutil
+
+    if not shutil.which("ffmpeg"):
+        import pytest
+
+        pytest.skip("ffmpeg is not installed")
+
+    cast_with_voices(project)
+    assert main(["-C", str(project), "render", "--volume", "Volume 1", "--review"]) == 0
+    page = project / "out" / "review - Volume 1.html"
+    assert page.exists()
+    assert "Point - Null." in page.read_text(encoding="utf-8")
+
+
+def test_the_lexicon_it_writes_is_one_it_can_read(project, capsys):
+    # A tool that writes a file it cannot read back is worse than one that
+    # writes nothing. Many of these words hold an apostrophe, which TOML does
+    # not accept in a name unless the name is quoted.
+    import openbook.lexicon as lexicon_module
+
+    real = lexicon_module.known_words
+    lexicon_module.known_words = lambda: {"the", "light", "arrives"}
+    try:
+        assert main(["-C", str(project), "words", "--write"]) == 0
+    finally:
+        lexicon_module.known_words = real
+
+    written = project / "lexicon.toml"
+    assert written.exists()
+    from openbook.lexicon import load_lexicon
+
+    assert len(load_lexicon(written)) >= 0
+
+
+def test_a_lexicon_that_exists_is_not_written_over(project, capsys):
+    # Whatever is in there was written by hand and must not be lost.
+    (project / "lexicon.toml").write_text(
+        '[words]\nNilah = "Nee-lah"\n', encoding="utf-8"
+    )
+    assert main(["-C", str(project), "words", "--write"]) == 2
+    assert "exists already" in capsys.readouterr().err
+    assert "Nee-lah" in (project / "lexicon.toml").read_text(encoding="utf-8")

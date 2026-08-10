@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..errors import OpenBookError
-from .package import Mark, require_ffmpeg, run_ffmpeg
+from .package import Mark, require_ffmpeg, run_ffmpeg, write_metadata
 
 # The longest video that YouTube accepts.
 YOUTUBE_LIMIT_SECONDS = 12 * 3600
@@ -271,6 +271,16 @@ def write_video_from_cards(
     _refuse_if_too_long(marks)
     out.parent.mkdir(parents=True, exist_ok=True)
     seconds = probe_seconds(audio)
+
+    # The marks go in as well. YouTube reads the description instead, so these
+    # are for a player that is not YouTube.
+    chapters = out.parent / f".{out.stem}.chapters.txt"
+    extra: list[str] = []
+    if marks:
+        chapters.write_text(
+            write_metadata(marks, title=out.stem, author=""), encoding="utf-8"
+        )
+        extra = ["-i", str(chapters), "-map_metadata", "2"]
     run_ffmpeg(
         [
             "ffmpeg",
@@ -286,6 +296,7 @@ def write_video_from_cards(
             str(concat_list),
             "-i",
             str(audio),
+            *extra,
             "-t",
             f"{seconds:.3f}",
             "-map",
@@ -316,6 +327,7 @@ def write_video_from_cards(
             str(out),
         ]
     )
+    chapters.unlink(missing_ok=True)
     return out
 
 
