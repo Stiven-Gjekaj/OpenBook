@@ -163,3 +163,28 @@ def test_a_render_stops_when_a_code_has_no_voice(project, capsys):
 def test_the_cache_reports_what_it_holds(project, capsys):
     assert main(["-C", str(project), "cache"]) == 0
     assert "pieces" in capsys.readouterr().out
+
+
+def test_words_lists_what_needs_a_pronunciation(project, capsys):
+    import openbook.cli as cli
+
+    # A small word list, so the test does not depend on the machine having one.
+    monkey = {"the", "light", "arrives"}
+    import openbook.lexicon as lexicon_module
+
+    real = lexicon_module.known_words
+    lexicon_module.known_words = lambda: monkey
+    try:
+        assert cli.main(["-C", str(project), "words"]) == 0
+    finally:
+        lexicon_module.known_words = real
+    assert "words have no entry" in capsys.readouterr().err
+
+
+def test_a_lexicon_entry_reaches_the_render(project, capsys):
+    cast_with_voices(project)
+    (project / "lexicon.toml").write_text(
+        '[words]\nPoint = "Poynt"\n', encoding="utf-8"
+    )
+    assert main(["-C", str(project), "plan", "--volume", "Volume 1"]) == 0
+    assert "Poynt" in capsys.readouterr().out

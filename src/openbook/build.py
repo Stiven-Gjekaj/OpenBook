@@ -14,6 +14,7 @@ from .cast.utterance import Item
 from .config.cast import Cast, load_cast
 from .config.grammar import Grammar, load_grammar
 from .errors import OpenBookError
+from .lexicon import Lexicon, load_lexicon
 from .parse import Note, ParsedChapter, parse_chapter
 from .plan.planner import Plan, plan_chapter, plan_volume
 from .source.epub import Chapter, read_book
@@ -26,6 +27,7 @@ class Project:
     directory: Path
     grammar: Grammar
     cast: Cast
+    lexicon: Lexicon
 
     @classmethod
     def open(cls, directory: Path) -> Project:
@@ -34,6 +36,7 @@ class Project:
             directory=directory,
             grammar=load_grammar(directory / "grammar.toml"),
             cast=load_cast(directory / "cast.toml"),
+            lexicon=load_lexicon(directory / "lexicon.toml"),
         )
 
     @property
@@ -88,7 +91,9 @@ def build_volume(
     chapter_plans: list[Plan] = []
     notes: list[Note] = []
     for chapter in chapters:
-        resolved = resolve_chapter(chapter, project.grammar, project.cast)
+        resolved = _say_as_written(
+            resolve_chapter(chapter, project.grammar, project.cast), project.lexicon
+        )
         items.append(resolved)
         chapter_plans.append(
             plan_chapter(resolved, project.grammar, max_characters=max_characters)
@@ -101,6 +106,27 @@ def build_volume(
         plan=plan_volume(items, project.grammar, max_characters=max_characters),
         chapter_plans=tuple(chapter_plans),
         notes=tuple(notes),
+    )
+
+
+def _say_as_written(items: tuple[Item, ...], lexicon: Lexicon) -> tuple[Item, ...]:
+    """Put the lexicon into the words, just before they reach a voice.
+
+    This happens here and not in the parser, so that the manuscript keeps its
+    own spelling and only the sound changes.
+    """
+    if not len(lexicon):
+        return items
+
+    from dataclasses import replace
+
+    from .cast.utterance import Utterance
+
+    return tuple(
+        replace(item, text=lexicon.apply(item.text))
+        if isinstance(item, Utterance)
+        else item
+        for item in items
     )
 
 
