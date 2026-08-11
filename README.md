@@ -8,7 +8,6 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
-  <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
   <img src="https://img.shields.io/badge/tests-527_passing-427819?style=for-the-badge" alt="527 tests passing"/>
 </p>
 
@@ -19,7 +18,6 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <a href="https://github.com/Stiven-Gjekaj/OpenBook/actions/workflows/ci.yml"><img src="https://github.com/Stiven-Gjekaj/OpenBook/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License"/>
-  <img src="https://img.shields.io/badge/status-early-orange?style=flat-square" alt="The project is early"/>
 </p>
 
 <p align="center">
@@ -57,25 +55,10 @@ I stop. Which means nothing. But the hesitation feels real.
 Every rule of that format lives in a configuration file rather than in the
 code, so a fork describes a different book by writing a different grammar file.
 
-## Status
-
 The pipeline runs end to end. One command reads the EPUB files and writes a
 levelled M4B with chapter marks and a cover, a video for YouTube with a card
 for each chapter, a description carrying the time of each chapter, captions,
 and a page for checking the result by ear.
-
-| Stage | State |
-| ----- | ----- |
-| Read chapters from EPUB | Built. All 325 chapters of Soultale, across two files |
-| Read and check the configuration | Built |
-| Parse a chapter into segments | Built. 7163 lines of dialogue, 186 speaker codes |
-| Give each segment a voice | Built. Unison lines can be spoken in both voices at once |
-| Plan the pauses and divide long lines | Built. 16,905 utterances, none over the engine limit |
-| Find the words needing a pronunciation | Built. 539 words, and a merge for new chapters |
-| Speak, through a cache | Built. Chatterbox and its Turbo model, Kokoro, espeak-ng, a silent clock |
-| Write an M4B with chapter marks | Built. Levelled to -19 LUFS, with a cover |
-| One video for each volume, for YouTube | Built. Cards, description, captions |
-| Check the result by ear, and correct it | Built. A page to mark lines, and a file that remakes them |
 
 What is left is the author's own work: the voices, the pronunciations, and the
 music. [TODO.md](TODO.md) holds every task, with the reason for each.
