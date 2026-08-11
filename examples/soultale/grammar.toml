@@ -226,6 +226,29 @@ pause_between_chapters      = "3s"
 action          = "drop"
 pause_at_action = "500ms"
 
+# THE HOST
+#
+# Words spoken to the listener and not to the book. A voice of their own reads
+# them, named under [host] in cast.toml, and a rest of pause_between_chapters
+# falls between them and the book in both directions.
+#
+# Neither takes a chapter mark. They still hold a place on the timeline, so
+# the video draws a card for each, and that card carries the name of the work
+# and nothing else.
+#
+# {VOLUME}, {TITLE}, {FIRST}, {LAST} and {CHAPTERS} are filled in.
+intro = """
+Welcome to the Soultale Library. This is {VOLUME}, {TITLE}, {CHAPTERS}
+chapters read from the first word to the last. Soultale is written by
+n1cetry, and the link to read it is under this video. Settle in.
+"""
+
+outro = """
+That was {VOLUME}, {TITLE}. Thank you for staying to the end of it. If a name
+or a voice came out wrong, say so in the comments and that line gets made
+again. Subscribe, and the next one finds you when it is ready.
+"""
+
 
 [output]
 # One audiobook for each volume. The EPUB files are not a guide here. Part 1

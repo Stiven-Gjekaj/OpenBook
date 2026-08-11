@@ -166,3 +166,38 @@ def test_a_cast_says_every_voice_it_asks_for(tmp_path):
     assert voices[0] == "voices/narrator.wav", "the narrator comes first"
     assert voices.count("voices/blook.wav") == 1, "a shared voice is said once"
     assert "" not in voices, "an entry with no voice yet asks for nothing"
+
+
+def test_a_host_speaks_the_words_outside_the_book(tmp_path):
+    # The intro and the outro speak to the listener. Nobody in the book hears
+    # them, so the voice that reads them is not in the cast.
+    path = tmp_path / "cast.toml"
+    path.write_text(
+        '[narrator]\nvoice = "voices/narrator.wav"\n\n'
+        '[host]\nvoice = "voices/host.wav"\nexaggeration = 0.7\n\n'
+        '[cast.BLK]\nname = "Blook"\nvoice = "voices/blook.wav"\n',
+        encoding="utf-8",
+    )
+    cast = load_cast(path)
+    assert cast.host == "voices/host.wav"
+    assert cast.host_exaggeration == 0.7
+    assert cast.host_voice() == "voices/host.wav"
+    assert "BLK" in cast.entries and "host" not in cast.entries
+
+
+def test_with_no_host_the_narrator_speaks_them(tmp_path):
+    # What happened before a host could be named, and what still happens for a
+    # book that names none.
+    path = tmp_path / "cast.toml"
+    path.write_text(
+        '[narrator]\nvoice = "voices/narrator.wav"\n\n'
+        '[cast.BLK]\nname = "Blook"\nvoice = "voices/blook.wav"\n',
+        encoding="utf-8",
+    )
+    cast = load_cast(path)
+    assert cast.host == ""
+    assert cast.host_voice() == "voices/narrator.wav"
+
+
+def test_the_example_names_a_host():
+    assert load_cast(EXAMPLE).host == "voices/host.wav"

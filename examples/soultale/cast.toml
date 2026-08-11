@@ -63,6 +63,17 @@
 voice = "voices/narrator.wav"
 
 
+[host]
+# The voice that speaks to the listener rather than inside the book. It reads
+# the intro and the outro, where the video says hello and asks for a
+# subscription.
+#
+# It is not a character and it is not in the cast, because nobody in the book
+# ever hears it. Leave this out and the narrator reads those words, which is
+# what happened before this entry existed.
+voice = "voices/host.wav"
+
+
 # LEADS
 #
 # Two codes carry most of the dialogue of the volume. Give each one a voice

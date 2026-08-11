@@ -66,7 +66,14 @@ def youtube_description(
 
     The first time has to be 0:00 or YouTube makes no chapter list at all, so
     the first mark is moved to zero if a silence pushed it later.
+
+    A host mark is not a chapter and is left out. Its time is not lost: the
+    first chapter listed reads 0:00, so an intro before it belongs to that
+    chapter as far as a viewer clicking the list is concerned. Dropping the
+    time instead would put the first chapter at 0:22 and YouTube would make
+    no chapter list at all, which is a failure nothing reports.
     """
+    marks = [m for m in marks if not m.host]
     if len(marks) < LEAST_MARKS:
         raise OpenBookError(
             f"YouTube needs at least {LEAST_MARKS} chapters before it makes a "

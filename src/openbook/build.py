@@ -146,6 +146,11 @@ class VolumePlan:
     grammar: Grammar
     narrator: str
     every: tuple[ParsedChapter, ...]
+
+    # The voice that speaks to the listener rather than inside the book, and
+    # how much feeling it reads with. Empty means the narrator does it.
+    host: str = ""
+    host_exaggeration: float | None = None
     notes: tuple[Note, ...] = field(default_factory=tuple)
 
     # The intro and the outro are made when the volume is spoken, and not when
@@ -244,6 +249,8 @@ def build_volume(
         chapter_plans=tuple(chapter_plans),
         grammar=project.grammar,
         narrator=project.cast.narrator,
+        host=project.cast.host_voice(),
+        host_exaggeration=project.cast.host_exaggeration,
         every=project.parsed(),
         notes=tuple(notes),
         lexicon=project.lexicon,
@@ -305,33 +312,48 @@ def render_volume(volume: VolumePlan, engine, cache, *, named=None):
     total = RenderReport()
     at = 0.0
     render = volume.grammar.render
-    narrator = Voice(volume.narrator)
+    host = Voice(volume.host or volume.narrator)
 
-    def spoken(text: str, title: str) -> None:
-        """Put a piece the narrator reads before or after the chapters.
+    def rest() -> None:
+        """The gap between the host and the book."""
+        nonlocal at
+        pieces.append(Audio.silence(seconds=render.between_chapters, rate=engine.rate))
+        at += render.between_chapters
+
+    def spoken(text: str, title: str, *, after: bool = False) -> None:
+        """Put a piece the host reads before or after the chapters.
 
         These words go through the lexicon and the corrections like any other,
         which they did not until it was noticed that an intro naming the book
         and its characters was the one place every pronunciation entry was
         ignored.
+
+        The rest falls between the host and the book either way: after the
+        intro, and before the outro. A listener needs the same moment to change
+        from being spoken to, to being read to, in both directions.
         """
         nonlocal at
         words = volume.as_spoken(text, named)
         if not words:
             return
-        said = Utterance(text=words, voice=narrator, kind=ANNOUNCEMENT)
+        if after:
+            rest()
+        said = Utterance(
+            text=words,
+            voice=host,
+            kind=ANNOUNCEMENT,
+            exaggeration=volume.host_exaggeration,
+        )
         audio, report = render_plan(Plan(items=(said,)), engine, cache)
         pieces.append(audio)
-        marks.append(Mark(title=title, start=at, end=at + audio.seconds))
+        marks.append(Mark(title=title, start=at, end=at + audio.seconds, host=True))
         total.made += report.made
         total.reused += report.reused
         total.keys |= report.keys
         total.timeline += [(u, at + b, at + e) for u, b, e in report.timeline]
         at += audio.seconds
-        pieces.append(
-            Audio.silence(seconds=render.after_chapter_name, rate=engine.rate)
-        )
-        at += render.after_chapter_name
+        if not after:
+            rest()
 
     spoken(render.intro, render.intro_title)
 
@@ -372,7 +394,7 @@ def render_volume(volume: VolumePlan, engine, cache, *, named=None):
             for utterance, begins, ends in report.timeline
         ]
 
-    spoken(render.outro, render.outro_title)
+    spoken(render.outro, render.outro_title, after=True)
 
     joined = join_all(pieces, engine.rate)
     total.seconds = joined.seconds

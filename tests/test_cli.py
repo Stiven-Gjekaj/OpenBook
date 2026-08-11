@@ -379,18 +379,21 @@ def test_check_does_not_blame_the_corrections_for_an_unfinished_cast(project, ca
 
 
 def with_intro(project, words):
-    """Give the example grammar an intro for the narrator to read.
+    """Put these words in the intro of the example grammar.
 
-    The key goes inside the [render] table the example already has. A second
-    table of the same name is not valid TOML.
+    The example has an intro of its own, and a second key of the same name is
+    not valid TOML, so this replaces the one that is there rather than adding
+    another.
     """
+    import re
+
     path = project / "grammar.toml"
     text = path.read_text(encoding="utf-8")
-    assert "\n[render]\n" in text
-    path.write_text(
-        text.replace("\n[render]\n", f'\n[render]\nintro = "{words}"\n', 1),
-        encoding="utf-8",
+    made, count = re.subn(
+        r'intro = ("""[^"]*"""|"[^"]*")', f'intro = "{words}"', text, count=1
     )
+    assert count == 1, "the example grammar no longer has an intro"
+    path.write_text(made, encoding="utf-8")
     return project
 
 
@@ -737,3 +740,36 @@ def test_both_chatterbox_models_can_be_asked_for(project):
 def test_an_engine_nobody_has_is_refused_by_the_command_line(project):
     with pytest.raises(SystemExit):
         main(["-C", str(project), "render", "--volume", "V", "--engine", "turbo"])
+
+
+def test_the_host_speaks_outside_the_book_and_takes_no_chapter(project, tmp_path):
+    """The intro and the outro are spoken to the listener, not to the book.
+
+    They hold a place on the timeline, because the video draws a card for
+    every place. They are not chapters, so nothing that lists chapters lists
+    them, and a rest falls between them and the book in both directions.
+    """
+    from openbook.build import Project, build_volume, render_volume
+    from openbook.speech.cache import Cache
+    from openbook.speech.engine import SilentEngine
+
+    cast_with_voices(project)
+    with_intro(project, "Welcome to the library.")
+    opened = Project.open(project)
+    volume = build_volume(opened, "Volume 1", max_characters=480)
+    _, marks, report = render_volume(
+        volume, SilentEngine(), Cache(tmp_path / "held"), named=None
+    )
+
+    host = [m for m in marks if m.host]
+    assert len(host) == 2, "an intro and an outro"
+    assert marks[0].host and marks[-1].host
+    assert all(not m.host for m in marks[1:-1]), "every chapter is a chapter"
+
+    rest = opened.grammar.render.between_chapters
+    assert marks[1].start == pytest.approx(marks[0].end + rest)
+    assert marks[-1].start == pytest.approx(marks[-2].end + rest)
+
+    said = [u for u, _, _ in report.timeline if "Welcome to the library." in u.text]
+    assert said, "the intro was spoken"
+    assert said[0].voice.key() == opened.cast.host_voice()

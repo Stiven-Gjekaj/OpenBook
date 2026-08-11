@@ -73,6 +73,16 @@ class Cast:
     entries: dict[str, tuple[Entry, ...]]
     aliases: dict[str, str]
 
+    # The voice that speaks to the listener rather than inside the book. It
+    # reads the words before the chapters and the words after them. With none
+    # given the narrator reads them, which is what happened before this
+    # existed.
+    host: str = ""
+    host_exaggeration: float | None = None
+
+    def host_voice(self) -> str:
+        return self.host or self.narrator
+
     def codes(self) -> tuple[str, ...]:
         return tuple(sorted(self.entries))
 
@@ -161,6 +171,14 @@ def load_cast(path: Path) -> Cast:
     narrator_exaggeration = narrator_table.number("exaggeration", None)
     narrator_table.done()
 
+    host_table = root.table("host", optional=True)
+    host = host_table.string("voice", "") if host_table is not None else ""
+    host_exaggeration = (
+        host_table.number("exaggeration", None) if host_table is not None else None
+    )
+    if host_table is not None:
+        host_table.done()
+
     entries: dict[str, list[Entry]] = {}
     aliases: dict[str, str] = {}
 
@@ -209,6 +227,8 @@ def load_cast(path: Path) -> Cast:
         narrator_exaggeration=narrator_exaggeration,
         entries={code: tuple(group) for code, group in entries.items()},
         aliases=aliases,
+        host=host,
+        host_exaggeration=host_exaggeration,
     )
 
 

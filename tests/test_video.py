@@ -372,3 +372,75 @@ def test_a_mark_carries_the_label_its_card_shows(tmp_path):
     ]
     cards = make_chapter_cards(labelled, style, tmp_path / "cards", total=1220.0)
     assert len(cards) == 3
+
+
+def test_the_intro_and_the_outro_get_no_time_of_their_own():
+    # They are not chapters. Their time is not lost either: the first chapter
+    # reads 0:00, so an intro in front of it belongs to that chapter as far as
+    # a viewer clicking the list is concerned.
+    marks = [
+        Mark("Introduction", 0.0, 20.0, host=True),
+        Mark("One.", 23.0, 600.0),
+        Mark("Two.", 603.0, 1200.0),
+        Mark("Three.", 1203.0, 1800.0),
+        Mark("Afterword", 1803.0, 1820.0, host=True),
+    ]
+    text = youtube_description(marks, title="Volume 1")
+    times = [line for line in text.splitlines() if line[:1].isdigit()]
+    assert len(times) == 3
+    assert times[0] == "0:00 One."
+    assert "Introduction" not in text
+    assert "Afterword" not in text
+
+
+def test_a_volume_of_two_chapters_is_refused_even_with_an_intro():
+    # The intro used to make the count. YouTube counts chapters, so a volume
+    # that has too few of them has to be told so rather than be given a list
+    # that YouTube silently ignores.
+    marks = [
+        Mark("Introduction", 0.0, 20.0, host=True),
+        Mark("One.", 23.0, 600.0),
+        Mark("Two.", 603.0, 1200.0),
+        Mark("Afterword", 1203.0, 1220.0, host=True),
+    ]
+    with pytest.raises(OpenBookError, match="at least 3 chapters"):
+        youtube_description(marks, title="Volume 1")
+
+
+@needs_font
+@needs_pillow
+def test_the_host_card_says_nothing_about_a_chapter(tmp_path):
+    # The intro speaks to the viewer and not about a place in the book, so its
+    # card carries the name of the work and nothing else. It still gets a card,
+    # because every moment of the video needs a picture.
+    from openbook.speech.cards import Style, make_chapter_cards
+
+    style = Style(
+        title_font=_fonts(),
+        body_font=_fonts(),
+        width=320,
+        height=180,
+        title_size=30,
+        body_size=14,
+        faint_size=10,
+    )
+    made = [
+        Mark("Introduction", 0.0, 20.0, host=True),
+        Mark("One.", 20.0, 600.0, label="Chapter 1 of 2"),
+        Mark("Afterword", 600.0, 620.0, host=True),
+    ]
+    cards = make_chapter_cards(made, style, tmp_path / "cards", total=620.0)
+    assert len(cards) == 3, "a card for every mark, host or not"
+
+    plain = make_chapter_cards(
+        [Mark("Introduction", 0.0, 20.0, host=True)],
+        style,
+        tmp_path / "plain",
+        total=20.0,
+    )
+    blank = make_chapter_cards(
+        [Mark("", 0.0, 20.0)], style, tmp_path / "blank", total=20.0, labels=[""]
+    )
+    assert plain[0][0].read_bytes() == blank[0][0].read_bytes(), (
+        "a host card draws the same as a card with no volume, chapter or title"
+    )

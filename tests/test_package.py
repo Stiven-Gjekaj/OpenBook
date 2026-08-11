@@ -180,3 +180,18 @@ def test_a_cover_reaches_the_file_as_a_picture():
             text=True,
         ).stdout
         assert "mjpeg" in found, f"the cover is not a picture, it is {found!r}"
+
+
+def test_the_intro_and_the_outro_are_not_chapters():
+    # A player that offered them as chapters would say the book has two
+    # chapters it does not have. The words still play, inside the file.
+    marks = [
+        Mark(title="Introduction", start=0.0, end=14.0, host=True),
+        Mark(title="One.", start=17.0, end=600.0),
+        Mark(title="Afterword", start=603.0, end=620.0, host=True),
+    ]
+    made = write_metadata(marks, title="Soultale", author="n1cetry")
+    assert made.count("[CHAPTER]") == 1
+    assert "title=One." in made
+    assert "Introduction" not in made
+    assert "Afterword" not in made

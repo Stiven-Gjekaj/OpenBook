@@ -29,6 +29,12 @@ class Mark:
     end: float
     label: str = ""
 
+    # True for the words spoken to the listener rather than to the book: the
+    # intro and the outro. They hold a place on the timeline, because the
+    # video draws a card for every place, and they are not chapters, so
+    # nothing that lists chapters lists them.
+    host: bool = False
+
 
 def have_ffmpeg() -> bool:
     return shutil.which("ffmpeg") is not None
@@ -48,9 +54,14 @@ def write_metadata(marks: list[Mark], *, title: str, author: str) -> str:
 
     The times are in milliseconds. A title can hold a character that ffmpeg
     treats as syntax, so each one is escaped.
+
+    A host mark is left out. The intro and the outro are spoken to the
+    listener and not part of the book, and a player that offered them as
+    chapters would say the book has two chapters it does not have. The words
+    still play, inside the chapter that holds them.
     """
     lines = [";FFMETADATA1", f"title={_escape(title)}", f"artist={_escape(author)}"]
-    for mark in marks:
+    for mark in (m for m in marks if not m.host):
         lines += [
             "",
             "[CHAPTER]",

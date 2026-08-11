@@ -223,6 +223,15 @@ def make_chapter_cards(
         # disagrees with the voice is worse than a card with no label at all.
         # A mark that carries its own label wins, which is how an intro gets a
         # card with no chapter line on it.
+        if mark.host:
+            # The intro and the outro speak to the viewer and not about a
+            # chapter, so the card carries the name of the work and nothing
+            # else. A volume or a chapter number here would name a place in
+            # the book that the words are not in.
+            make_card(style, path)
+            cards.append((path, max(0.04, until - mark.start)))
+            continue
+
         if labels is not None:
             label = labels[index]
         elif mark.label:
