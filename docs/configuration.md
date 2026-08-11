@@ -136,8 +136,24 @@ nothing installed.
 | Key | Means |
 | --- | ----- |
 | `end_matter_element` | The element that holds the words at the end of a chapter |
+| `end_matter_tail` | A closing line that does not wear that element, by its shape |
 | `scene_break` | A line matching this becomes a silence and is not spoken |
 | `strip_elements` | Elements removed while their text is kept |
+
+`end_matter_tail` is for a book whose closing is not all marked the same way.
+Soultale underlines `End of Chapter 4` and the name of the chapter, then leaves
+a line in brackets under them in bold alone, so `end_matter_element = "u"`
+finds two lines of three. The pattern matches only where a closing has already
+begun, because the same shape in the middle of a chapter is something else
+entirely. Leave it out and nothing changes.
+
+The lines of a closing are then read as one, with a full stop put where the
+line break was and none added where the line already ends in one. A book
+writes them separately because that is how they sit on a page; a reader still
+says them as a single sentence falling to its end, and an engine given three
+pieces returns three endings in a row. In chapter 0 the three came to 6.6
+seconds and the one comes to 4.5, the difference being the silence each
+separate reading carried at its ends.
 
 ### [render]
 
@@ -158,8 +174,7 @@ nothing installed.
 | `outro_title` | The name of the outro |
 
 `read_end_matter` decides whether the words that close a chapter are spoken.
-In Soultale every chapter ends with three lines, and only the third of them is
-narration:
+In Soultale every chapter ends with three lines:
 
 ```
 End of Chapter 0
@@ -168,9 +183,10 @@ End of Chapter 0
 ```
 
 Read together they close the chapter: it is named, then titled, then answered.
-Read alone the last line arrives from nowhere. Nothing falls between the
-three, because all three are narration and a pause lands only where the kind
-of the text changes. `pause_between_chapters` follows them.
+Read alone the last line arrives from nowhere, which is why `end_matter_tail`
+exists and why this key governs all three rather than the two that share an
+element. They reach the engine as one line, and `pause_between_chapters`
+follows them.
 
 **A pause falls only where the kind of the text changes.** Two lines of
 dialogue get nothing between them, so a conversation keeps its speed, and two
