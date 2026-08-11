@@ -239,14 +239,17 @@ pause_at_action = "500ms"
 # {VOLUME}, {TITLE}, {FIRST}, {LAST} and {CHAPTERS} are filled in.
 intro = """
 Welcome to the Soultale Library. This is {VOLUME}, {TITLE}, {CHAPTERS}
-chapters read from the first word to the last. Soultale is written by
-n1cetry, and the link to read it is under this video. Settle in.
+chapters read from the first word to the last. I hope you enjoy it. If you do,
+a like helps more than you would think, and subscribing means the next one
+finds you when it lands. Everything used to make this is credited in the
+description below.
 """
 
 outro = """
-That was {VOLUME}, {TITLE}. Thank you for staying to the end of it. If a name
-or a voice came out wrong, say so in the comments and that line gets made
-again. Subscribe, and the next one finds you when it is ready.
+That was {VOLUME}, {TITLE}. I hope you enjoyed it. If a voice, a name or a
+pause did not sit right with you, leave a comment and say so, and I will
+change it. Thank you for listening to the end. I will see you all in the next
+volume.
 """
 
 
