@@ -251,6 +251,20 @@ Only needed to make a video.
 | `peek_words` | How many words of the opening to quote. `0` for none |
 | `credits` | Lines naming what a licence asks you to name |
 
+`[video.descriptions]` gives one release its own words, keyed by the name of
+the file being made. A release with no entry takes `description`, so write
+nothing about one volume there:
+
+```toml
+[video.descriptions]
+Prologue = """
+Before there was anyone to name it, there was one consciousness alone.
+"""
+```
+
+Put this table at the end of the file. A bare key written after a table header
+belongs to that table, so every other key of `[video]` has to come first.
+
 Name the fonts and a card is drawn for each chapter. Name a `visual` instead
 and that picture is used. Give neither and the file refuses to load.
 
