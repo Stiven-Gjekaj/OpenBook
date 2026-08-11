@@ -110,12 +110,15 @@ class TurboSettings(Settings):
     """What to ask of Turbo, which asks for more and starts elsewhere.
 
     Turbo reads flat at zero where the older model reads flat at one half, so
-    the numbers tuned for that one do not carry across. These are a starting
-    point and nothing more, the way 0.3 and 0.7 were a starting point.
+    the numbers tuned for that one do not carry across.
+
+    Both kinds sit at one half here, after a chapter at 0 and 0.4 came back
+    with a narrator that read every line as a statement of fact. That was the
+    setting and not the recording: zero is what this model calls flat.
     """
 
-    narration: float = 0.0
-    dialogue: float = 0.4
+    narration: float = 0.5
+    dialogue: float = 0.5
     guidance: float = 0.0
     min_p: float = 0.0
     top_p: float = 0.95

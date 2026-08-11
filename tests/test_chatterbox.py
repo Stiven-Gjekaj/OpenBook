@@ -334,9 +334,12 @@ def test_both_refuse_a_blended_voice_with_what_to_use_instead(family, project):
 
 
 @BOTH
-def test_both_read_dialogue_with_more_feeling_than_narration(family, project):
+def test_both_read_everything_that_is_not_dialogue_the_same_way(family, project):
+    # An action the narrator speaks, a chapter announcement and the end matter
+    # are all the narrator talking, whichever model is reading.
     settings = family(directory=project)._settings
-    assert settings.exaggeration("dialogue") > settings.exaggeration("narration")
+    for kind in ("narration", "action", "announcement", "end matter"):
+        assert settings.exaggeration(kind) == settings.narration
 
 
 @BOTH
@@ -369,6 +372,15 @@ def test_turbo_starts_from_its_own_numbers():
     assert TurboSettings().narration != Settings().narration
     assert TurboSettings().guidance == 0.0
     assert TurboSettings().norm_loudness is True
+
+
+def test_turbo_reads_both_kinds_with_the_same_feeling():
+    # The older model gives narration less than dialogue, because a narrator
+    # holds one level for hours. Turbo does not, because a chapter read at 0
+    # and 0.4 came back with a narrator that stated every line as a fact, and
+    # zero is what this model calls flat.
+    assert TurboSettings().narration == TurboSettings().dialogue == 0.5
+    assert Settings().narration < Settings().dialogue
 
 
 def test_turbo_names_its_own_arguments_in_its_version():
