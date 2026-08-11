@@ -53,7 +53,7 @@ book it was written for has not been tested, whatever its tests say.
 ### It speaks
 
 - Chatterbox, which reads the book in the voice of a recording you supply, its
-  Turbo model, which reads several times faster and holds one loudness by
+  Turbo model, which reads about twice as fast and holds one loudness by
   itself, Kokoro, espeak-ng, and a silent engine that gives quiet of the right
   length.
 - A recording is part of the cache key and not only its path, so a better

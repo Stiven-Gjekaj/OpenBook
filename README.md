@@ -186,7 +186,7 @@ anything takes seconds, because only what changed is made again.
 
 Five engines use one interface, chosen with `--engine`. **chatterbox** reads
 the book in the voice of a recording you supply, and **chatterbox-turbo** is
-the same through a newer model that reads several times faster and holds one
+the same through a newer model that reads about twice as fast and holds one
 loudness by itself. **kokoro** chooses from its own list of voices and is the
 one to fall back to. **espeak-ng** sounds like a machine from the 1990s and needs no model, no
 download and no Python package, so a whole volume can be checked against real

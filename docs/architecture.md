@@ -78,7 +78,7 @@ Everything useful follows from that:
 
 Five engines use that interface. **Chatterbox** reads the book in the voice of
 a recording you supply. **Chatterbox Turbo** is the same idea through a newer
-model that reads several times faster and holds one loudness by itself.
+model that reads about twice as fast and holds one loudness by itself.
 **Kokoro** chooses from its own list of voices and is the one to fall back to.
 **espeak-ng** sounds like a machine from the 1990s and needs no model, no
 download and no Python package, so a whole volume can be checked against real
@@ -132,10 +132,27 @@ is about eight and a half hours. Kokoro does about ten times real time.
 The audio also came back peaking at **+0.6 dB**, above what a sample holds, so
 the chapter was clipping before the levelling stage saw it.
 
-Turbo is here because of those two numbers. It claims six times real time and
-it brings every line to one loudness itself. Neither claim is measured yet, and
-the cache holds both readings apart, so the same chapter can be made by each
-and the two compared.
+Turbo was added because of those two numbers, and the same chapter through it
+answers both. It is 114 pieces rather than 112, the two extra being the end
+matter, and it came to 906 seconds of audio in 1068 seconds of compute. That is
+**0.85 times real time**, counted from the command to the finished file and so
+carrying the 3.8 GB of weights being loaded. Twice Chatterbox, and not the six
+times the model claims. It also reads faster than Chatterbox does: the same
+chapter runs 906 seconds where the older model took 1020, so a volume is
+shorter as well as sooner, and Volume 1 falls from about eight and a half hours
+to a little over four.
+
+Nothing clipped. The loudest of the 114 pieces peaks at **-3.11 dBFS** and none
+reaches full scale, because Turbo brings each piece to one loudness itself: the
+median sits at -26.6 dBFS against the -27 the model aims for, and the spread
+from quietest to loudest is 11.2 dB.
+
+The third cost is the one no measurement reaches. Nothing above says whether a
+word was dropped or repeated across 114 generations. What can be said is that
+no piece is long or short for the words in it: the six furthest from the median
+are all single words, where the silence at each end is most of the piece. That
+is the absence of the obvious failure rather than proof there was none, which
+is once more why the review page exists.
 
 ## Checking the thing that was made
 

@@ -249,7 +249,7 @@ aliases = ["BLCK"]
 | Engine | A voice is | Example |
 | ------ | ---------- | ------- |
 | `chatterbox` | A path to a recording of the character, read from the project directory | `"voices/blook.wav"` |
-| `chatterbox-turbo` | The same, through a model that reads several times faster | `"voices/blook.wav"` |
+| `chatterbox-turbo` | The same, through a model that reads about twice as fast | `"voices/blook.wav"` |
 | `kokoro` | One of its own voice names. The first letter is the accent | `"af_heart"` |
 | `espeak` | A language, and a variant after a plus | `"en-gb+Alicia"` |
 
@@ -264,13 +264,13 @@ better take over `voices/blook.wav` makes every line Blook has again. Without
 that the path would not have changed, nothing would have been remade, and the
 old voice would have stayed in the book for ever with nothing said about it.
 
-**Two models read from a recording.** `chatterbox` is the one measured here:
-0.45 times real time, and audio that peaked above what a sample holds, so a
-whole chapter was clipping before the levelling stage saw it.
-`chatterbox-turbo` is the newer of the two. It claims six times real time and
-it brings every line to one loudness by itself. It also reads flat at 0 where
-the other reads flat at 0.5, so the exaggeration numbers do not carry between
-them and each has its own.
+**Two models read from a recording.** `chatterbox` is the older: 0.45 times
+real time, and audio that peaked above what a sample holds, so a whole chapter
+was clipping before the levelling stage saw it. `chatterbox-turbo` made the
+same chapter at 0.85 times real time, with nothing clipping and every piece
+brought to one loudness by the model. It also reads flat at 0 where the other
+reads flat at 0.5, so the exaggeration numbers do not carry between them and
+each has its own.
 
 Both hold their audio apart, because the name of the engine is part of a key.
 The same chapter can be read by each and the two compared, and neither throws
