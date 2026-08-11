@@ -18,8 +18,16 @@ examples/soultale/.work/
 
 # The recordings a voice is taken from. They are yours, they are large, and
 # they are not the tool.
+#
+# The note beside them is kept. It says which voice speaks for which
+# character, and a record that lives only where it can be cleared is not a
+# record.
+# The contents are ignored and not the directory itself. Git does not look
+# inside a directory it has been told to ignore, so the exception below would
+# never be read.
 /voices/
-examples/soultale/voices/
+examples/soultale/voices/*
+!examples/soultale/voices/README.md
 
 # Speech corpora. A voice is chosen from one of these and then copied into
 # voices/. The corpus itself is tens of gigabytes and it comes from somewhere
