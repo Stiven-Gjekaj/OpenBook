@@ -1,0 +1,25 @@
+# Lines that came out wrong, and the words to give the engine instead.
+#
+# The name of an entry is the line as the review page showed it. A correction
+# lands after the lexicon and after a long line is divided, so what is written
+# here is what the page displayed and what the engine was handed.
+#
+# Only the marked line is made again. The text is part of its key, so changing
+# the words remakes that one piece and the rest of the volume keeps its audio.
+#
+# The reading is also seeded from the text, so any change to the words gives a
+# different reading and not the same one with a patch on it. That is why an
+# entry that repeats its own line is refused: it would make the same audio
+# under the same key, and look like a correction that did not take.
+
+[corrections]
+
+# The 'Wh' came out as a hard G, so the line opened on 'Goo are you'. It is
+# the first thing this character says and three words long, which is where a
+# model that makes a token at a time has the least to steady itself with.
+#
+# Three dots fixed the sound and bought a gap too long to be hesitation. A
+# dash asks for a shorter break, and if the model gives it no weight at all
+# the line is the one the book wrote, read from a different seed, which was
+# most of what the first correction was worth.
+"Who are you?" = "Who — are you?"
