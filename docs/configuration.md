@@ -207,29 +207,27 @@ YouTube description still points at 0:00.
 | `channels` | `0` keeps one channel. `2` for YouTube |
 | `level` | Bring the speech to the loudness an audiobook is expected to have |
 
-`[output.merge_volumes]` puts one volume into the file of another. Use it for a
-volume too short to stand alone.
+Both of the tables below change the grouping of the output only. A chapter
+keeps the number and the volume the book gives it, in the chapter list, on the
+card, and in the words the narrator speaks.
 
-`[output.parts]` names a run of chapters that becomes a file of its own. A part
-wins over both the volume and any merge. Soultale uses one for the prologue,
-which goes out before Volume 1 and on its own:
+`[output.merge_volumes]` puts one volume into the file of another. Use it for a
+volume too short to stand alone. Soultale merges nothing: the book gives
+chapters 0 to 2 a volume named Prologue, and they go out first and on their
+own, so the grouping the book already carries is the right one.
 
 ```toml
-[output.parts]
-Prologue = "0-3"
+[output.merge_volumes]
+"Prologue" = "Volume 1"
 ```
 
-A part changes the grouping of the output only. Each chapter keeps the number
-and the volume the book gives it, in the chapter list, on the card, and in the
-words the narrator speaks. The book calls chapters 0 to 2 the prologue and
-chapter 3 the start of Volume 1. The part reads to 3 because the author ships
-those four chapters together.
-
-Name several parts to divide a long volume:
+`[output.parts]` names a run of chapters that becomes a file of its own. A part
+wins over both the volume and any merge. Use it where the division you want
+does not follow a volume, most often to divide a long one:
 
 ```toml
 [output.parts]
-"Volume 1, Part 1" = "4-12"
+"Volume 1, Part 1" = "3-12"
 "Volume 1, Part 2" = "13-22"
 ```
 
