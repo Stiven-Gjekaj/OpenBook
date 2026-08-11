@@ -237,19 +237,22 @@ pause_at_action = "500ms"
 # and nothing else.
 #
 # {VOLUME}, {TITLE}, {FIRST}, {LAST} and {CHAPTERS} are filled in.
+#
+# These words name the prologue and say nothing that a template fills in for
+# the volume. One key is read by every release, so change these before Volume
+# 1 goes out, or it welcomes a listener to the prologue.
 intro = """
-Welcome to the Soultale Library. This is {VOLUME}, {TITLE}, {CHAPTERS}
-chapters read from the first word to the last. I hope you enjoy it. If you do,
-a like helps more than you would think, and subscribing means the next one
-finds you when it lands. Everything used to make this is credited in the
-description below.
+Welcome to the Soultale Library. This is the Prologue, {CHAPTERS} chapters
+read from the first word to the last. I hope you enjoy it. If you do, a like
+helps more than you would think, and subscribing means the next one finds you
+when it lands. Everything used to make this is credited in the description
+below.
 """
 
 outro = """
-That was {VOLUME}, {TITLE}. I hope you enjoyed it. If a voice, a name or a
-pause did not sit right with you, leave a comment and say so, and I will
-change it. Thank you for listening to the end. I will see you all in the next
-volume.
+That was the Prologue. I hope you enjoyed it. If a voice, a name or a pause
+did not sit right with you, leave a comment and say so, and I will change it.
+Thank you for listening to the end. I will see you all in the next volume.
 """
 
 
