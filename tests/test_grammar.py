@@ -87,9 +87,21 @@ def test_the_archive_volumes_are_skipped_and_the_prologue_is_not():
     assert not grammar.source.is_skipped("Volume 1")
 
 
-def test_the_prologue_joins_volume_one():
+def test_the_prologue_stands_on_its_own():
+    # The book gives chapters 0 to 2 a volume of their own, and the example
+    # merges nothing, so the prologue becomes its own file and its own video.
     grammar = load_grammar(EXAMPLE)
+    assert grammar.output.merge_volumes == {}
+    assert grammar.output.group_of("Prologue") == "Prologue"
+    assert grammar.output.group_of("Volume 3") == "Volume 3"
+
+
+def test_a_volume_can_be_put_into_the_file_of_another(tmp_path):
+    # The example does not use this. A volume too short to stand alone does.
+    # MINIMAL carries the mapping, because this is where it is tested now.
+    grammar = load_grammar(write(tmp_path, MINIMAL))
     assert grammar.output.group_of("Prologue") == "Volume 1"
+    assert grammar.output.group_for(0, "Prologue") == "Volume 1"
     assert grammar.output.group_of("Volume 3") == "Volume 3"
 
 

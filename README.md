@@ -9,7 +9,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
   <img src="https://img.shields.io/badge/dependencies-0_core-007ec6?style=for-the-badge" alt="The core declares no dependency and uses the standard library only"/>
-  <img src="https://img.shields.io/badge/tests-526_passing-427819?style=for-the-badge" alt="526 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-527_passing-427819?style=for-the-badge" alt="527 tests passing"/>
 </p>
 
 <p align="center">
@@ -93,8 +93,8 @@ music. [TODO.md](TODO.md) holds every task, with the reason for each.
   file names
 - Joins parts that overlap, and keeps one copy of a repeated chapter
 - Passes over the volumes you tell it to skip
-- Groups the finished audio by volume, and folds a prologue into the volume you
-  name
+- Groups the finished audio by volume, and can fold a short volume into another
+  or split a long one into named parts
 - Passes over a cover and a table of contents without being told to
 
 </td>
@@ -152,14 +152,13 @@ not ready
 List what the audiobook will contain:
 
 ```
-uv run openbook -C ~/audiobook chapters --volume "Volume 1"
+uv run openbook -C ~/audiobook chapters --volume "Prologue"
 ```
 
 ```
-   0  Volume 1    Point - Null.
-   1  Volume 1    What I Hold Dear.
-   2  Volume 1    On The 7th Day.
-   3  Volume 1    Wandering Spirit.
+   0  Prologue    Point - Null.
+   1  Prologue    What I Hold Dear.
+   2  Prologue    On The 7th Day.
 ```
 
 ## How it works

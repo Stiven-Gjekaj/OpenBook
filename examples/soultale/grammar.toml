@@ -261,30 +261,16 @@ channels    = 0
 # only if something else levels the audio later.
 level = true
 
-# The three prologue chapters are chapter 0, 1 and 2. They come before chapter
-# 3, so the order inside the file stays correct.
-[output.merge_volumes]
-"Prologue" = "Volume 1"
+# The prologue is chapters 0, 1 and 2, and the book gives them a volume of
+# that name. Nothing here groups them, because nothing has to. They went into
+# Volume 1 while this file merged that volume into it. They now go out first
+# and on their own, so the merge is gone and the book decides.
 
 # THE VIDEO
 #
 # A card is drawn for each chapter, and the card names the volume above the
 # work and the chapter below it. Every colour is a default the drawing code
 # holds, so only the fonts and the words are named here.
-
-[output.parts]
-
-# A run of chapters that becomes its own file, and its own video.
-#
-# The prologue is chapters 0 to 3. It goes out first and on its own, so it
-# needs a file of its own and a name of its own. Volume 1 then starts at
-# chapter 4.
-#
-# A part wins over the volume that holds it. The chapters stay in Volume 1
-# everywhere else: in the book, in the chapter list, and in the numbers the
-# narrator speaks.
-Prologue = "0-3"
-
 
 [video]
 file_name       = "Soultale - {VOLUME}.mp4"
