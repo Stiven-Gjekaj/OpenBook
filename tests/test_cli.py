@@ -37,10 +37,15 @@ def project(tmp_path):
     make_epub(
         tmp_path / "book.epub",
         [
+            # One chapter in each group the example configuration makes. The
+            # prologue is a part of its own, so a chapter of Volume 1 has to
+            # sit outside the run that part names.
             ("a.xhtml", "(Chapter -1 || Archive) The Continuity.", "<p>skip</p>"),
             ("b.xhtml", "(Chapter 0 || Prologue) Point - Null.", "<p>one</p>"),
-            ("c.xhtml", "(Chapter 3 || Volume 1) Wandering Spirit.", "<p>two</p>"),
-            ("d.xhtml", "(Chapter 23 || Volume 2) Snowflake.", "<p>three</p>"),
+            ("c.xhtml", "(Chapter 5 || Volume 1) Wandering Spirit.", "<p>two</p>"),
+            # Two in one group, so that narrowing to one chapter can be seen.
+            ("d.xhtml", "(Chapter 6 || Volume 1) Will of The Weak.", "<p>three</p>"),
+            ("e.xhtml", "(Chapter 23 || Volume 2) Snowflake.", "<p>four</p>"),
         ],
     )
     return tmp_path
@@ -53,10 +58,12 @@ def test_chapters_lists_the_book_without_the_archive(project, capsys):
     assert "The Continuity." not in out
 
 
-def test_the_prologue_is_listed_under_volume_one(project, capsys):
+def test_the_prologue_is_listed_as_its_own_part(project, capsys):
+    # The book calls chapters 0 to 2 the Prologue and the example groups them
+    # with chapter 3 into a part of the same name, which goes out on its own.
     assert main(["-C", str(project), "chapters"]) == 0
     lines = [ln for ln in capsys.readouterr().out.splitlines() if ln.strip()]
-    assert lines[0].split()[1:3] == ["Volume", "1"]
+    assert lines[0].split()[1] == "Prologue"
 
 
 def test_chapters_can_show_one_volume(project, capsys):
@@ -137,18 +144,18 @@ def test_check_is_ready_once_every_voice_is_chosen(project, capsys):
 def test_plan_prints_a_line_with_its_voice(project, capsys):
     cast_with_voices(project)
     assert main(["-C", str(project), "plan", "--volume", "Volume 1"]) == 0
-    assert "Point - Null." in capsys.readouterr().out
+    assert "Wandering Spirit." in capsys.readouterr().out
 
 
 def test_plan_can_show_one_chapter(project, capsys):
     cast_with_voices(project)
     assert (
-        main(["-C", str(project), "plan", "--volume", "Volume 1", "--chapter", "3"])
+        main(["-C", str(project), "plan", "--volume", "Volume 1", "--chapter", "5"])
         == 0
     )
     out = capsys.readouterr().out
-    assert "chapter 3" in out
-    assert "chapter 0" not in out
+    assert "chapter 5" in out
+    assert "chapter 6" not in out
 
 
 def test_notes_reports_what_the_parser_noticed(project, capsys):
@@ -214,17 +221,17 @@ def test_words_lists_what_needs_a_pronunciation(project, capsys):
 def test_a_lexicon_entry_reaches_the_render(project, capsys):
     cast_with_voices(project)
     (project / "lexicon.toml").write_text(
-        '[words]\nPoint = "Poynt"\n', encoding="utf-8"
+        '[words]\nWandering = "Wondering"\n', encoding="utf-8"
     )
     assert main(["-C", str(project), "plan", "--volume", "Volume 1"]) == 0
-    assert "Poynt" in capsys.readouterr().out
+    assert "Wondering" in capsys.readouterr().out
 
 
 def test_the_plan_totals_describe_what_was_printed(project, capsys):
     # A person who asks for one chapter must not be given the number that
     # belongs to the whole volume.
     cast_with_voices(project)
-    main(["-C", str(project), "plan", "--volume", "Volume 1", "--chapter", "0"])
+    main(["-C", str(project), "plan", "--volume", "Volume 1", "--chapter", "5"])
     one = capsys.readouterr().err
     main(["-C", str(project), "plan", "--volume", "Volume 1"])
     whole = capsys.readouterr().err
@@ -249,7 +256,7 @@ def test_a_render_writes_captions_beside_the_audiobook(project, capsys):
     assert captions.exists()
     # Sound with no picture has nothing else marking where a chapter begins,
     # so the announcements belong in these captions.
-    assert "Chapter 0." in captions.read_text(encoding="utf-8")
+    assert "Chapter 5." in captions.read_text(encoding="utf-8")
 
 
 @needs_ffmpeg
@@ -258,7 +265,7 @@ def test_a_render_can_write_a_review_page(project, capsys):
     assert main(["-C", str(project), "render", "--volume", "Volume 1", "--review"]) == 0
     page = project / "out" / "review - Volume 1.html"
     assert page.exists()
-    assert "Point - Null." in page.read_text(encoding="utf-8")
+    assert "Wandering Spirit." in page.read_text(encoding="utf-8")
 
 
 def test_the_lexicon_it_writes_is_one_it_can_read(project, capsys):
@@ -618,25 +625,30 @@ def test_a_card_names_a_volume_the_archive_does_not_list(project):
 
     cast_with_voices(project)
     opened = Project.open(project)
-    volume = build_volume(opened, "Volume 1", max_characters=480)
 
-    written = {c.title: c.volume for c in volume.chapters}
-    assert written["Point - Null."] == "Prologue"
+    def labels_of(name):
+        volume = build_volume(opened, name, max_characters=480)
+        marks = [Mark(title=c.title, start=0.0, end=10.0) for c in volume.chapters]
+        return volume, dict(
+            zip(
+                [m.title for m in marks],
+                _volume_labels(opened, volume, marks),
+                strict=True,
+            )
+        )
+
+    # The two chapters sit in different groups, because the prologue is a part
+    # of its own, so each is built from the group that holds it.
+    part, in_part = labels_of("Prologue")
+    _, in_volume = labels_of("Volume 1")
+
+    assert {c.title: c.volume for c in part.chapters}["Point - Null."] == "Prologue"
     assert "Prologue" not in opened.volumes(), "the archive never names it"
 
-    marks = [Mark(title=c.title, start=0.0, end=10.0) for c in volume.chapters]
-    labels = dict(
-        zip(
-            [m.title for m in marks],
-            _volume_labels(opened, volume, marks),
-            strict=True,
-        )
-    )
-
     # The prologue keeps the name it was written under, with no title beneath.
-    assert labels["Point - Null."] == ("Prologue", "")
+    assert in_part["Point - Null."] == ("Prologue", "")
     # A volume the archive does name keeps both.
-    assert labels["Wandering Spirit."][0] == "Volume 1"
+    assert in_volume["Wandering Spirit."][0] == "Volume 1"
 
 
 def test_one_chapter_can_be_rendered_while_the_rest_is_uncast(project, capsys):
@@ -661,7 +673,7 @@ def test_one_chapter_can_be_rendered_while_the_rest_is_uncast(project, capsys):
                 str(project),
                 "render",
                 "--volume",
-                "Volume 1",
+                "Prologue",
                 "--chapter",
                 "0",
                 "--dry-run",
@@ -700,7 +712,7 @@ def test_one_chapter_keeps_the_number_its_volume_gives_it(project):
 
     cast_with_voices(project)
     opened = Project.open(project)
-    volume = build_volume(opened, "Volume 1", max_characters=480, only=0)
+    volume = build_volume(opened, "Prologue", max_characters=480, only=0)
     assert len(volume.chapters) == 1
     assert len(volume.every) > 1, "the whole book is still there to count with"
     last = last_chapters(volume.every)

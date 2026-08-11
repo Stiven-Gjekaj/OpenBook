@@ -272,6 +272,20 @@ level = true
 # work and the chapter below it. Every colour is a default the drawing code
 # holds, so only the fonts and the words are named here.
 
+[output.parts]
+
+# A run of chapters that becomes its own file, and its own video.
+#
+# The prologue is chapters 0 to 3. It goes out first and on its own, so it
+# needs a file of its own and a name of its own. Volume 1 then starts at
+# chapter 4.
+#
+# A part wins over the volume that holds it. The chapters stay in Volume 1
+# everywhere else: in the book, in the chapter list, and in the numbers the
+# narrator speaks.
+Prologue = "0-3"
+
+
 [video]
 file_name       = "Soultale - {VOLUME}.mp4"
 title           = "SOULTALE"
