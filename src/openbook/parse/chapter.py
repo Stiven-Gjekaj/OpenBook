@@ -91,9 +91,11 @@ def _one_closing(segments: list[Segment]) -> list[Segment]:
 
 
 # What a reader would hear as the end of a sentence, once the marks that can
-# close one from the outside are set aside.
+# close one from the outside are set aside. The last of those are the curly
+# quotes, written as escapes because they cannot be told from the straight
+# ones by eye and a linter refuses them on that ground.
 STOPS = ".!?…:;"
-CLOSERS = "\"'”’)]}"
+CLOSERS = "\"'\u201d\u2019)]}"
 
 
 def _and_then(before: str, after: str) -> str:
@@ -103,9 +105,7 @@ def _and_then(before: str, after: str) -> str:
     clause and hurries through the name.
     """
     ends = before.rstrip().rstrip(CLOSERS)
-    return (
-        f"{before} {after}" if ends and ends[-1] in STOPS else f"{before}. {after}"
-    )
+    return f"{before} {after}" if ends and ends[-1] in STOPS else f"{before}. {after}"
 
 
 def _read_line(

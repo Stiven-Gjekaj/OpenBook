@@ -167,10 +167,7 @@ def test_the_end_matter_is_known_by_its_element(grammar):
 def test_the_lines_of_a_closing_are_read_as_one(grammar):
     # The book writes them on separate lines because that is how they sit on a
     # page. Read as three they come back as three endings in a row.
-    body = (
-        "<p>The last line.</p>"
-        '<p><u>End of Chapter 230</u><br/><u>"A Title"</u></p>'
-    )
+    body = '<p>The last line.</p><p><u>End of Chapter 230</u><br/><u>"A Title"</u></p>'
     segments = parse(body, grammar).segments
     assert len(segments) == 2
     assert segments[-1] == EndMatter(text='End of Chapter 230. "A Title"')
