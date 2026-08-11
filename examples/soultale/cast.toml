@@ -29,10 +29,16 @@
 #
 # HOW MUCH FEELING
 #
-# An engine that reads with feeling takes an exaggeration. Narration gets 0.3
-# and dialogue gets 0.7, because a narrator holds one level for hours and a
-# character in a fantasy is frightened, or lying, or giving an order. One
-# value for both gives a theatrical narrator or a flat cast.
+# An engine that reads with feeling takes an exaggeration. What it means
+# depends on the model, because they do not agree on where flat is.
+#
+#   chatterbox        0.3 narration, 0.7 dialogue. Flat is 0.5.
+#   chatterbox-turbo  0.5 for both.  Flat is 0.
+#
+# The older pair says that a narrator holds one level for hours while a
+# character in a fantasy is frightened, or lying, or giving an order. Turbo
+# gets one number for both because narration at its flat came back stating
+# every line as a fact, and 0.5 there is not the 0.5 of the other model.
 #
 # Add 'exaggeration' to an entry to say something else about one character:
 #
@@ -69,8 +75,11 @@ voice = ""
 
 # 54 lines. First in chapter 0.
 [cast.INK]
-name  = ""
-voice = "voices/ink.wav"
+name         = ""
+voice        = "voices/ink.wav"
+# Under the 0.5 the rest of the cast gets. Chapter 0 at 0.5 was a shade
+# broader than this character asks for.
+exaggeration = 0.4
 
 
 # RECURRING
