@@ -21,6 +21,11 @@ examples/soultale/.work/
 /voices/
 examples/soultale/voices/
 
+# Speech corpora. A voice is chosen from one of these and then copied into
+# voices/. The corpus itself is tens of gigabytes and it comes from somewhere
+# else, so it stays out of the repository.
+/datasets/
+
 # The manuscript of Soultale is in the repository on purpose, because this is
 # the working space of its author. See examples/soultale/book/NOTICE.md: the
 # book is not under the licence that covers the code. Any other EPUB is
