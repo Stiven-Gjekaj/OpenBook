@@ -139,6 +139,18 @@ mode = "mix_matched"
 # does not read the text.
 end_matter_element = "u"
 
+# The last line of a closing, which does not wear that element. Soultale
+# underlines 'End of Chapter 4' and the name of the chapter, then leaves a line
+# in brackets under them in bold alone. The element alone would give that line
+# to the narration, and turning the closing off would leave it talking on its
+# own. It counts only where a closing has already begun, because a bracketed
+# line in the middle of a chapter is something else entirely.
+#
+# The lines of a closing are then read as one. The book puts them on separate
+# lines because that is how they sit on a page; a reader still says them as a
+# single sentence falling to its end.
+end_matter_tail = '^\[.*\]$'
+
 # A scene break. The author writes a short line of dashes. The renderer makes a
 # pause here and speaks nothing. Without this rule the narrator says the name
 # of each dash.

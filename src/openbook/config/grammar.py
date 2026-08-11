@@ -60,6 +60,7 @@ class Structure:
     """The parts of a chapter that are not narration and not dialogue."""
 
     end_matter_element: str
+    end_matter_tail: re.Pattern[str] | None
     scene_break: re.Pattern[str]
     strip_elements: frozenset[str]
 
@@ -269,8 +270,16 @@ def _read_dialogue(table: Table) -> Dialogue:
 
 
 def _read_structure(table: Table) -> Structure:
+    tail = table.string("end_matter_tail", "")
     structure = Structure(
         end_matter_element=table.string("end_matter_element").lower(),
+        end_matter_tail=(
+            compile_regex(
+                tail, key="grammar.structure.end_matter_tail", path=table.path
+            )
+            if tail
+            else None
+        ),
         scene_break=compile_regex(
             table.string("scene_break"),
             key="grammar.structure.scene_break",

@@ -164,6 +164,43 @@ def test_the_end_matter_is_known_by_its_element(grammar):
     assert segments[-1].text == "End of Chapter 230"
 
 
+def test_the_lines_of_a_closing_are_read_as_one(grammar):
+    # The book writes them on separate lines because that is how they sit on a
+    # page. Read as three they come back as three endings in a row.
+    body = (
+        "<p>The last line.</p>"
+        '<p><u>End of Chapter 230</u><br/><u>"A Title"</u></p>'
+    )
+    segments = parse(body, grammar).segments
+    assert len(segments) == 2
+    assert segments[-1] == EndMatter(text='End of Chapter 230. "A Title"')
+
+
+def test_a_stop_is_not_doubled_where_a_closing_line_has_one(grammar):
+    body = "<p><u>End of Chapter 230.</u><br/><u>Ends here!</u></p>"
+    (segment,) = parse(body, grammar).segments
+    assert segment.text == "End of Chapter 230. Ends here!"
+
+
+def test_the_last_line_of_a_closing_joins_it_without_the_element(grammar):
+    # Soultale leaves this one in bold alone. Without the rule it would be
+    # narration, and turning the closing off would leave it talking on its own.
+    body = (
+        '<p><u>End of Chapter 230</u><br/><u>"A Title"</u></p>'
+        "<p><b>[ The 1 named 0. ]</b></p>"
+    )
+    (segment,) = parse(body, grammar).segments
+    assert isinstance(segment, EndMatter)
+    assert segment.text == 'End of Chapter 230. "A Title". [ The 1 named 0. ]'
+
+
+def test_a_bracketed_line_in_the_middle_of_a_chapter_is_narration(grammar):
+    # The same shape means nothing until a closing has begun.
+    body = "<p><b>[ The 1 named 0. ]</b></p><p>And the chapter goes on.</p>"
+    segments = parse(body, grammar).segments
+    assert all(isinstance(s, Narration) for s in segments)
+
+
 def test_a_chapter_with_no_dialogue_gives_only_narration(grammar):
     # 61 chapters of the book are like this.
     body = "<p>One.</p><p>Two.</p><p>Three.</p>"

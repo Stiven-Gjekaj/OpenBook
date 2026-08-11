@@ -52,7 +52,10 @@ def parse_chapter(chapter: Chapter, grammar: Grammar) -> ParsedChapter:
     end_matter = frozenset({grammar.structure.end_matter_element})
 
     for line in read_lines(chapter.body):
-        segment = _read_line(line, grammar, end_matter, chapter.number, notes)
+        closing = bool(segments) and isinstance(segments[-1], EndMatter)
+        segment = _read_line(
+            line, grammar, end_matter, chapter.number, notes, closing=closing
+        )
         if segment is not None:
             segments.append(segment)
 
@@ -60,8 +63,48 @@ def parse_chapter(chapter: Chapter, grammar: Grammar) -> ParsedChapter:
         number=chapter.number,
         volume=chapter.volume,
         title=chapter.title,
-        segments=tuple(segments),
+        segments=tuple(_one_closing(segments)),
         notes=tuple(notes),
+    )
+
+
+def _one_closing(segments: list[Segment]) -> list[Segment]:
+    """Join the lines that close a chapter into one.
+
+    A closing is one thing: the words 'End of Chapter 4', the name of the
+    chapter, and the line the author leaves under it. The book writes them on
+    separate lines because that is how they look on a page, and a reader would
+    still say them as a single sentence falling to its end.
+
+    Read as three, they come back as three endings in a row, each with its own
+    fall. Read as one, the engine is given the whole shape at once.
+    """
+    joined: list[Segment] = []
+    for segment in segments:
+        if isinstance(segment, EndMatter) and isinstance(
+            joined[-1] if joined else None, EndMatter
+        ):
+            joined[-1] = EndMatter(text=_and_then(joined[-1].text, segment.text))
+        else:
+            joined.append(segment)
+    return joined
+
+
+# What a reader would hear as the end of a sentence, once the marks that can
+# close one from the outside are set aside.
+STOPS = ".!?…:;"
+CLOSERS = "\"'”’)]}"
+
+
+def _and_then(before: str, after: str) -> str:
+    """Join two closing lines, with a stop where the line break used to be.
+
+    Without one the engine reads 'End of Chapter 0 "Point - Null"' as a single
+    clause and hurries through the name.
+    """
+    ends = before.rstrip().rstrip(CLOSERS)
+    return (
+        f"{before} {after}" if ends and ends[-1] in STOPS else f"{before}. {after}"
     )
 
 
@@ -71,12 +114,24 @@ def _read_line(
     end_matter: frozenset[str],
     chapter: int,
     notes: list[Note],
+    *,
+    closing: bool = False,
 ) -> Segment | None:
     text = line.text
     if not text:
         return None
 
     if line.wholly_inside(end_matter):
+        return EndMatter(text=text)
+
+    # A line that closes a chapter without wearing the element the others wear.
+    # Soultale underlines 'End of Chapter 4' and the name of the chapter, and
+    # leaves the line beneath them in bold alone, so the element alone would
+    # hand the last line of a closing to the narration. It is only a closing
+    # where a closing has already begun, because the same shape means nothing
+    # in the middle of a chapter.
+    tail = grammar.structure.end_matter_tail
+    if closing and tail is not None and tail.match(text):
         return EndMatter(text=text)
 
     if grammar.structure.scene_break.match(text):
