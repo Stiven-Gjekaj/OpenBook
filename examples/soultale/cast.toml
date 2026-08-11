@@ -1,8 +1,8 @@
 # Cast for Soultale.
 #
-# This file holds every speaker code that Volume 1 uses. Volume 1 contains the
-# three prologue chapters and chapters 3 to 22. It has 44 codes and 687
-# dialogue lines.
+# This file holds every speaker code that the prologue and Volume 1 use. The
+# prologue is chapters 0 to 2 and Volume 1 is chapters 3 to 22. Together they
+# have 44 codes and 687 dialogue lines.
 #
 # The build stops when a chapter uses a code that this file does not have. The
 # error names the code and the chapter. Add the code here, then build again.
@@ -57,9 +57,9 @@
 # voice where a wandering model costs most, because it reads a third of a
 # million words and a dropped one is found only by listening.
 #
-# A Kokoro name while the cast is being tried out, because it needs no
-# recording. Put the path of a recording here and render with
-# '--engine chatterbox' when the real voice is ready.
+# A recording, so this needs '--engine chatterbox-turbo'. Everything the
+# recording carries comes out in the reading: the accent, the pace, and the
+# room it was made in.
 voice = "voices/narrator.wav"
 
 
@@ -84,9 +84,9 @@ exaggeration = 0.4
 
 # RECURRING
 #
-# The four below still hold Kokoro names, which are not recordings. They are
-# for chapters 1 and 2 and chapter 0 does not reach them, so a chapter 0 render
-# with Chatterbox works and 'check --engine chatterbox' still names them.
+# Six of these speak in the prologue and all six now hold a recording. The
+# rest are for Volume 1 and still wait for a voice, so a render of the
+# prologue works while Volume 1 does not.
 #
 # These codes have 5 to 39 lines each. Give each one a voice. Two of them can
 # share a voice when they never appear in the same chapter, though a listener
@@ -173,12 +173,12 @@ voice = ""
 # 13 lines. First in chapter 1.
 [cast.DRM]
 name  = ""
-voice = "bm_lewis"
+voice = "voices/dream.wav"
 
 # 12 lines. First in chapter 1.
 [cast.END]
 name  = ""
-voice = "am_onyx"
+voice = "voices/theend.wav"
 
 # 9 lines. First in chapter 4.
 [cast.VTH]
@@ -188,7 +188,7 @@ voice = ""
 # 7 lines. First in chapter 1.
 [cast.BLB]
 name  = ""
-voice = "am_puck"
+voice = "voices/blueberry.wav"
 
 # 6 lines. First in chapter 14.
 [cast.MAN]
@@ -217,7 +217,7 @@ voice = ""
 # 4 lines. First in chapter 1.
 [cast.EDG]
 name  = ""
-voice = "am_eric"
+voice = "voices/edge.wav"
 
 # 4 lines. First in chapter 9.
 [cast.VLG]
