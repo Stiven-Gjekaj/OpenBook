@@ -173,6 +173,22 @@ separate reading carried at its ends.
 | `intro_title` | The name of the intro in the chapter list |
 | `outro_title` | The name of the outro |
 
+`intro` and `outro` are spoken to the listener rather than to the book. They
+take `{VOLUME}`, `{TITLE}`, `{FIRST}`, `{LAST}` and `{CHAPTERS}`. Name a voice
+for them under `[host]` in `cast.toml`, or leave that out and the narrator
+reads them.
+
+Neither takes a chapter mark. They hold a place on the timeline, so the video
+draws a card for each, and that card carries the name of the work and nothing
+else. Nothing that lists chapters lists them: not the chapter marks of the
+M4B, and not the times in the YouTube description. The time is not lost,
+because the first chapter listed reads 0:00 and an intro in front of it
+belongs to that chapter as far as a viewer clicking the list is concerned.
+
+A rest of `pause_between_chapters` falls between the host and the book, after
+the intro and before the outro. A listener needs the same moment to change
+from being spoken to, to being read to, in both directions.
+
 `read_end_matter` decides whether the words that close a chapter are spoken.
 In Soultale every chapter ends with three lines:
 
@@ -191,10 +207,6 @@ follows them.
 **A pause falls only where the kind of the text changes.** Two lines of
 dialogue get nothing between them, so a conversation keeps its speed, and two
 paragraphs of prose get nothing either.
-
-The intro and the outro accept `{VOLUME}`, `{TITLE}`, `{FIRST}`, `{LAST}` and
-`{CHAPTERS}`. Each takes a chapter mark of its own, so the first time in a
-YouTube description still points at 0:00.
 
 ### [output]
 
@@ -280,11 +292,20 @@ long before the end of a volume.
 [narrator]
 voice = "af_heart"
 
+[host]
+voice = "voices/host.wav"
+
 [cast.BLK]
 name  = "Blook"
 voice = "am_michael"
 aliases = ["BLCK"]
 ```
+
+`[host]` is the voice that speaks to the listener rather than inside the book.
+It reads the `intro` and the `outro` from `[render]`, where a video says hello
+and asks for a subscription. It is not a character and it is not in the cast,
+because nobody in the book ever hears it. Leave it out and the narrator reads
+those words.
 
 **What a voice is depends on the engine.**
 

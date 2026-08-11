@@ -36,13 +36,15 @@ This voice speaks to the viewer and not to the book. It reads the words
 before the chapters start and the words after they end, where the video says
 hello and asks for a subscription.
 
-It is not in the cast, because it is not a character. The `intro` and the
-`outro` in `[render]` hold those words, and both are empty today. The code
-gives them to the narrator, so a second voice needs a key of its own before
-this assignment can happen.
+It is not in the cast, because it is not a character. `host.wav` holds it, and
+`[host]` in [cast.toml](../cast.toml) names it. The words are the `intro` and
+the `outro` in [grammar.toml](../grammar.toml).
+
+Neither takes a chapter mark. The video draws a card for each, and that card
+carries the name of the work and nothing else.
 
 38 codes in [cast.toml](../cast.toml) still have no voice, and Volume 1 needs
-them. None of them can have Makima now.
+them. None of them can have this voice.
 
 ## Tried and dropped
 
