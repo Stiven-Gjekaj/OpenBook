@@ -217,7 +217,13 @@ pause_between_chapters      = "3s"
 #             the reader where a character looks, and it interrupts a short
 #             line badly.
 #   drop      Take the action out and leave nothing.
-action          = "pause"
+#
+# Dropped. 45 of the book's 48 actions say where a character looks or what
+# they are doing while they speak: 'to his assistant', 'answering phone'.
+# Those are directions to an actor and a listener is not owed them. The other
+# three are a sigh and two coughs, and no mode tells one kind from the other.
+# They fall in 19 chapters of 192, twelve of them in chapter 15 alone.
+action          = "drop"
 pause_at_action = "500ms"
 
 

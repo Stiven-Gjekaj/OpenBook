@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import pytest
@@ -153,32 +154,46 @@ def test_two_characters_together_can_be_made_one_voice(cast, tmp_path):
     assert voice.key() == "am_adam:0.500+am_onyx:0.500"
 
 
-def test_an_action_becomes_a_silence_by_default(grammar, cast):
+def reading_actions(tmp_path, mode: str):
+    """The example grammar, with the action mode set to the one being tested.
+
+    Each of these three tests is about one mode, and the value in the example
+    file is a decision about Soultale that can change. Taking the mode from
+    the file makes a change of mind about the book fail a test of the code,
+    and worse, it once made the test for 'drop' pass by writing nothing
+    because the file already said it.
+    """
+    text = (EXAMPLES / "grammar.toml").read_text(encoding="utf-8")
+    text, changed = re.subn(
+        r'(?m)^action(\s*)= "(?:pause|narrator|drop)"$',
+        rf'action\g<1>= "{mode}"',
+        text,
+    )
+    assert changed == 1, "the example grammar no longer sets the action mode"
+    path = tmp_path / "grammar.toml"
+    path.write_text(text, encoding="utf-8")
+    return load_grammar(path)
+
+
+def test_an_action_becomes_a_silence_where_the_mode_is_pause(cast, tmp_path):
+    other = reading_actions(tmp_path, "pause")
     result = items(
-        "<p><strong>IVY</strong>: I am fine *cough* really.</p>", grammar, cast
+        "<p><strong>IVY</strong>: I am fine *cough* really.</p>", other, cast
     )
     kinds = [type(i).__name__ for i in result[1:]]
     assert kinds == ["Utterance", "Silence", "Utterance"]
     assert result[2] == Silence(seconds=0.5, reason="action: cough")
 
 
-def test_an_action_can_be_spoken_by_the_narrator(grammar, cast, tmp_path):
-    text = (EXAMPLES / "grammar.toml").read_text(encoding="utf-8")
-    text = text.replace('action          = "pause"', 'action          = "narrator"')
-    path = tmp_path / "grammar.toml"
-    path.write_text(text, encoding="utf-8")
-    other = load_grammar(path)
+def test_an_action_can_be_spoken_by_the_narrator(cast, tmp_path):
+    other = reading_actions(tmp_path, "narrator")
     result = items("<p><strong>IVY</strong>: Fine *cough* really.</p>", other, cast)
     action = [i for i in result if getattr(i, "kind", None) == "action"]
     assert action[0] == Utterance(text="cough", voice=Voice("af_heart"), kind="action")
 
 
-def test_an_action_can_be_dropped(grammar, cast, tmp_path):
-    text = (EXAMPLES / "grammar.toml").read_text(encoding="utf-8")
-    text = text.replace('action          = "pause"', 'action          = "drop"')
-    path = tmp_path / "grammar.toml"
-    path.write_text(text, encoding="utf-8")
-    other = load_grammar(path)
+def test_an_action_can_be_dropped(cast, tmp_path):
+    other = reading_actions(tmp_path, "drop")
     result = items("<p><strong>IVY</strong>: Fine *cough* really.</p>", other, cast)
     assert not [i for i in result if isinstance(i, Silence)]
     assert len(spoken(result)) == 3
