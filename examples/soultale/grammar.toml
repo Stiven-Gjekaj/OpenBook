@@ -301,13 +301,12 @@ channels        = 2
 # is the authoring view, which opens for the author and for nobody else, so a
 # reader who followed it from a video would arrive nowhere. Open the link in a
 # browser that is not signed in before a volume goes up.
+# The words for a release that has none of its own, at the end of this file.
+# Say nothing here that names one volume, because these words go above every
+# video without an entry there.
 description = """
 True strength is not measured by who you can defeat. It is defined by who you
 choose not to destroy.
-
-Volume 1, The Ascension. A world begins again, and the people who will decide
-its shape arrive one at a time: a thread weaver, an oathkeeper, a doctor of
-lies. None of them yet knows what is going to be asked of them.
 
 Read Soultale on Wattpad: https://www.wattpad.com/series/163487
 Written by n1cetry.
@@ -326,4 +325,40 @@ peek_words      = 45
 credits = [
   "Determination by anonymous-1438277, licensed CC BY 3.0",
   "https://fontstruct.com/fontstructions/show/2368299",
+  "Monster Friend Back by SattarSayat, licensed CC BY",
+  "https://fontstruct.com/fontstructions/show/1502526",
 ]
+
+
+# The words above the chapter times, one release at a time. The prologue and a
+# volume go out as separate videos, and what is worth saying about one is not
+# what is worth saying about the other. A release with no entry here takes the
+# general words above.
+#
+# This table is last in the file on purpose. A bare key written after a table
+# header belongs to that table, so every key of [video] has to come first.
+[video.descriptions]
+
+Prologue = """
+True strength is not measured by who you can defeat. It is defined by who you
+choose not to destroy.
+
+The Creation. Before there was anyone to name it, there was one consciousness
+alone in a place where only ideas lived. What it makes first is not a world.
+It is someone to talk to.
+
+Read Soultale on Wattpad: https://www.wattpad.com/series/163487
+Written by n1cetry.
+"""
+
+"Volume 1" = """
+True strength is not measured by who you can defeat. It is defined by who you
+choose not to destroy.
+
+Volume 1, The Ascension. A world begins again, and the people who will decide
+its shape arrive one at a time: a thread weaver, an oathkeeper, a doctor of
+lies. None of them yet knows what is going to be asked of them.
+
+Read Soultale on Wattpad: https://www.wattpad.com/series/163487
+Written by n1cetry.
+"""

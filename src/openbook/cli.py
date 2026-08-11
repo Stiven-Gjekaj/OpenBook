@@ -496,7 +496,7 @@ def _video(options) -> int:
     # in one place and read from there rather than typed again here.
     heading = f"Soultale, {named.written}" if named else f"Soultale, {volume.name}"
 
-    before = settings.description.strip() if settings else ""
+    before = settings.description_for(volume.name).strip() if settings else ""
     if settings and settings.peek_words and volume.chapters:
         peek = opening_words(volume.chapters[0], settings.peek_words)
         if peek:

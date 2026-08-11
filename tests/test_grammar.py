@@ -202,6 +202,39 @@ def test_the_intro_and_outro_are_the_words_the_author_wrote(tmp_path):
     assert grammar.render.outro == "That was {VOLUME}."
 
 
+VIDEO = """
+[video]
+file_name = "Soultale - {VOLUME}.mp4"
+visual = "cover.png"
+description = "A book about a world that begins again."
+"""
+
+
+def test_a_release_can_carry_a_description_of_its_own(tmp_path):
+    # A prologue and a volume go out as separate videos, and what is worth
+    # saying about one is not what is worth saying about the other.
+    text = MINIMAL + VIDEO + '\n[video.descriptions]\nPrologue = "Where it starts."\n'
+    grammar = load_grammar(write(tmp_path, text))
+    assert grammar.video.description_for("Prologue") == "Where it starts."
+
+
+def test_a_release_nobody_wrote_one_for_takes_the_general_words(tmp_path):
+    # An empty description is worse than a general one.
+    text = MINIMAL + VIDEO + '\n[video.descriptions]\nPrologue = "Where it starts."\n'
+    grammar = load_grammar(write(tmp_path, text))
+    assert grammar.video.description_for("Volume 2") == (
+        "A book about a world that begins again."
+    )
+
+
+def test_a_book_with_one_description_uses_it_everywhere(tmp_path):
+    grammar = load_grammar(write(tmp_path, MINIMAL + VIDEO))
+    assert grammar.video.descriptions == {}
+    assert grammar.video.description_for("Prologue") == (
+        "A book about a world that begins again."
+    )
+
+
 def test_a_book_with_no_parts_groups_by_volume(tmp_path):
     grammar = load_grammar(write(tmp_path, MINIMAL))
     assert grammar.output.parts == {}

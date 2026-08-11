@@ -133,12 +133,23 @@ class Video:
     background: str
     credits: tuple[str, ...]
     description: str
+    descriptions: dict[str, str]
     peek_words: int
 
     @property
     def draws_cards(self) -> bool:
         """True when the fonts are named, so a card is drawn for each chapter."""
         return bool(self.title_font and self.body_font)
+
+    def description_for(self, name: str) -> str:
+        """The words above the chapter times, for the release being made.
+
+        A prologue and a volume go out as separate videos, and what is worth
+        saying about one is not what is worth saying about the other. The
+        single description stays as the answer for a release nobody wrote one
+        for, because an empty description is worse than a general one.
+        """
+        return self.descriptions.get(name, self.description)
 
 
 @dataclass(frozen=True)
@@ -355,6 +366,7 @@ def _read_video(table: Table) -> Video:
         background=table.string("background", "#12101F"),
         credits=table.strings("credits", ()),
         description=table.string("description", ""),
+        descriptions=table.string_map("descriptions", optional=True),
         peek_words=table.integer("peek_words", 0),
     )
     if "{VOLUME}" not in video.file_name:
