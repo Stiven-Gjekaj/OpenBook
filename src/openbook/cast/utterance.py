@@ -16,6 +16,12 @@ from dataclasses import dataclass
 
 NARRATOR = "narrator"
 
+# The voice that speaks to the listener rather than inside the book. It is not
+# a code in the cast file, because nobody in the book ever hears it, and it is
+# not the narrator, because the review page would then say the narrator read
+# words the narrator never read.
+HOST = "host"
+
 # What an utterance is for. The planner uses this to decide where a pause
 # falls, so a value that the planner does not know is a mistake it can find.
 NARRATION = "narration"

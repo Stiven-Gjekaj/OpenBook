@@ -773,3 +773,11 @@ def test_the_host_speaks_outside_the_book_and_takes_no_chapter(project, tmp_path
     said = [u for u, _, _ in report.timeline if "Welcome to the library." in u.text]
     assert said, "the intro was spoken"
     assert said[0].voice.key() == opened.cast.host_voice()
+    # The review page names whoever spoke each line. The narrator did not
+    # speak this one, and a page that said so would send a person looking for
+    # a fault in the wrong voice.
+    assert said[0].speaker == "host"
+
+    from openbook.speech.captions import label_for
+
+    assert label_for(said[0], {}) == "", "a caption puts no name on an announcement"

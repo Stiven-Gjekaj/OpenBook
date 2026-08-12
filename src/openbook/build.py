@@ -301,7 +301,7 @@ def render_volume(volume: VolumePlan, engine, cache, *, named=None):
     guessed. A guess drifts, and a chapter mark that drifts is worse than none.
     """
     from .cast import chapter_label, last_chapters
-    from .cast.utterance import ANNOUNCEMENT, Silence, Utterance, Voice
+    from .cast.utterance import ANNOUNCEMENT, HOST, Silence, Utterance, Voice
     from .plan.planner import Plan
     from .speech.audio import Audio, join_all
     from .speech.package import Mark
@@ -342,6 +342,7 @@ def render_volume(volume: VolumePlan, engine, cache, *, named=None):
             text=words,
             voice=host,
             kind=ANNOUNCEMENT,
+            speaker=HOST,
             exaggeration=volume.host_exaggeration,
         )
         audio, report = render_plan(Plan(items=(said,)), engine, cache)
