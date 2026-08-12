@@ -32,13 +32,20 @@
 # An engine that reads with feeling takes an exaggeration. What it means
 # depends on the model, because they do not agree on where flat is.
 #
-#   chatterbox        0.3 narration, 0.7 dialogue. Flat is 0.5.
-#   chatterbox-turbo  0.5 for both.  Flat is 0.
+#   chatterbox        0.3 narration, 0.7 dialogue.
+#   chatterbox-turbo  0.5 for both, and it does nothing to the sound.
 #
 # The older pair says that a narrator holds one level for hours while a
-# character in a fantasy is frightened, or lying, or giving an order. Turbo
-# gets one number for both because narration at its flat came back stating
-# every line as a fact, and 0.5 there is not the 0.5 of the other model.
+# character in a fantasy is frightened, or lying, or giving an order.
+#
+# Turbo ignores the number. One line read at 0.0, 0.5 and 1.0 from one seed
+# comes back bit for bit the same, so the setting cannot make this model read
+# with more feeling. It is still part of the key of a line, so changing it
+# gives a different reading of that line, and the two kinds share one number
+# because this model draws no line between them.
+#
+# A feeling on Turbo comes from a tag in corrections.toml, [happy] or [fear]
+# and the rest. That is the only thing it listens to.
 #
 # Add 'exaggeration' to an entry to say something else about one character:
 #

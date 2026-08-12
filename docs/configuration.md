@@ -331,9 +331,13 @@ old voice would have stayed in the book for ever with nothing said about it.
 real time, and audio that peaked above what a sample holds, so a whole chapter
 was clipping before the levelling stage saw it. `chatterbox-turbo` made the
 same chapter at 0.85 times real time, with nothing clipping and every piece
-brought to one loudness by the model. It also reads flat at 0 where the other
-reads flat at 0.5, so the exaggeration numbers do not carry between them and
-each has its own.
+brought to one loudness by the model.
+
+**The exaggeration does nothing on Turbo.** One line read at 0.0, 0.5 and 1.0
+from one seed comes back bit for bit the same, and the library warns on every
+line that it ignores the number. It stays in the key of a line, so changing it
+still gives a different reading, and each model keeps its own numbers. To ask
+Turbo for a feeling, put a tag in the words: see corrections.toml below.
 
 Both hold their audio apart, because the name of the engine is part of a key.
 The same chapter can be read by each and the two compared, and neither throws
@@ -486,6 +490,32 @@ Two entries are refused rather than ignored:
 
 An entry with a blank answer, which is what the page writes, is a line waiting
 for words. It changes nothing and is counted apart.
+
+### Asking for a feeling
+
+The text of an entry reaches the engine untouched, so a tag in it is read as
+an instruction. This is how one line is given a feeling that the words alone
+do not carry:
+
+```toml
+"Zero, no!" = "[fear] Zero, no!"
+"Finally, someone newer than me!" = "[happy] Finally, someone newer than me!"
+```
+
+The captions take the tag out again, so a viewer sees the words alone. Text
+the book itself writes in brackets is kept, because the rule matches a list of
+known tags and never the shape of the brackets.
+
+The tags belong to the engine and the two Chatterbox models do not agree on
+them. `chatterbox-turbo` reads `[angry]`, `[fear]`, `[surprised]`,
+`[whispering]`, `[happy]`, `[crying]`, `[sarcastic]` and `[dramatic]`, and the
+sounds `[laugh]`, `[chuckle]`, `[sigh]`, `[gasp]`, `[cough]`, `[groan]`,
+`[sniff]`, `[shush]` and `[clear throat]`. The older `chatterbox` has no
+feelings at all and spells several of the sounds differently, so a file of
+Turbo tags read by it says the letters out loud.
+
+Use one only where the words leave no doubt. A tag on a line that could be
+read two ways replaces the author's ambiguity with a guess.
 
 A render says what the file did:
 
