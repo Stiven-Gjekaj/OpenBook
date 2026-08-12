@@ -15,6 +15,7 @@ at all, and mark the sounds that are not speech.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from ..cast.utterance import ACTION, ANNOUNCEMENT, DIALOGUE, NARRATOR, Utterance
@@ -100,6 +101,81 @@ def label_for(utterance: Utterance, names: dict[str, str] | None) -> str:
     return f"[{' and '.join(parts)}] "
 
 
+# What a speech engine reads as an instruction rather than as words. A tag
+# tells the model how to say a line, or asks it for a sound. Both Chatterbox
+# models are here, because a caption should not show either one, and the two
+# do not spell them the same way.
+#
+# The book writes bracketed text of its own, such as the line that closes each
+# chapter, and that is words a reader should see. So the match is against this
+# list and never against the shape of the brackets.
+TAGS = frozenset(
+    {
+        # How a line is said.
+        "angry",
+        "fear",
+        "surprised",
+        "whispering",
+        "happy",
+        "crying",
+        "sarcastic",
+        "dramatic",
+        "narration",
+        "advertisement",
+        "whisper",
+        # A sound rather than a word. One of these holds a space, so the set
+        # is written out rather than split on whitespace.
+        "laugh",
+        "chuckle",
+        "sigh",
+        "gasp",
+        "cough",
+        "groan",
+        "sniff",
+        "shush",
+        "clear throat",
+        "clear_throat",
+        "giggle",
+        "laughter",
+        "guffaw",
+        "inhale",
+        "exhale",
+        "cry",
+        "bark",
+        "howl",
+        "meow",
+        "singing",
+        "music",
+        "whistle",
+        "humming",
+        "mumble",
+        "sneeze",
+        "snore",
+        "chew",
+        "sip",
+        "kiss",
+        "shhh",
+        "gibberish",
+        "uh",
+        "um",
+    }
+)
+
+TAG = re.compile(r"\[([^\[\]]{1,20})\]")
+
+
+def without_tags(text: str) -> str:
+    """Take the instructions out, and leave the words.
+
+    A tag is how a line is said and not what is said, so a reader of the
+    captions is owed the words alone.
+    """
+    made = TAG.sub(
+        lambda m: "" if m.group(1).strip().lower() in TAGS else m.group(0), text
+    )
+    return " ".join(made.split())
+
+
 def cues_from_timeline(
     timeline: list[tuple[Utterance, float, float]],
     *,
@@ -128,7 +204,7 @@ def cues_from_timeline(
             continue
 
         label = label_for(utterance, names)
-        pieces = break_text(utterance.text, limit)
+        pieces = break_text(without_tags(utterance.text), limit)
         if not pieces:
             continue
 

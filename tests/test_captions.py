@@ -157,3 +157,30 @@ def test_the_chapter_name_can_be_asked_for():
     said = Utterance(text="Chapter 0. Point - Null.", voice=VOICE, kind="announcement")
     cues = cues_from_timeline([(said, 0.0, 2.0)], announcements=True)
     assert cues[0].text == "Chapter 0. Point - Null."
+
+
+def test_a_caption_shows_the_words_and_not_the_instructions():
+    # A tag tells the engine how to say a line. It is not said, so a reader of
+    # the captions is owed the words alone.
+    from openbook.speech.captions import without_tags
+
+    assert without_tags("[happy] Finally, someone newer!") == "Finally, someone newer!"
+    assert without_tags("Fall back! [angry] Now!") == "Fall back! Now!"
+
+
+def test_the_words_the_book_puts_in_brackets_are_kept():
+    # The line that closes every chapter of Soultale is written in brackets.
+    # A reader is meant to see it, and a rule about the shape of the brackets
+    # would take it away.
+    from openbook.speech.captions import without_tags
+
+    assert without_tags("[ The 1 named 0. ]") == "[ The 1 named 0. ]"
+    assert without_tags("[Chapter 4]") == "[Chapter 4]"
+
+
+def test_a_tag_holding_a_space_is_taken_out_too():
+    # One tag of the set is two words. A set split on whitespace would keep
+    # this one and take out a bracketed 'clear' that no engine reads.
+    from openbook.speech.captions import without_tags
+
+    assert without_tags("[clear throat] Right, then.") == "Right, then."
