@@ -23,3 +23,25 @@
 # the line is the one the book wrote, read from a different seed, which was
 # most of what the first correction was worth.
 "Who are you?" = "Who — are you?"
+
+# FEELING
+#
+# A tag tells the engine how to read a line. It is an instruction and not
+# words, so the captions take it out again and a viewer never sees it.
+#
+# The tags belong to the engine. These are Turbo's. The older Chatterbox model
+# spells several of them differently and would read these as letters.
+#
+# Only where the words leave no doubt. A tag on a line that could be read two
+# ways replaces the author's ambiguity with a guess.
+
+"whoa!" = "[surprised] whoa!"
+"Perfect!" = "[happy] Perfect!"
+"Finally, someone newer than me around here!" = "[happy] Finally, someone newer than me around here!"
+"Even guardians can have fun!" = "[happy] Even guardians can have fun!"
+"Well, you've got the best teacher right here! The Magnificent Blueberry is an expert in fun!" = "[happy] Well, you've got the best teacher right here! The Magnificent Blueberry is an expert in fun!"
+"Don't look directly at them!" = "[fear] Don't look directly at them!"
+"Zero, no!" = "[fear] Zero, no!"
+"No!" = "[angry] No!"
+"I am the true strongest!" = "[dramatic] I am the true strongest!"
+"All resistance ends." = "[dramatic] All resistance ends."

@@ -1,0 +1,23 @@
+# How a word is said.
+#
+# The name of an entry is the word as the book writes it, and the value is a
+# respelling that an engine reads correctly. The match is on whole words and
+# it ignores case, so one entry answers every place the book uses the word.
+#
+# This applies before a line is divided and before a correction, so it reaches
+# every line of the book, the intro and the outro included. That matters most
+# for a name, which the intro is likely to say.
+#
+# A respelling ends up in the captions as well as in the sound, because both
+# come from the words the engine was given. Prefer a spelling a reader would
+# not stumble over.
+#
+# 'openbook words' names every word the phonemizer does not have, and
+# 'openbook words --merge' adds the new ones without touching the answers
+# already here.
+
+[words]
+
+# The book writes 'Woah'. The word is 'whoa', and an engine given 'Woah' reads
+# it as two syllables that rhyme with 'Noah'.
+Woah = "whoa"
