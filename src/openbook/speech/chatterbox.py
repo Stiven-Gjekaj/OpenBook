@@ -109,12 +109,14 @@ class Settings:
 class TurboSettings(Settings):
     """What to ask of Turbo, which asks for more and starts elsewhere.
 
-    Turbo reads flat at zero where the older model reads flat at one half, so
-    the numbers tuned for that one do not carry across.
+    The exaggeration of this model does nothing to the sound. It is measured:
+    one line read at 0.0, 0.5 and 1.0 from one seed comes back bit for bit the
+    same. It stays in the key of a line, so it still chooses which reading of
+    a line you get, and one number for both kinds says that this model draws
+    no line between narration and dialogue.
 
-    Both kinds sit at one half here, after a chapter at 0 and 0.4 came back
-    with a narrator that read every line as a statement of fact. That was the
-    setting and not the recording: zero is what this model calls flat.
+    A feeling comes from a tag in the words instead, such as [happy] or
+    [fear], which is the only thing this model listens to.
     """
 
     narration: float = 0.5
@@ -342,9 +344,22 @@ class ChatterboxTurboEngine(_Chatterbox):
         return ChatterboxTurboTTS
 
     def _arguments(self, exaggeration: float) -> dict:
+        """What this model takes. The exaggeration is not among them.
+
+        Turbo ignores it. The library says so in a warning on every line, and
+        the model agrees: one line read at 0.0, 0.5 and 1.0 from one seed
+        comes back bit for bit the same, three times. Sending it only prints
+        the warning.
+
+        It stays in the key of a line even so. A key is where the audio of
+        this project already sits, and taking it out would orphan every piece
+        Turbo has made. What it selects is a reading and not a feeling: change
+        the number and the seed changes, so the line is said again differently.
+        A feeling comes from a tag in corrections.toml, which is the only thing
+        this model listens to.
+        """
         settings = self._settings
         return {
-            "exaggeration": exaggeration,
             "cfg_weight": settings.guidance,
             "temperature": settings.temperature,
             "min_p": settings.min_p,

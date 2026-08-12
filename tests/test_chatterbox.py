@@ -398,9 +398,22 @@ def test_turbo_names_its_own_arguments_in_its_version():
 def test_turbo_asks_the_model_for_the_things_only_it_takes(project):
     engine = ChatterboxTurboEngine(directory=project)
     asked = engine._arguments(0.4)
-    assert asked["exaggeration"] == 0.4
     assert asked["norm_loudness"] is True
     assert "top_k" in asked
+
+
+def test_turbo_is_not_sent_an_exaggeration(project):
+    # It ignores the number. The library warns on every line that it does, and
+    # the model agrees: one line read at 0.0, 0.5 and 1.0 from one seed comes
+    # back bit for bit the same. Sending it only prints the warning.
+    #
+    # It stays in the key of a line, so the older model keeps its meaning and
+    # no piece Turbo has already made is orphaned.
+    engine = ChatterboxTurboEngine(directory=project)
+    assert "exaggeration" not in engine._arguments(0.4)
+    assert engine.voice_key(Voice("voices/blook.wav"), exaggeration=0.4) != (
+        engine.voice_key(Voice("voices/blook.wav"), exaggeration=0.5)
+    )
 
 
 def test_the_older_model_asks_for_only_what_it_takes(project):
