@@ -333,6 +333,12 @@ was clipping before the levelling stage saw it. `chatterbox-turbo` made the
 same chapter at 0.85 times real time, with nothing clipping and every piece
 brought to one loudness by the model.
 
+**Do not write an `exaggeration` for a new character while Turbo is the
+engine.** It cannot do the thing its name promises, and it still changes the
+key of every line that character says, so writing one makes that character
+again and gives a different reading. Give the character a recording and stop
+there.
+
 **The exaggeration does nothing on Turbo.** One line read at 0.0, 0.5 and 1.0
 from one seed comes back bit for bit the same, and the library warns on every
 line that it ignores the number. It stays in the key of a line, so changing it

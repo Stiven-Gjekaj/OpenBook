@@ -47,15 +47,24 @@
 # A feeling on Turbo comes from a tag in corrections.toml, [happy] or [fear]
 # and the rest. That is the only thing it listens to.
 #
-# Add 'exaggeration' to an entry to say something else about one character:
+# DO NOT WRITE 'exaggeration' FOR A NEW CHARACTER while Turbo is the engine.
+#
+# It cannot do the thing its name promises. What it still does is change the
+# key of every line that character says, so writing one makes that character
+# again and gives you a different reading, which is not what somebody adding
+# a voice is asking for. Give the character a recording and stop there.
 #
 #   [cast.BLK]
-#   voice        = "voices/blook.wav"
-#   exaggeration = 0.85
+#   voice = "voices/blook.wav"
 #
-# Leave it out and the kind of the line decides. It is part of the key of each
-# line, so changing it for one character remakes that character and nobody
-# else, and changing the number for dialogue leaves the narration alone.
+# One entry below has a number, and it stays only because the lines it made
+# are made and were listened to. Removing it now would remake them for no
+# gain. Read that entry as history rather than as an example.
+#
+# On the older chatterbox engine the number means what it says. Leave it out
+# and the kind of the line decides. It is part of the key of each line, so
+# changing it for one character remakes that character and nobody else, and
+# changing the number for dialogue leaves the narration alone.
 
 
 [narrator]
@@ -95,8 +104,10 @@ voice = ""
 [cast.INK]
 name         = ""
 voice        = "voices/ink.wav"
-# Under the 0.5 the rest of the cast gets. Chapter 0 at 0.5 was a shade
-# broader than this character asks for.
+# Written when this number was thought to set how much feeling a character
+# reads with. It does not, on this engine. It is left alone because these 54
+# lines are made and have been heard, and removing it would change the key and
+# make them all again. Do not copy it into a new entry.
 exaggeration = 0.4
 
 
