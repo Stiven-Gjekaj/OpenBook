@@ -13,18 +13,33 @@ book then has two characters that a reader cannot tell apart.
 | ---- | --------- | ----- | ---- | ----- |
 | | narrator | Frieren, soft | Frieren: Beyond Journey's End | 211 Hz |
 | INK | Ink | Subaru | Re:Zero | 121 Hz |
-| ZER | zero | Ayanokoji | Classroom of the Elite | 132 Hz |
-| DRM | dream | Rudeus Greyrat | Mushoku Tensei | 229 Hz |
+| ZER | zero | Ayanokoji | Classroom of the Elite | 130 Hz |
+| DRM | dream | Sunday | Honkai: Star Rail | 118 Hz |
 | END | The end | My Liege, Dramatic Old Male | a voice library, not a character | 79 Hz |
-| BLB | Blueberry | Yanqing | Honkai: Star Rail | 288 Hz |
+| BLB | Blueberry | Rudeus Greyrat | Mushoku Tensei | 229 Hz |
 | EDG | Edge | jin_woo | Solo Leveling | 86 Hz |
+
+**dream and Ink are 3 Hz apart**, and they trade lines in chapters 1 and 2.
+They are the closest pair in the cast by a wide margin. Pitch is not the whole
+of a voice and the two may separate by timbre alone, but if a listener ever
+mistakes one for the other, this is the pair and this is why.
 
 `///` is the nameless voice of the prologue. It is zero, so it uses
 `zero.wav`. Change it whenever ZER changes, or the two come apart.
 
 The pitch is the median of the reference recording. It is here because two
 voices close in pitch are the two a listener confuses. The cast above spans
-79 to 288 Hz, which is nearly two octaves.
+79 to 229 Hz.
+
+## Held, not used
+
+| Voice | From | Pitch | File |
+| ----- | ---- | ----- | ---- |
+| Yanqing | Honkai: Star Rail | 288 Hz | `yanqing.wav` |
+
+Kept on purpose. It was Ink and then Blueberry, and it is the highest voice
+of the set, which no character holds now. 38 codes in
+[cast.toml](../cast.toml) still have no voice and Volume 1 needs them.
 
 ## The host
 
@@ -55,7 +70,8 @@ evening finding out the same thing again.
 | ----- | ---- | --- | ----------- |
 | Kafka | Honkai: Star Rail | narrator | The author chose Frieren instead |
 | Sunday | Honkai: Star Rail | zero | Replaced before it was heard |
-| Yanqing | Honkai: Star Rail | Ink | Moved to Blueberry |
+| Yanqing | Honkai: Star Rail | Ink, then Blueberry | Held instead, see above |
+| Rudeus Greyrat | Mushoku Tensei | dream | Moved to Blueberry |
 | AniSpeech 116 | AniSpeech, voice 116 | Ink | Its clips held more than one speaker |
 | AniSpeech 142 | AniSpeech, voice 142 | zero | The author preferred Ayanokoji |
 | AniSpeech 123 | AniSpeech, voice 123 | dream | Replaced in the overhaul |
