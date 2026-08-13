@@ -75,8 +75,6 @@ def main() -> int:
 
 
 def _load(model_dir: str, device: str | None):
-    import os
-
     import torch
     from indextts.infer_v2 import IndexTTS2
 
@@ -89,7 +87,72 @@ def _load(model_dir: str, device: str | None):
         use_fp16=False,
         device=device,
         use_qwen_emo=False,
+        aux_paths=_aux_paths(model_dir),
     ), torch
+
+
+# The four models IndexTTS needs beyond its own weights, and the one file of
+# each that it reads.
+AUXILIARY = (
+    ("w2v_bert", "facebook/w2v-bert-2.0", None),
+    ("semantic_codec", "amphion/MaskGCT", "semantic_codec/model.safetensors"),
+    ("campplus", "funasr/campplus", "campplus_cn_common.bin"),
+    ("bigvgan", "nvidia/bigvgan_v2_22khz_80band_256x", None),
+)
+
+
+def _aux_paths(model_dir: str):
+    """Where the four extra models are, without making a second copy of them.
+
+    Left to itself the library copies all four into {model_dir}/hf_cache. That
+    is 2.98 GB of files that are already on the disk, and when the model
+    directory is the HuggingFace cache, as it is by default, it writes them
+    into the cache beside the originals.
+
+    So they are found where downloading them put them and handed over. If any
+    one of them is missing the library is asked to fetch them after all, into
+    a directory it may write to.
+    """
+    found = {}
+    for key, repo, inside in AUXILIARY:
+        where = _snapshot(repo)
+        if where is None:
+            return _fetched(model_dir)
+        whole = os.path.join(where, *inside.split("/")) if inside else where
+        if not os.path.exists(whole):
+            return _fetched(model_dir)
+        found[key] = whole
+    return found
+
+
+def _snapshot(repo: str):
+    """A repository in the HuggingFace cache, or None if it is not there."""
+    hub = os.environ.get("HF_HUB_CACHE") or os.path.join(
+        os.path.expanduser("~"), ".cache", "huggingface", "hub"
+    )
+    snapshots = os.path.join(hub, "models--" + repo.replace("/", "--"), "snapshots")
+    if not os.path.isdir(snapshots):
+        return None
+    for name in sorted(os.listdir(snapshots)):
+        whole = os.path.join(snapshots, name)
+        if os.path.isdir(whole) and os.listdir(whole):
+            return whole
+    return None
+
+
+def _fetched(model_dir: str):
+    """Let the library download what is missing, somewhere it may write.
+
+    Not into the model directory, which is the HuggingFace cache by default
+    and is not this project's to write in.
+    """
+    from indextts.utils.model_download import ensure_models_available
+
+    work = os.environ.get("OPENBOOK_INDEXTTS_WORK") or os.path.join(
+        os.path.expanduser("~"), ".openbook", "indextts-aux"
+    )
+    os.makedirs(work, exist_ok=True)
+    return ensure_models_available(work)
 
 
 def _one(loaded, request: dict) -> dict:
