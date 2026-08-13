@@ -312,6 +312,31 @@ title_back_font = "fonts/MonsterFriendBack.otf"
 body_font       = "fonts/determination.ttf"
 background      = "#12101F"
 
+# THE MUSIC AND THE FADES
+#
+# One track, looped to the length of the volume, then compressed with the
+# speech as the key: where somebody talks the music drops, where nobody talks
+# it comes back. It is under the video only. The M4B has none, because an
+# audiobook with a bed under it is not an audiobook any distributor takes.
+#
+# 'Undertale' by toby fox, track 71, 6 minutes 22, so it goes round about
+# seven times under the prologue.
+#
+# THIS RECORDING IS NOT YOURS. It is on a commercially released album and it
+# is in YouTube Content ID, so a video carrying it is claimed automatically,
+# whoever uploads it and whether or not the video is monetised. That is a
+# claim rather than a strike. Decide before you upload, not after.
+music           = "music/undertale.flac"
+
+# A tenth of the speech, before the ducking takes it further down. The bed is
+# there to be noticed only when nobody is talking.
+music_level     = 0.10
+
+# The picture comes out of black and goes back into it, and the music arrives
+# and leaves with it. The speech never fades: the first word of the intro
+# would be swallowed.
+fade            = "3s"
+
 # A still card each second is enough, because nothing on a card moves.
 framerate       = 1
 bitrate         = "192k"

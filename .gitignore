@@ -34,6 +34,11 @@ examples/soultale/voices/*
 # else, so it stays out of the repository.
 /datasets/
 
+# The music under a video. It is somebody else's recording, the same as the
+# voices are, and it is large.
+/music/
+examples/soultale/music/
+
 # The manuscript of Soultale is in the repository on purpose, because this is
 # the working space of its author. See examples/soultale/book/NOTICE.md: the
 # book is not under the licence that covers the code. Any other EPUB is

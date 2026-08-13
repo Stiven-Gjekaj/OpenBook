@@ -257,6 +257,7 @@ Only needed to make a video.
 | `visual` | A picture to use instead of drawing cards |
 | `music` | A bed to put under the speech |
 | `music_level` | How loud the bed is before it is ducked |
+| `fade` | How long the picture and the music take to arrive and to leave |
 | `framerate` | Frames each second. `1` is right for a still |
 | `bitrate`, `sample_rate`, `channels` | The audio of the video |
 | `description` | Your own words, above the chapter times |
@@ -282,7 +283,17 @@ and that picture is used. Give neither and the file refuses to load.
 
 Music is compressed against the speech rather than laid under it, so it drops
 where somebody talks. A bed at one level fights the narration and is tiring
-long before the end of a volume.
+long before the end of a volume. One track is looped to the length of the
+volume, so a six minute piece goes round seven times under a prologue.
+
+`fade` brings the picture out of black and takes it back into black, and the
+music arrives and leaves with it. **The speech never fades.** The first word
+of an intro would be swallowed by it, and the picture is not what carries the
+story. Leave the key out and nothing fades.
+
+There is no music under the M4B, and no key for one. An audiobook with a bed
+under it is not one any distributor accepts: ACX asks for -19 LUFS and -3
+dBTP, which this project already hits, and forbids background music outright.
 
 ---
 
