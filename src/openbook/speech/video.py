@@ -40,6 +40,10 @@ class Music:
     attack: float = 20.0
     release: float = 500.0
 
+    # How long the bed takes to arrive and to leave. The speech is never
+    # faded: the first word of an intro would be swallowed by it.
+    fade: float = 0.0
+
     def __post_init__(self) -> None:
         if not 0 < self.level <= 1:
             raise ValueError("the level of the music must be above 0 and at most 1")
@@ -136,8 +140,19 @@ def mix_music(speech: Path, music: Music, out: Path) -> Path:
         raise OpenBookError(f"{music.path}: the music file does not exist")
     require_ffmpeg()
 
+    # The bed alone fades. It is looped to a length nobody chose, so it would
+    # otherwise begin and end mid phrase.
+    arrives = ""
+    if music.fade > 0:
+        seconds = probe_seconds(speech)
+        leaves = max(0.0, seconds - music.fade)
+        arrives = (
+            f",afade=t=in:st=0:d={music.fade:g}"
+            f",afade=t=out:st={leaves:.3f}:d={music.fade:g}"
+        )
+
     graph = (
-        f"[1:a]volume={music.level}[bed];"
+        f"[1:a]volume={music.level}{arrives}[bed];"
         f"[bed][0:a]sidechaincompress="
         f"threshold={music.threshold}:ratio={music.ratio}:"
         f"attack={music.attack}:release={music.release}[duck];"
@@ -170,6 +185,19 @@ def mix_music(speech: Path, music: Music, out: Path) -> Path:
     return out
 
 
+def _picture_fade(fade: float, seconds: float) -> str:
+    """Bring the picture out of black and take it back into black.
+
+    Nothing fades the sound of the speech with it. A listener who hears the
+    first word arrive out of nothing has lost that word, and the card is not
+    what carries the story.
+    """
+    if fade <= 0 or seconds <= 0:
+        return ""
+    leaves = max(0.0, seconds - fade)
+    return f",fade=t=in:st=0:d={fade:g},fade=t=out:st={leaves:.3f}:d={fade:g}"
+
+
 def write_video(
     audio: Path,
     visual: Path,
@@ -180,6 +208,7 @@ def write_video(
     bitrate: str = "128k",
     sample_rate: int = 48000,
     channels: int = 2,
+    fade: float = 0.0,
 ) -> Path:
     """Join a picture and the sound into one file for YouTube.
 
@@ -206,6 +235,7 @@ def write_video(
     # An odd width or height cannot be encoded as yuv420p, which every player
     # expects, so the picture is padded up to an even size rather than refused.
     scale = "scale=trunc(iw/2)*2:trunc(ih/2)*2"
+    scale += _picture_fade(fade, probe_seconds(audio))
 
     run_ffmpeg(
         [
@@ -261,6 +291,7 @@ def write_video_from_cards(
     bitrate: str = "128k",
     sample_rate: int = 48000,
     channels: int = 2,
+    fade: float = 0.0,
 ) -> Path:
     """Join a list of cards and the sound into one file.
 
@@ -311,7 +342,7 @@ def write_video_from_cards(
             "-map",
             "1:a:0",
             "-vf",
-            f"fps={framerate},format=yuv420p",
+            f"fps={framerate}{_picture_fade(fade, seconds)},format=yuv420p",
             "-c:v",
             "libx264",
             "-tune",

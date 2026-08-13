@@ -8,7 +8,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12 or newer"/>
-  <img src="https://img.shields.io/badge/tests-542_passing-427819?style=for-the-badge" alt="542 tests passing"/>
+  <img src="https://img.shields.io/badge/tests-546_passing-427819?style=for-the-badge" alt="546 tests passing"/>
 </p>
 
 <p align="center">

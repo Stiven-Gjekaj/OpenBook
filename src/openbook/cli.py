@@ -527,7 +527,8 @@ def _video(options) -> int:
         if music_path is not None:
             mixed = project.work_directory / f"{out.stem}.mixed.wav"
             level = settings.music_level if settings else 0.15
-            mix_music(work, Music(path=music_path, level=level), mixed)
+            fade = settings.fade if settings else 0.0
+            mix_music(work, Music(path=music_path, level=level, fade=fade), mixed)
             work.unlink(missing_ok=True)
             work = mixed
         shape = {
@@ -536,6 +537,7 @@ def _video(options) -> int:
             "bitrate": settings.bitrate if settings else "128k",
             "sample_rate": settings.sample_rate if settings else 48000,
             "channels": settings.channels if settings else 2,
+            "fade": settings.fade if settings else 0.0,
         }
         if options.visual is None and settings is not None and settings.draws_cards:
             here = project.directory

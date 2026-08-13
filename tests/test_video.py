@@ -444,3 +444,37 @@ def test_the_host_card_says_nothing_about_a_chapter(tmp_path):
     assert plain[0][0].read_bytes() == blank[0][0].read_bytes(), (
         "a host card draws the same as a card with no volume, chapter or title"
     )
+
+
+def test_a_fade_of_zero_leaves_the_picture_alone():
+    from openbook.speech.video import _picture_fade
+
+    assert _picture_fade(0.0, 600.0) == ""
+    assert _picture_fade(3.0, 0.0) == ""
+
+
+def test_the_picture_comes_out_of_black_and_goes_back_into_it():
+    # The fade out is placed from the end, so it lands on the last seconds of
+    # the volume rather than at a time somebody had to work out.
+    from openbook.speech.video import _picture_fade
+
+    made = _picture_fade(3.0, 600.0)
+    assert "fade=t=in:st=0:d=3" in made
+    assert "fade=t=out:st=597.000:d=3" in made
+
+
+def test_a_fade_longer_than_the_video_does_not_start_before_it():
+    from openbook.speech.video import _picture_fade
+
+    assert "st=0.000" in _picture_fade(30.0, 10.0)
+
+
+def test_the_music_carries_its_own_fade():
+    # The bed is looped to a length nobody chose, so without this it begins
+    # and ends mid phrase.
+    from pathlib import Path
+
+    from openbook.speech.video import Music
+
+    assert Music(path=Path("m.flac")).fade == 0.0
+    assert Music(path=Path("m.flac"), fade=3.0).fade == 3.0

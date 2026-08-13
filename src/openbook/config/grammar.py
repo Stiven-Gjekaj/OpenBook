@@ -136,6 +136,11 @@ class Video:
     descriptions: dict[str, str]
     peek_words: int
 
+    # How long the picture takes to come out of black and to go back into it,
+    # and how long the music takes to arrive and to leave. The speech never
+    # fades: the first word of an intro would be swallowed by it.
+    fade: float = 0.0
+
     @property
     def draws_cards(self) -> bool:
         """True when the fonts are named, so a card is drawn for each chapter."""
@@ -354,7 +359,9 @@ def _read_video(table: Table) -> Video:
         file_name=table.string("file_name"),
         visual=table.string("visual", ""),
         music=table.string("music", ""),
-        music_level=float(table.string("music_level", "0.15")),
+        # A number, because it is one. It was read as text, so a level had to
+        # be written in quotes and a plain 0.1 was refused.
+        music_level=table.number("music_level", 0.15),
         framerate=table.integer("framerate", 1),
         bitrate=table.string("bitrate", "128k"),
         sample_rate=table.integer("sample_rate", 48000),
@@ -368,6 +375,7 @@ def _read_video(table: Table) -> Video:
         description=table.string("description", ""),
         descriptions=table.string_map("descriptions", optional=True),
         peek_words=table.integer("peek_words", 0),
+        fade=table.duration("fade", 0.0),
     )
     if "{VOLUME}" not in video.file_name:
         raise ConfigError(
