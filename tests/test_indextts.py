@@ -33,9 +33,9 @@ def engine(project):
 
 def test_the_engine_names_itself(engine):
     assert engine.name == "indextts"
-    # Not the 24000 the other engines give back. A stage that assumed one rate
-    # for every engine would resample this one without saying so.
-    assert engine.rate == 22050
+    # The same rate as every other engine, because a render can route one kind
+    # of line here and another elsewhere, and two rates cannot be laid end to end.
+    assert engine.rate == 24000
     assert engine.max_characters == MAX_CHARACTERS
 
 
@@ -238,6 +238,6 @@ def test_it_speaks_a_line_and_a_feeling_makes_it_louder(project, tmp_path):
     with IndexTtsEngine(directory=project) as engine:
         flat = engine.speak("I am the true strongest!", voice, kind="dialogue")
         loud = engine.speak("[angry] I am the true strongest!", voice, kind="dialogue")
-    assert flat.rate == 22050
+    assert flat.rate == 24000
     assert flat.seconds > 0.5 and loud.seconds > 0.5
     assert loudness(loud) > loudness(flat) + 3.0

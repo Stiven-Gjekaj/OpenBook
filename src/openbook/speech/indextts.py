@@ -54,8 +54,11 @@ from ..errors import OpenBookError
 from .audio import Audio
 from .captions import TAG, without_tags
 
-# What IndexTTS 2 gives back. Not the 24000 the other engines here use.
-RATE = 22050
+# What every engine here gives back. The model itself works at 22050 and the
+# worker resamples before handing a line over, because a render that routes
+# some kinds of line to one engine and some to another lays their pieces end
+# to end, and two rates meeting there is refused outright.
+RATE = 24000
 
 # The same limit Chatterbox takes, and for the same reason: this model is
 # autoregressive too. It matters more that the two agree, because the limit

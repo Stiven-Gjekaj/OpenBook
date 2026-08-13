@@ -176,25 +176,36 @@ def _one(loaded, request: dict) -> dict:
     return {"ok": True, "seconds": _rewrite(out)}
 
 
+# What every engine in OpenBook gives back. This model works at 22050, and a
+# render that mixes engines lays their pieces end to end, which is refused
+# outright when two rates meet. Rather than teach every stage after this one
+# about a second rate, the one engine that is different is brought into line
+# here, once, where the libraries to do it are already installed.
+WANTED_RATE = 24000
+
+
 def _rewrite(path: str) -> float:
-    """Put the file into 16 bit samples of one channel, and say how long it is.
+    """Put the file into 16 bit samples of one channel at the usual rate.
 
     The engine reads this with the standard library, which has no opinion on
     a float wav. Doing the conversion here keeps numpy on this side of the
     process boundary, where it already is.
     """
+    import librosa
     import numpy
     import soundfile
 
     samples, rate = soundfile.read(path, always_2d=True)
     mono = samples.mean(axis=1)
+    if rate != WANTED_RATE:
+        mono = librosa.resample(mono, orig_sr=rate, target_sr=WANTED_RATE)
     held = numpy.clip(mono, -1.0, 1.0)
     with wave.open(path, "wb") as handle:
         handle.setnchannels(1)
         handle.setsampwidth(2)
-        handle.setframerate(rate)
+        handle.setframerate(WANTED_RATE)
         handle.writeframes((held * 32767.0).astype("<i2").tobytes())
-    return len(mono) / rate
+    return len(mono) / WANTED_RATE
 
 
 def _say(message: dict) -> None:
