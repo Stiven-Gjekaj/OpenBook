@@ -41,6 +41,19 @@ def key_for(
     return hashlib.sha256(joined.encode("utf-8")).hexdigest()
 
 
+def engine_for(engine, kind: str):
+    """The engine that will really speak a line of this kind.
+
+    Nearly always the engine itself. One of them holds several and chooses
+    between them by kind, and a key has to name the one that speaks: keying on
+    the holder instead would give a line of narration and a line of dialogue
+    the same engine in their keys, and the audio of one would be served for the
+    other after the routing changed.
+    """
+    choosing = getattr(engine, "for_kind", None)
+    return choosing(kind) if choosing is not None else engine
+
+
 def key_of(utterance: Utterance, engine) -> str:
     """The key for one utterance, spoken by one engine.
 
@@ -49,14 +62,19 @@ def key_of(utterance: Utterance, engine) -> str:
     the sound is the file. Two different recordings under one path are two
     different voices, and a cache that could not tell them apart would hand
     back the old voice for ever without saying anything.
+
+    All three parts come from the engine that speaks this kind of line. So a
+    volume rendered by one engine keeps every line of it when another engine
+    is put in front of a single kind, and only that kind is made again.
     """
+    chosen = engine_for(engine, utterance.kind)
     return key_for(
         utterance.text,
-        engine.voice_key(
+        chosen.voice_key(
             utterance.voice, kind=utterance.kind, exaggeration=utterance.exaggeration
         ),
-        engine.name,
-        engine.version,
+        chosen.name,
+        chosen.version,
     )
 
 

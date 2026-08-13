@@ -335,3 +335,39 @@ def test_the_cache_asks_the_engine_what_to_call_a_voice():
 
     said = Utterance(text="one two", voice=Voice("ivy.wav"), kind="narration")
     assert key_of(said, Fingerprinting()) != key_of(said, SilentEngine())
+
+
+def test_a_key_names_the_engine_that_will_really_speak_the_line():
+    """An engine holding several has to key on the one it hands out.
+
+    Keying on the holder would give narration and dialogue the same engine in
+    their keys. Then putting a second engine in front of one kind would serve
+    the audio made by the other, and nothing would say so.
+    """
+
+    class Chooses:
+        name, version, rate, max_characters = "holder", "1", 24000, 300
+
+        def __init__(self, by_kind):
+            self._by_kind = by_kind
+
+        def for_kind(self, kind):
+            return self._by_kind.get(kind, self)
+
+        def voice_key(self, voice, *, kind="narration", exaggeration=None):
+            return f"holder:{voice.key()}"
+
+    inner = SilentEngine()
+    holder = Chooses({"dialogue": inner})
+    said = Utterance(text="Yes.", voice=Voice("v"), kind="dialogue", speaker="IVY")
+    assert key_of(said, holder) == key_of(said, inner)
+
+
+def test_a_key_is_unchanged_for_an_engine_that_chooses_nothing():
+    # Every engine but one has no for_kind at all, and their keys must stay
+    # exactly where they were.
+    engine = SilentEngine()
+    said = Utterance(text="Yes.", voice=Voice("v"), kind="narration", speaker="IVY")
+    assert key_of(said, engine) == key_for(
+        "Yes.", engine.voice_key(Voice("v")), engine.name, engine.version
+    )
