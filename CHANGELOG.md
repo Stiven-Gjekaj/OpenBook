@@ -65,6 +65,14 @@ book it was written for has not been tested, whatever its tests say.
   pins cannot be met alongside Chatterbox's.
 - The tags in `corrections.toml` choose the feeling on that engine, so the
   corrections already written keep working and nothing new has to be learned.
+- `--engine-for dialogue=indextts` reads one kind of line with another engine,
+  and can be repeated for each kind. Narration takes the fastest model that
+  holds steady, dialogue takes the one that can shout.
+- A cache key names the engine that speaks the line rather than the one
+  holding several, so a kind nobody routed keeps the audio it already has. On
+  the prologue that is 221 of 349 lines untouched.
+- The host speaks a kind of line of its own. It was an announcement, which is
+  what a chapter name is, and the two are read by different people.
 - A recording is part of the cache key and not only its path, so a better
   take of a character remakes that character and nothing else.
 - Every piece of audio is kept under a key made from the text, the voice, the
