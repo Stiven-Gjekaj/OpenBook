@@ -422,9 +422,11 @@ every line of narration where it is. On the prologue that is 221 of 349 lines
 untouched and 128 to make.
 
 Two engines have to give back audio at the same rate, or their pieces cannot
-be joined. Everything here is 24000 except `espeak`, which is 22050, so that
-one cannot be routed beside the others. It is refused before anything is
-spoken rather than partway through a volume.
+be joined, and a disagreement is refused before anything is spoken rather than
+partway through a volume. Every engine here gives back 24000. `espeak-ng`
+writes 22050 and has no setting for it, so that one is resampled on the way
+out, which roughly doubles what it costs a line and still leaves it the
+fastest way to hear a volume in real words.
 
 **Do not write an `exaggeration` for a new character while Turbo is the
 engine.** It cannot do the thing its name promises, and it still changes the
