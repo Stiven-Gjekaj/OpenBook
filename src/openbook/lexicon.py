@@ -28,7 +28,18 @@ from .errors import ConfigError
 # A word of the text. An apostrophe stays inside a word, so "don't" is one word
 # and not two, and a hyphen divides, so "Thread-Weaver" gives both halves and
 # each one can have its own entry.
-WORD = re.compile(r"[A-Za-z][A-Za-z']*")
+#
+# A word may also begin with one. The book elides at both ends, "ya'" and
+# "'bout", and a model reads the mark rather than the elision. Without the
+# leading one there was no way to write an entry for "'bout" at all: the word
+# began at the b and the apostrophe was left outside it.
+#
+# Both marks count. An EPUB written in a word processor carries the curly one
+# and a file written in an editor carries the straight one, and the same word
+# can arrive either way. They are written as escapes because a literal curly
+# quote in the source is refused as ambiguous.
+APOSTROPHES = "'\u2019"
+WORD = re.compile(f"[{APOSTROPHES}]?[A-Za-z][A-Za-z{APOSTROPHES}]*")
 
 
 @dataclass(frozen=True)
@@ -62,7 +73,25 @@ class Lexicon:
         """
         if not self.entries:
             return text
-        return WORD.sub(lambda m: self.says(m.group(0)) or m.group(0), text)
+        return WORD.sub(lambda m: self._said(m.group(0)), text)
+
+    def _said(self, word: str) -> str:
+        """One word, respelled if there is an entry for it.
+
+        A word may begin with an apostrophe two ways. In "'bout" the mark is
+        an elision and belongs to the word. In "say 'But someone has to'" it
+        opens a quotation and belongs to the sentence. Nothing about the mark
+        says which, so the whole is tried first and then the letters alone,
+        and a quotation keeps its mark while an elision loses it.
+        """
+        found = self.says(word)
+        if found is not None:
+            return found
+        if word[0] in APOSTROPHES:
+            inner = self.says(word[1:])
+            if inner is not None:
+                return word[0] + inner
+        return word
 
     def __len__(self) -> int:
         return len(self.entries)
@@ -140,6 +169,13 @@ def is_known(word: str, known: set[str]) -> bool:
     """
     if word in known or word in IRREGULAR:
         return True
+
+    # A word that opens with an apostrophe is either a quotation the sentence
+    # owns, "'But", or an elision the word owns, "'bout". Either way it is
+    # known when what follows the mark is known. Without this every opening
+    # quotation mark in the book arrives in the report as an invented name.
+    if len(word) > 1 and word[0] in APOSTROPHES:
+        return is_known(word[1:], known)
 
     # A word with an apostrophe is known when the part in front of it is.
     # "you're" gives "you", and "don't" gives "don". The second is not a word,
