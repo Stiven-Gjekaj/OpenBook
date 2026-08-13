@@ -23,6 +23,11 @@ from .reader import Table, load_toml
 # One chapter, or a run of chapters, or several of either divided by commas.
 _RANGE = re.compile(r"\A(-?\d+)\s*(?:-\s*(-?\d+))?\Z")
 
+# The code an entry of the narrator carries. It is not a speaker code and it
+# never reaches the cast table, so it is spelled here rather than imported
+# from the stage that speaks it.
+NARRATOR = "narrator"
+
 
 @dataclass(frozen=True)
 class Chapters:
@@ -80,8 +85,25 @@ class Cast:
     host: str = ""
     host_exaggeration: float | None = None
 
+    # A narrator for a run of chapters. Empty means one voice tells the whole
+    # book, which is what every book did before this existed.
+    narrators: tuple[Entry, ...] = ()
+
     def host_voice(self) -> str:
         return self.host or self.narrator
+
+    def narrator_for(self, chapter: int) -> tuple[str, float | None]:
+        """The voice that tells this chapter, and how it reads.
+
+        A book does not have to keep one narrator. Soultale tells the prologue
+        from outside, then gives the telling to the character whose story it
+        is, and later chapters change again. So a range wins over the plain
+        entry, which stays as the answer for every chapter no range covers.
+        """
+        for entry in self.narrators:
+            if entry.covers(chapter):
+                return entry.voice, entry.exaggeration
+        return self.narrator, self.narrator_exaggeration
 
     def codes(self) -> tuple[str, ...]:
         return tuple(sorted(self.entries))
@@ -130,6 +152,9 @@ class Cast:
         which. It answers what was written down.
         """
         found = [self.narrator] if self.narrator else []
+        for entry in self.narrators:
+            if entry.is_cast and entry.voice not in found:
+                found.append(entry.voice)
         for group in self.entries.values():
             for entry in group:
                 if entry.is_cast and entry.voice not in found:
@@ -178,6 +203,24 @@ def load_cast(path: Path) -> Cast:
     )
     if host_table is not None:
         host_table.done()
+
+    narrators: list[Entry] = []
+    for index, body in enumerate(root.raw_list("narrator_range")):
+        key = f"narrator_range[{index}]"
+        table = Table(body, path=name, prefix=key)
+        narrators.append(
+            Entry(
+                code=NARRATOR,
+                name=table.string("name", ""),
+                voice=table.string("voice", ""),
+                exaggeration=table.number("exaggeration", None),
+                chapters=parse_chapters(
+                    table.string("chapters"), key=f"{key}.chapters", path=name
+                ),
+            )
+        )
+        table.done()
+    _refuse_overlap({NARRATOR: narrators}, path=name)
 
     entries: dict[str, list[Entry]] = {}
     aliases: dict[str, str] = {}
@@ -229,6 +272,7 @@ def load_cast(path: Path) -> Cast:
         aliases=aliases,
         host=host,
         host_exaggeration=host_exaggeration,
+        narrators=tuple(narrators),
     )
 
 

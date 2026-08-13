@@ -37,8 +37,7 @@ def resolve_chapter(
     chapter: ParsedChapter, grammar: Grammar, cast: Cast
 ) -> tuple[Item, ...]:
     """Give every segment of a chapter a voice."""
-    narrator = _narrator(cast, chapter.number)
-    told = cast.narrator_exaggeration
+    narrator, told = _narrator(cast, chapter.number)
     items: list[Item] = []
 
     if grammar.render.read_chapter_names:
@@ -180,8 +179,15 @@ def _dialogue_voice(
     )
 
 
-def _narrator(cast: Cast, chapter: int) -> VoiceRef:
-    if not cast.narrator:
+def _narrator(cast: Cast, chapter: int) -> tuple[VoiceRef, float | None]:
+    """Who tells this chapter, and how they read it.
+
+    A book does not have to keep one narrator. Soultale tells the prologue
+    from outside and then gives the telling to the character whose story it
+    is, so the chapter number chooses.
+    """
+    voice, told = cast.narrator_for(chapter)
+    if not voice:
         raise CastError(
             NARRATOR,
             chapter,
@@ -190,7 +196,7 @@ def _narrator(cast: Cast, chapter: int) -> VoiceRef:
                 "book, so choose this one first"
             ),
         )
-    return Voice(name=cast.narrator)
+    return Voice(name=voice), told
 
 
 def _announcement(chapter: ParsedChapter, grammar: Grammar) -> str:

@@ -171,6 +171,19 @@ class Table:
             )
         return value
 
+    def raw_list(self, key: str) -> list[Any]:
+        """Take a list of tables without checking them, for a caller that walks
+        it itself. This is what [[key]] gives, written twice over."""
+        value = self._raw(key, [])
+        if not isinstance(value, list):
+            raise ConfigError(
+                "this must be a list of tables. Write [[key]] with two "
+                "brackets, one table for each group of chapters",
+                path=self._path,
+                key=self._key_name(key),
+            )
+        return value
+
     def one_of(
         self, key: str, allowed: tuple[str, ...], default: Any = _MISSING
     ) -> str:

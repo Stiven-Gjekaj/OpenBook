@@ -284,3 +284,39 @@ def test_a_character_with_no_number_carries_none(grammar, cast):
 def test_an_exaggeration_outside_the_range_is_refused():
     with pytest.raises(ValueError, match="between 0 and 2"):
         Utterance(text="x", voice=Voice("a"), kind="narration", exaggeration=5.0)
+
+
+def test_the_chapter_chooses_who_tells_it(grammar, tmp_path):
+    """The narration of a chapter takes the narrator that covers it.
+
+    Soultale tells the prologue from outside, with no first person in 5,306
+    words, and then gives the telling to the character whose story it is. The
+    voice has to change with it or one of the two is wrong.
+    """
+    from openbook.cast import Voice
+    from openbook.cast.utterance import NARRATION
+
+    path = tmp_path / "cast.toml"
+    path.write_text(
+        '[narrator]\nvoice = "voices/outside.wav"\n\n'
+        '[[narrator_range]]\nchapters = "3-22"\nvoice = "voices/blook.wav"\n\n'
+        '[cast.IVY]\nname = "Ivy"\nvoice = "voices/ivy.wav"\n',
+        encoding="utf-8",
+    )
+    told = load_cast(path)
+
+    def narration_of(number):
+        chapter = Chapter(
+            number=number,
+            volume="Volume 1",
+            title="A Title.",
+            body="<p>She walked home.</p>",
+            source="x.epub",
+        )
+        items = resolve_chapter(parse_chapter(chapter, grammar), grammar, told)
+        return next(i for i in items if getattr(i, "kind", "") == NARRATION).voice
+
+    assert narration_of(0) == Voice("voices/outside.wav")
+    assert narration_of(3) == Voice("voices/blook.wav")
+    assert narration_of(22) == Voice("voices/blook.wav")
+    assert narration_of(40) == Voice("voices/outside.wav")

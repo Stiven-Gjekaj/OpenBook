@@ -201,3 +201,56 @@ def test_with_no_host_the_narrator_speaks_them(tmp_path):
 
 def test_the_example_names_a_host():
     assert load_cast(EXAMPLE).host == "voices/host.wav"
+
+
+def test_a_narrator_can_change_with_the_chapter(tmp_path):
+    # A book does not have to keep one narrator. Soultale tells the prologue
+    # from outside and then gives the telling to the character whose story it
+    # is, and later chapters change again.
+    path = tmp_path / "cast.toml"
+    path.write_text(
+        '[narrator]\nvoice = "voices/outside.wav"\n\n'
+        '[[narrator_range]]\nchapters = "3-22"\n'
+        'name = "Blook"\nvoice = "voices/blook.wav"\nexaggeration = 0.4\n\n'
+        '[[narrator_range]]\nchapters = "23-40"\nvoice = "voices/other.wav"\n\n'
+        '[cast.BLK]\nname = "Blook"\nvoice = "voices/blook.wav"\n',
+        encoding="utf-8",
+    )
+    cast = load_cast(path)
+    assert cast.narrator_for(0) == ("voices/outside.wav", None)
+    assert cast.narrator_for(2) == ("voices/outside.wav", None)
+    assert cast.narrator_for(3) == ("voices/blook.wav", 0.4)
+    assert cast.narrator_for(22) == ("voices/blook.wav", 0.4)
+    assert cast.narrator_for(30) == ("voices/other.wav", None)
+    # A chapter no range covers falls back, so a book with none behaves as
+    # every book did before ranges existed.
+    assert cast.narrator_for(99) == ("voices/outside.wav", None)
+
+
+def test_every_narrator_recording_is_asked_for(tmp_path):
+    # check names a recording that is not there. A narrator of one volume must
+    # be named too, or the one that is missing is found by a render instead.
+    path = tmp_path / "cast.toml"
+    path.write_text(
+        '[narrator]\nvoice = "voices/outside.wav"\n\n'
+        '[[narrator_range]]\nchapters = "3-22"\nvoice = "voices/blook.wav"\n\n'
+        '[cast.BLK]\nname = "Blook"\nvoice = "voices/blook.wav"\n',
+        encoding="utf-8",
+    )
+    voices = load_cast(path).voices()
+    assert voices[0] == "voices/outside.wav", "the narrator comes first"
+    assert "voices/blook.wav" in voices
+    assert voices.count("voices/blook.wav") == 1, "a shared voice is said once"
+
+
+def test_two_narrator_ranges_over_one_chapter_are_refused(tmp_path):
+    path = tmp_path / "cast.toml"
+    path.write_text(
+        '[narrator]\nvoice = "voices/outside.wav"\n\n'
+        '[[narrator_range]]\nchapters = "3-22"\nvoice = "voices/one.wav"\n\n'
+        '[[narrator_range]]\nchapters = "20-30"\nvoice = "voices/two.wav"\n\n'
+        '[cast.BLK]\nname = "Blook"\nvoice = "voices/blook.wav"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ConfigError, match="cover"):
+        load_cast(path)
