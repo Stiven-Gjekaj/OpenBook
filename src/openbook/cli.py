@@ -23,10 +23,19 @@ from .speech.package import have_ffmpeg, write_m4b
 
 # chatterbox reads in the voice of a recording and kokoro is the one to fall
 # back to. chatterbox-turbo is the same idea through a model that reads several
-# times faster and holds one loudness by itself. silent stays the default of
-# the commands, because it needs nothing installed and answers the questions
-# about timing.
-ENGINES = ("silent", "espeak", "kokoro", "chatterbox", "chatterbox-turbo")
+# times faster and holds one loudness by itself, and it is the one a book is
+# read with. indextts is the only one that can raise its voice, and it is eight
+# times slower, so it is for the lines that need it rather than for a volume.
+# silent stays the default of the commands, because it needs nothing installed
+# and answers the questions about timing.
+ENGINES = (
+    "silent",
+    "espeak",
+    "kokoro",
+    "chatterbox",
+    "chatterbox-turbo",
+    "indextts",
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -331,6 +340,13 @@ def _engine_for(options):
         # project directory, so the engine has to be told where that is.
         family = ChatterboxTurboEngine if asked.endswith("turbo") else ChatterboxEngine
         return family(directory=Path(options.project))
+    if asked == "indextts":
+        from .speech.indextts import IndexTtsEngine
+
+        # The same recordings, read by a model in a Python of its own. It is
+        # not installed here and cannot be, so nothing is imported from it and
+        # the engine says where to make that environment if it is missing.
+        return IndexTtsEngine(directory=Path(options.project))
     if asked == "espeak":
         from .speech.espeak import EspeakEngine
 
