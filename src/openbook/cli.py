@@ -345,17 +345,28 @@ def _engine_for(options):
     --engine-for puts a second engine in front of one kind of line. What comes
     back then answers for all of them and hands out the right one for each
     line, so nothing after this has to know there is more than one.
+
+    One engine is built for each name and shared by every kind that asks for
+    it. Building one for each kind instead is what happened first, and two
+    kinds routed to IndexTTS started two of it: two subprocesses, each loading
+    seven gigabytes, on a machine with sixteen. Nothing said so. The render sat
+    there with both of them fighting over the memory.
     """
-    base = _one_engine(getattr(options, "engine", "silent"), options)
+    built: dict[str, object] = {}
+
+    def named(name: str):
+        if name not in built:
+            built[name] = _one_engine(name, options)
+        return built[name]
+
+    base = named(getattr(options, "engine", "silent"))
     routing = _routing(getattr(options, "engine_for", None) or [])
     if not routing:
         return base
 
     from .speech.routing import ByKind
 
-    return ByKind(
-        base, by_kind={kind: _one_engine(name, options) for kind, name in routing}
-    )
+    return ByKind(base, by_kind={kind: named(name) for kind, name in routing})
 
 
 def _routing(asked: list[str]) -> list[tuple[str, str]]:

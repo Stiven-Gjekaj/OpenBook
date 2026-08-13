@@ -209,3 +209,33 @@ def test_the_command_line_says_which_part_is_wrong(pair, complaint):
 
     with pytest.raises(OpenBookError, match=complaint):
         _engine_for(options(engine_for=[pair]))
+
+
+def test_two_kinds_routed_to_one_engine_share_it():
+    """One engine for each name, not one for each kind.
+
+    Building one for each kind started two IndexTTS subprocesses, each loading
+    seven gigabytes on a machine with sixteen. The render did not fail, it sat
+    there while the two of them fought over the memory, which is the worst way
+    for this to go wrong.
+    """
+    from openbook.cli import _engine_for
+
+    made = _engine_for(
+        options(
+            engine="chatterbox-turbo",
+            engine_for=["dialogue=indextts", "host=indextts"],
+        )
+    )
+    assert made.for_kind(DIALOGUE) is made.for_kind(HOST)
+    assert len(made.engines) == 2, "the base and one indextts, and no more"
+
+
+def test_routing_a_kind_to_the_engine_already_in_use_shares_it():
+    from openbook.cli import _engine_for
+
+    made = _engine_for(
+        options(engine="chatterbox-turbo", engine_for=["dialogue=chatterbox-turbo"])
+    )
+    assert made.for_kind(DIALOGUE) is made.for_kind(NARRATION)
+    assert len(made.engines) == 1
