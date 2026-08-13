@@ -233,3 +233,57 @@ def test_a_cache_on_another_disk_keeps_the_only_address_there_is(tmp_path, monke
     monkeypatch.setattr(review.os.path, "relpath", refuse)
     said = review.where_the_audio_is(tmp_path / "review.html", tmp_path / "cache")
     assert said.startswith("file:")
+
+
+def test_a_chapter_keeps_the_number_the_book_gives_it():
+    """Not where it falls in the file.
+
+    The intro sits in front of the chapters and is not one. While the number
+    was the place of the mark in the list, the intro pushed every chapter up
+    by one and the first of them was reported as chapter 1.
+    """
+    from openbook.review import _chapter_at
+
+    marks = [
+        Mark(title="Introduction", start=0.0, end=16.0, host=True),
+        Mark(title="Point - Null.", start=17.85, end=891.0, number=0),
+        Mark(title="Afterword", start=897.0, end=910.0, host=True),
+    ]
+    assert _chapter_at(marks, 21.53) == (0, "Point - Null.")
+
+
+def test_the_announcement_of_a_chapter_lands_inside_it():
+    # It begins exactly where the chapter begins. The two numbers are added up
+    # separately and drift, so an exact comparison filed it under the intro.
+    from openbook.review import _chapter_at
+
+    marks = [
+        Mark(title="Introduction", start=0.0, end=16.0, host=True),
+        Mark(title="Point - Null.", start=17.850000000000001, end=891.0, number=0),
+    ]
+    assert _chapter_at(marks, 17.85) == (0, "Point - Null.")
+
+
+def test_the_host_belongs_to_no_chapter():
+    from openbook.review import _chapter_at
+
+    marks = [
+        Mark(title="Introduction", start=0.0, end=16.0, host=True),
+        Mark(title="Point - Null.", start=17.85, end=891.0, number=0),
+        Mark(title="Afterword", start=897.0, end=910.0, host=True),
+    ]
+    assert _chapter_at(marks, 0.0) == ("", "Introduction")
+    assert _chapter_at(marks, 900.0) == ("", "Afterword")
+
+
+def test_a_volume_that_does_not_start_at_zero_keeps_its_numbers():
+    # Volume 1 is chapters 3 to 22. Numbering by place in the list would call
+    # them 0 to 19 and every chapter in the review page would be wrong.
+    from openbook.review import _chapter_at
+
+    marks = [
+        Mark(title="Wandering Spirit.", start=0.0, end=100.0, number=3),
+        Mark(title="The Next One.", start=100.0, end=200.0, number=4),
+    ]
+    assert _chapter_at(marks, 50.0) == (3, "Wandering Spirit.")
+    assert _chapter_at(marks, 150.0) == (4, "The Next One.")

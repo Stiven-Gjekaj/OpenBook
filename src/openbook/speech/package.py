@@ -29,6 +29,11 @@ class Mark:
     end: float
     label: str = ""
 
+    # The number the book gives this chapter. Not where it falls in the file:
+    # a render of chapters 3 to 22 numbers them 3 to 22, and the intro sitting
+    # in front of them is not chapter anything.
+    number: int | None = None
+
     # True for the words spoken to the listener rather than to the book: the
     # intro and the outro. They hold a place on the timeline, because the
     # video draws a card for every place, and they are not chapters, so

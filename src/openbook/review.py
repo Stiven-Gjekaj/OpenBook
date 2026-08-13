@@ -122,11 +122,34 @@ def rows_from(
     return rows
 
 
-def _chapter_at(marks, start: float) -> tuple[int, str]:
-    found = ("", "")
-    for index, mark in enumerate(marks):
-        if mark.start <= start:
-            found = (index, mark.title)
+# A line that begins exactly where a chapter begins, which is what the
+# announcement of that chapter does, has to land inside it. The two numbers
+# are added up separately and drift by a fraction of a sample, so comparing
+# them exactly put the announcement in whatever came before, which since the
+# intro existed was the intro.
+TOUCHING = 0.05
+
+
+def _chapter_at(marks, start: float) -> tuple[int | str, str]:
+    """Which chapter a line belongs to, and what that chapter is called.
+
+    The number is the book's own, taken from the mark. It used to be the place
+    of the mark in the list, which was the same thing until the host gained an
+    intro: that sits in front of the chapters and is not one, so every chapter
+    after it was reported one too high.
+
+    The host's own lines belong to no chapter and say so.
+    """
+    found: tuple[int | str, str] = ("", "")
+    for mark in marks:
+        if mark.host:
+            # Not a chapter. A line inside it keeps whatever it had, which for
+            # the intro is nothing, because nothing comes before it.
+            if mark.start <= start < mark.end:
+                return ("", mark.title)
+            continue
+        if mark.start - TOUCHING <= start:
+            found = (mark.number if mark.number is not None else "", mark.title)
     return found
 
 

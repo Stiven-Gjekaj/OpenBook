@@ -385,6 +385,7 @@ def render_volume(volume: VolumePlan, engine, cache, *, named=None):
                 start=at,
                 end=at + audio.seconds,
                 label=chapter_label(chapter.number, last[chapter.volume]),
+                number=chapter.number,
             )
         )
         at += audio.seconds
