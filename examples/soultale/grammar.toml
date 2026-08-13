@@ -337,8 +337,14 @@ music_level     = 0.10
 # would be swallowed.
 fade            = "3s"
 
-# A still card each second is enough, because nothing on a card moves.
-framerate       = 1
+# Nothing on a card moves, so one frame a second would do. The fades move,
+# and at one frame a second a three second fade is four steps of brightness
+# rather than a fade.
+#
+# Measured on the prologue: 24 frames a second costs about eighty seconds of
+# encoding and eight megabytes on a sixty megabyte file, because x264 spends
+# almost nothing on twenty four identical frames.
+framerate       = 24
 bitrate         = "192k"
 sample_rate     = 48000
 channels        = 2
