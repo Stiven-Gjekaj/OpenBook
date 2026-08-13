@@ -41,6 +41,23 @@ Run the tests:
 
     uv run pytest
 
+That is enough to work on the parser, the configuration, and the commands.
+The core declares no dependencies and reads a book with the standard library,
+so this installs pytest and ruff and nothing else. The suite passes, and the
+tests for the drawing and for the speech skip, because what they need is not
+there yet.
+
+To make audio or video, take the optional groups as well:
+
+    uv sync --all-extras
+
+And two programs that are not Python packages, which no sync can install:
+
+    brew install ffmpeg espeak-ng
+
+ffmpeg does the levelling, the chapter marks, and the video, so a render stops
+without it. The workflow installs both with apt, on Linux only.
+
 Run the tool against a book:
 
     uv run openbook -C path/to/project check
