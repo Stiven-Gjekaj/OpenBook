@@ -73,6 +73,10 @@ book it was written for has not been tested, whatever its tests say.
   the prologue that is 221 of 349 lines untouched.
 - The host speaks a kind of line of its own. It was an announcement, which is
   what a chapter name is, and the two are read by different people.
+- espeak-ng gives back the rate the other engines give back. It writes 22050
+  and has no setting for it, so it is resampled on the way out, which lets it
+  be routed beside the others: narration at espeak speed while the dialogue
+  is read by the real voices.
 - A recording is part of the cache key and not only its path, so a better
   take of a character remakes that character and nothing else.
 - Every piece of audio is kept under a key made from the text, the voice, the
