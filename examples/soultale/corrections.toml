@@ -35,11 +35,21 @@
 # Only where the words leave no doubt. A tag on a line that could be read two
 # ways replaces the author's ambiguity with a guess.
 
-# Said twice at 1.92s, where every other short line of this character
-# runs 0.60 to 1.16. A one word line is where a model that makes a token
-# at a time repeats itself, and a re-roll is the only answer. The capital
-# does that and gives a caption that reads as it should.
-"whoa!" = "[surprised] Whoa!"
+# Said twice, twice. It doubled with one voice at 1.92 seconds and again
+# with the next at 1.80, where every other short line of this character runs
+# 0.64 to 1.16. A one word line is where a model that makes a token at a time
+# repeats itself.
+#
+# The engine was asked directly, six ways, with the seed a render would use:
+#
+#   1.80  [surprised] Whoa!      doubled
+#   0.92  [surprised] Whoa       clean
+#   0.88  Whoa!                  clean
+#   0.96  Whoa.                  clean
+#
+# So it is that exact string and not the tag or the capital. The exclamation
+# mark goes and the tag stays.
+"whoa!" = "[surprised] Whoa"
 "Perfect!" = "[happy] Perfect!"
 "Finally, someone newer than me around here!" = "[happy] Finally, someone newer than me around here!"
 "Even guardians can have fun!" = "[happy] Even guardians can have fun!"
