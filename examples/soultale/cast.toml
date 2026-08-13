@@ -79,6 +79,27 @@
 voice = "voices/narrator.wav"
 
 
+# A narrator for a run of chapters, where the telling changes hands.
+#
+# Soultale does not keep one narrator. The prologue is told from outside: no
+# first person in all 5,306 words of its narration. Chapter 3 opens in the
+# first person and never goes back, and that voice is Blook, so the narrator
+# of Volume 1 and the voice of BLK are one person and take one recording.
+# Later volumes change again, chapter by chapter, to whoever the point of
+# view belongs to.
+#
+# A range wins over [narrator] above, which answers for every chapter no
+# range covers. Two ranges over one chapter are refused.
+#
+#   [[narrator_range]]
+#   chapters = "3-22"
+#   name     = "Blook"
+#   voice    = "voices/blook.wav"
+#
+# Nothing here yet. Volume 1 is not cast, and writing a range before the
+# recording exists would only move where the build stops.
+
+
 [host]
 # The voice that speaks to the listener rather than inside the book. It reads
 # the intro and the outro, where the video says hello and asks for a

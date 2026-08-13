@@ -312,6 +312,30 @@ voice = "am_michael"
 aliases = ["BLCK"]
 ```
 
+`[[narrator_range]]` gives a run of chapters its own narrator, for a book
+where the telling changes hands:
+
+```toml
+[narrator]
+voice = "voices/outside.wav"
+
+[[narrator_range]]
+chapters = "3-22"
+name     = "Blook"
+voice    = "voices/blook.wav"
+```
+
+A range wins over `[narrator]`, which answers for every chapter no range
+covers, so a book with one narrator writes none of these. Two ranges over one
+chapter are refused, the same as two entries of one speaker code are. Each
+range can carry its own `exaggeration`.
+
+Soultale needs this because the prologue is told from outside, with no first
+person in all 5,306 words of its narration, and chapter 3 opens in the first
+person and stays there. Where a character tells their own chapters, the
+narrator and that character's code take the same recording: it is one person
+thinking and then speaking.
+
 `[host]` is the voice that speaks to the listener rather than inside the book.
 It reads the `intro` and the `outro` from `[render]`, where a video says hello
 and asks for a subscription. It is not a character and it is not in the cast,
