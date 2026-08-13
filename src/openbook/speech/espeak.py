@@ -26,14 +26,22 @@ from pathlib import Path
 
 from ..cast.utterance import NARRATION, BlendedVoice, Voice, VoiceRef
 from ..errors import OpenBookError
-from .audio import Audio
+from .audio import Audio, resampled
 from .engine import MAX_CHARACTERS
 
 PROGRAM = "espeak-ng"
 
-# What espeak-ng writes. Every voice built into it gives this, and a voice that
-# gives something else is refused by name rather than joined at the wrong speed.
-RATE = 22050
+# What espeak-ng writes. Every voice built into it gives this, and it has no
+# setting for it: the rate comes from the voice data rather than the command
+# line. A voice that gives something else is refused by name rather than
+# joined at the wrong speed.
+NATIVE_RATE = 22050
+
+# What this engine gives back, which is what every other engine here gives
+# back. A render can read one kind of line with one engine and another kind
+# with another, and pieces at two rates cannot be joined, so this was the one
+# engine that could not be used that way until it was brought into line.
+RATE = 24000
 
 # The pace espeak-ng reads at when nothing says otherwise, in words each
 # minute. A speed of 1.0 means this.
@@ -66,9 +74,12 @@ class EspeakEngine:
     @property
     def version(self) -> str:
         # The pace changes the audio, so it belongs in the version and the
-        # cache must not reuse across a change of it.
+        # cache must not reuse across a change of it. The rate is here for a
+        # sharper reason: what this engine gave back used to be 22050, and
+        # without the rate in the version that older audio would be handed
+        # back as though it were 24000 and would speak too slowly.
         if self._version is None:
-            self._version = f"{installed_version()}-{self._speed:g}"
+            self._version = f"{installed_version()}-{self._speed:g}-{RATE}"
         return self._version
 
     @property
@@ -111,13 +122,13 @@ class EspeakEngine:
             self._run(text, _name_of(voice), out)
             audio = Audio.read(out)
 
-        if audio.rate != RATE:
+        if audio.rate != NATIVE_RATE:
             raise OpenBookError(
                 f"the voice {_name_of(voice)!r} gave audio at {audio.rate} "
-                f"where every other voice gives {RATE}. Joining the two would "
-                "make one of them speak at the wrong speed"
+                f"where every other voice gives {NATIVE_RATE}. Joining the two "
+                "would make one of them speak at the wrong speed"
             )
-        return audio
+        return resampled(audio, RATE)
 
     def _run(self, text: str, voice: str, out: Path) -> None:
         """Say one line into a file.

@@ -171,16 +171,19 @@ def test_the_command_line_builds_the_route():
     assert made.for_kind(NARRATION).name == "silent"
 
 
-def test_espeak_cannot_be_routed_beside_the_others():
-    """It is the one engine at 22050, and everything else here is at 24000.
+def test_espeak_can_be_routed_beside_the_others():
+    """It writes 22050 and gives back 24000, so it joins the rest.
 
-    Refusing at the start is the point. The pieces are joined well into a
-    volume, and finding out there is where the time goes.
+    Skimming a volume for its pacing at espeak speed while still hearing the
+    real character voices is the reason to want this.
     """
     from openbook.cli import _engine_for
 
-    with pytest.raises(OpenBookError, match="different rates"):
-        _engine_for(options(engine_for=["dialogue=espeak"]))
+    made = _engine_for(
+        options(engine="chatterbox-turbo", engine_for=["narration=espeak"])
+    )
+    assert made.for_kind("narration").name == "espeak"
+    assert made.rate == 24000
 
 
 def test_asking_for_no_route_gives_one_plain_engine():

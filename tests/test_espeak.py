@@ -43,7 +43,10 @@ def test_the_speed_is_part_of_the_version():
 @needs_espeak
 def test_it_speaks():
     audio = EspeakEngine().speak("Hello there, this is a test.", Voice("en-us"))
-    assert audio.rate == 22050
+    # espeak-ng itself writes 22050 and has no setting for it. What comes back
+    # is the rate every other engine gives, so this one can be routed beside
+    # them, and the resampling happens on the way out.
+    assert audio.rate == 24000
     assert 0.5 < audio.seconds < 5
     assert any(audio.samples), "the audio is not silent"
 
