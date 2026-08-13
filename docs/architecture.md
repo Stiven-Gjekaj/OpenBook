@@ -89,6 +89,14 @@ speech in seconds. **The silent engine** is a clock: quiet of the length the
 words would take, which is what the stages after it were built and tested
 against.
 
+One render can use several of them at once. `--engine-for dialogue=indextts`
+puts a second engine in front of one kind of line, and what comes back answers
+every question a single engine answers, so the planner, the renderer and the
+cache carry on unchanged. The care is all in the key: it names the engine that
+speaks the line rather than the one holding them, so a volume already made by
+Turbo keeps every line of the kinds nobody routed. Routing the dialogue of the
+prologue leaves 221 of its 349 lines alone.
+
 The third of those properties is what lets the narrator and the cast use
 different engines. The narrator reads 79 percent of Soultale in one voice, and
 wants a model that cannot drift over a third of a million words. The cast
