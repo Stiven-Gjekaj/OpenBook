@@ -35,7 +35,11 @@
 # Only where the words leave no doubt. A tag on a line that could be read two
 # ways replaces the author's ambiguity with a guess.
 
-"whoa!" = "[surprised] whoa!"
+# Said twice at 1.92s, where every other short line of this character
+# runs 0.60 to 1.16. A one word line is where a model that makes a token
+# at a time repeats itself, and a re-roll is the only answer. The capital
+# does that and gives a caption that reads as it should.
+"whoa!" = "[surprised] Whoa!"
 "Perfect!" = "[happy] Perfect!"
 "Finally, someone newer than me around here!" = "[happy] Finally, someone newer than me around here!"
 "Even guardians can have fun!" = "[happy] Even guardians can have fun!"
