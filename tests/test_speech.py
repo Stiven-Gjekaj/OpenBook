@@ -1,3 +1,4 @@
+import itertools
 from array import array
 
 import pytest
@@ -371,3 +372,49 @@ def test_a_key_is_unchanged_for_an_engine_that_chooses_nothing():
     assert key_of(said, engine) == key_for(
         "Yes.", engine.voice_key(Voice("v")), engine.name, engine.version
     )
+
+
+def test_resampling_keeps_the_length_of_the_sound():
+    # The number of samples changes and the seconds do not. Getting this wrong
+    # is a voice that speaks too fast, which sounds like a choice.
+    from openbook.speech.audio import resampled
+
+    audio = Audio(samples=bytes(2 * 22050), rate=22050)
+    made = resampled(audio, 24000)
+    assert made.rate == 24000
+    assert made.seconds == pytest.approx(audio.seconds, abs=0.001)
+    assert len(made.samples) // 2 == 24000
+
+
+def test_resampling_to_the_rate_it_already_has_changes_nothing():
+    from openbook.speech.audio import resampled
+
+    audio = Audio(samples=b"\x01\x00\x02\x00", rate=24000)
+    assert resampled(audio, 24000) is audio
+
+
+def test_resampling_nothing_gives_nothing():
+    from openbook.speech.audio import resampled
+
+    assert resampled(Audio(samples=b"", rate=22050), 24000).samples == b""
+
+
+def test_a_rate_of_nothing_is_refused_by_the_resampler():
+    from openbook.speech.audio import resampled
+
+    with pytest.raises(ValueError, match="above zero"):
+        resampled(Audio(samples=b"\x01\x00", rate=22050), 0)
+
+
+def test_resampling_follows_the_shape_of_the_sound():
+    """A ramp stays a ramp, which a wrong index or a wrong step would break."""
+    from openbook.speech.audio import bytes_of, resampled, values_of
+
+    ramp = [round(-8000 + 16000 * i / 99) for i in range(100)]
+    made = resampled(Audio(samples=bytes_of(ramp), rate=1000), 2000)
+    values = values_of(made.samples)
+    assert len(values) == 200
+    assert values[0] == ramp[0]
+    assert values[-1] == pytest.approx(ramp[-1], abs=200)
+    # Rising all the way, with no step backwards anywhere in it.
+    assert all(b >= a for a, b in itertools.pairwise(values))

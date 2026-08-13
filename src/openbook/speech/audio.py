@@ -151,3 +151,43 @@ def bytes_of(values) -> bytes:
     if sys.byteorder != "little":
         made.byteswap()
     return made.tobytes()
+
+
+def resampled(audio: Audio, rate: int) -> Audio:
+    """The same sound at another rate.
+
+    Straight lines between the samples. A careful resampler filters first, and
+    this does not, so it is not the thing to put a voice somebody listens to
+    through. The one engine that needs it is a formant synthesiser used for
+    checking where the pauses and the chapter marks fall, and it already sounds
+    like a machine from the 1990s.
+
+    It is here rather than in that engine because it belongs with the other
+    arithmetic on samples, and because the reason it exists is the rule at the
+    top of this file: pieces at two rates cannot be joined.
+    """
+    if rate <= 0:
+        raise ValueError("a rate must be above zero")
+    if rate == audio.rate:
+        return audio
+
+    values = values_of(audio.samples)
+    if not values:
+        return Audio(samples=b"", rate=rate)
+
+    wanted = round(len(values) * rate / audio.rate)
+    if wanted <= 0:
+        return Audio(samples=b"", rate=rate)
+
+    step = audio.rate / rate
+    last = len(values) - 1
+    made = array("h", bytes(WIDTH * wanted))
+    for index in range(wanted):
+        at = index * step
+        left = int(at)
+        if left >= last:
+            made[index] = values[last]
+            continue
+        first, second = values[left], values[left + 1]
+        made[index] = round(first + (second - first) * (at - left))
+    return Audio(samples=bytes_of(made), rate=rate)
