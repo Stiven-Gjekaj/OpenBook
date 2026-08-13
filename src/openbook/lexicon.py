@@ -39,7 +39,18 @@ from .errors import ConfigError
 # can arrive either way. They are written as escapes because a literal curly
 # quote in the source is refused as ambiguous.
 APOSTROPHES = "'\u2019"
-WORD = re.compile(f"[{APOSTROPHES}]?[A-Za-z][A-Za-z{APOSTROPHES}]*")
+PART = f"[{APOSTROPHES}]?[A-Za-z][A-Za-z{APOSTROPHES}]*"
+
+# One word. This is what the finder counts, so a hyphen still divides and
+# "Thread-Weaver" is reported as two words that each need an answer.
+WORD = re.compile(PART)
+
+# A word, or a run of them joined by hyphens. A hyphen divides for the finder
+# and holds for an entry: "Ink-sphere" is six places in the book where a model
+# pauses at the mark and says two things, and an entry for the whole term is
+# the only way to ask for one. The halves keep their own entries, because the
+# whole is tried first and the parts are the answer when nothing names it.
+TERM = re.compile(f"{PART}(?:-{PART})+|{PART}")
 
 
 @dataclass(frozen=True)
@@ -73,10 +84,18 @@ class Lexicon:
         """
         if not self.entries:
             return text
-        return WORD.sub(lambda m: self._said(m.group(0)), text)
+        return TERM.sub(lambda m: self._said(m.group(0)), text)
 
     def _said(self, word: str) -> str:
         """One word, respelled if there is an entry for it.
+
+        The whole is always tried before its parts, so an entry names exactly
+        what it means and nothing wider answers for it.
+
+        A hyphen holds the parts together here and divides them everywhere
+        else. "Ink-sphere" with an entry is one word; without one it is Ink
+        and sphere, each free to have an entry of its own, which is what a
+        name like "Thread-Weaver" wants.
 
         A word may begin with an apostrophe two ways. In "'bout" the mark is
         an elision and belongs to the word. In "say 'But someone has to'" it
@@ -87,6 +106,8 @@ class Lexicon:
         found = self.says(word)
         if found is not None:
             return found
+        if "-" in word:
+            return "-".join(self._said(part) for part in word.split("-"))
         if word[0] in APOSTROPHES:
             inner = self.says(word[1:])
             if inner is not None:
@@ -108,10 +129,10 @@ def load_lexicon(path: Path) -> Lexicon:
     entries = root.string_map("words", optional=True)
     root.done()
     for word in entries:
-        if not WORD.fullmatch(word):
+        if not TERM.fullmatch(word):
             raise ConfigError(
                 f"{word!r} is not one word. An entry names one word, with "
-                "letters and apostrophes only",
+                "letters, apostrophes and hyphens only",
                 path=str(path),
                 key="words",
             )

@@ -1,7 +1,14 @@
 import pytest
 
 from openbook.errors import ConfigError
-from openbook.lexicon import EMPTY, Lexicon, find_unknown, is_known, load_lexicon
+from openbook.lexicon import (
+    EMPTY,
+    Lexicon,
+    find_unknown,
+    is_known,
+    load_lexicon,
+    words_of,
+)
 
 
 def test_a_lexicon_replaces_a_whole_word():
@@ -146,3 +153,48 @@ def test_a_word_opening_with_a_quotation_mark_is_not_an_invented_name():
 
 def test_an_apostrophe_on_its_own_is_not_a_word():
     assert not is_known("'", {"but"})
+
+
+def test_a_hyphenated_term_can_be_one_word():
+    """The book writes "Ink-sphere" and a model pauses at the mark.
+
+    A hyphen divides for the finder, so each half can need its own answer.
+    It holds for an entry, because otherwise there is no way to ask for the
+    whole term at all.
+    """
+    lexicon = Lexicon(entries={"Ink-sphere": "Inksphere"})
+    assert lexicon.apply("The Ink-sphere pulsed.") == "The Inksphere pulsed."
+    # The entry ignores case like every other one.
+    assert lexicon.apply("The Ink-Sphere pulsed.") == "The Inksphere pulsed."
+
+
+def test_the_halves_of_a_hyphenated_term_keep_their_own_entries():
+    # Nothing names "Thread-Weaver", so each half is answered on its own and
+    # the hyphen stays where the author put it.
+    lexicon = Lexicon(entries={"Thread": "Thred", "Weaver": "Weevr"})
+    assert lexicon.apply("The Thread-Weaver came.") == "The Thred-Weevr came."
+
+
+def test_the_whole_term_wins_over_its_halves():
+    lexicon = Lexicon(entries={"Ink-sphere": "Inksphere", "Ink": "Inque"})
+    assert lexicon.apply("Ink-sphere") == "Inksphere"
+    assert lexicon.apply("Ink alone") == "Inque alone"
+
+
+def test_the_finder_still_counts_the_halves_separately():
+    # A hyphen divides for the report, so each half is a word somebody may
+    # have to answer for.
+    assert words_of("The Thread-Weaver came.") == ["The", "Thread", "Weaver", "came"]
+
+
+def test_a_hyphenated_entry_is_accepted(tmp_path):
+    path = tmp_path / "lexicon.toml"
+    path.write_text('[words]\n"Ink-sphere" = "Inksphere"\n', encoding="utf-8")
+    assert load_lexicon(path).says("ink-sphere") == "Inksphere"
+
+
+def test_an_entry_that_is_not_a_word_is_still_refused(tmp_path):
+    path = tmp_path / "lexicon.toml"
+    path.write_text('[words]\n"two words" = "x"\n', encoding="utf-8")
+    with pytest.raises(ConfigError, match="is not one word"):
+        load_lexicon(path)
