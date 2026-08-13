@@ -76,10 +76,13 @@ Everything useful follows from that:
 - A character can move to a different engine, and the rest of the book keeps
   the audio it already has.
 
-Five engines use that interface. **Chatterbox** reads the book in the voice of
+Six engines use that interface. **Chatterbox** reads the book in the voice of
 a recording you supply. **Chatterbox Turbo** is the same idea through a newer
 model that reads about twice as fast and holds one loudness by itself.
-**Kokoro** chooses from its own list of voices and is the one to fall back to.
+**IndexTTS** reads those same recordings and is the only one here that can
+raise its voice, at about eight times the cost, so it is for the lines that
+need it rather than for a volume. **Kokoro** chooses from its own list of
+voices and is the one to fall back to.
 **espeak-ng** sounds like a machine from the 1990s and needs no model, no
 download and no Python package, so a whole volume can be checked against real
 speech in seconds. **The silent engine** is a clock: quiet of the length the

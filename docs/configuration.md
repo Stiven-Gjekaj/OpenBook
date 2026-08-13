@@ -351,6 +351,7 @@ those words.
 | ------ | ---------- | ------- |
 | `chatterbox` | A path to a recording of the character, read from the project directory | `"voices/blook.wav"` |
 | `chatterbox-turbo` | The same, through a model that reads about twice as fast | `"voices/blook.wav"` |
+| `indextts` | The same recordings again, through the one model here that can raise its voice | `"voices/zero.wav"` |
 | `kokoro` | One of its own voice names. The first letter is the accent | `"af_heart"` |
 | `espeak` | A language, and a variant after a plus | `"en-gb+Alicia"` |
 
@@ -370,6 +371,36 @@ real time, and audio that peaked above what a sample holds, so a whole chapter
 was clipping before the levelling stage saw it. `chatterbox-turbo` made the
 same chapter at 0.85 times real time, with nothing clipping and every piece
 brought to one loudness by the model.
+
+**A third reads from a recording, and it is the only one with a range.**
+`indextts` keeps the feeling apart from the voice: the recording says who is
+speaking and eight numbers say how. It is the answer to a thing the others
+cannot do at all. Zero murmurs "These connections..." and then shouts "I am
+the true strongest!" at the end of chapter 2, and Turbo reads that pair 0.3 dB
+apart with its loudness normaliser off, the shout being the quieter of the
+two. Through IndexTTS the same pair, from the same `voices/zero.wav`, measured
+15.5 dB apart.
+
+It costs about eight times what Turbo costs, so it is not for reading a book.
+The cache holds the name of the engine, so a line made here sits beside its
+neighbours made by Turbo and neither disturbs the other. Render a volume with
+Turbo, then render the lines that need a raised voice with this.
+
+It needs a Python of its own, because `indextts` asks for a version below 3.12
+and torch 2.8 while this project asks for 3.12 and holds torch 2.6 for
+Chatterbox. Both pins are exact and no version of Python satisfies both, so
+the model runs beside the project and talks to it over a pipe:
+
+```
+uv venv --python 3.11 ~/.openbook/indextts
+VIRTUAL_ENV=~/.openbook/indextts uv pip install \
+    "indextts @ git+https://github.com/index-tts/index-tts.git"
+hf download IndexTeam/IndexTTS-2
+```
+
+That is where the engine looks first. `OPENBOOK_INDEXTTS_PYTHON` names another
+interpreter and `OPENBOOK_INDEXTTS_MODEL` names another directory of weights,
+which is also how the worker is pointed at a machine with a graphics card.
 
 **Do not write an `exaggeration` for a new character while Turbo is the
 engine.** It cannot do the thing its name promises, and it still changes the
@@ -557,6 +588,27 @@ sounds `[laugh]`, `[chuckle]`, `[sigh]`, `[gasp]`, `[cough]`, `[groan]`,
 `[sniff]`, `[shush]` and `[clear throat]`. The older `chatterbox` has no
 feelings at all and spells several of the sounds differently, so a file of
 Turbo tags read by it says the letters out loud.
+
+`indextts` reads the same tags and is the only engine where they change how
+hard a line is said. It has eight feelings and the tags map onto them:
+
+| Tag | Feeling |
+| --- | ------- |
+| `[angry]`, `[dramatic]` | angry |
+| `[happy]` | happy |
+| `[crying]`, `[cry]` | sad |
+| `[fear]` | afraid |
+| `[surprised]` | surprised |
+| `[whispering]`, `[whisper]`, `[narration]` | calm |
+
+A tag naming a sound rather than a delivery, `[cough]` or `[laugh]`, has no
+feeling to map to. It is taken out of the words like any other and the line is
+read flat. `[sarcastic]` is the same: this model has no such feeling, and
+guessing one for it would be inventing a reading the author did not ask for.
+
+What the tags mean is part of the version of the engine, so changing this
+table remakes the lines carrying those tags and leaves every other line in the
+book where it is.
 
 Use one only where the words leave no doubt. A tag on a line that could be
 read two ways replaces the author's ambiguity with a guess.

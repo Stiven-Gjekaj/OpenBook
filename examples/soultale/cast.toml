@@ -20,6 +20,13 @@
 #                The same paths, through a newer model that reads several
 #                times faster, holds one loudness by itself, and takes five
 #                seconds of reference instead of twenty.
+#   indextts     The same paths again, through the one model here that can
+#                raise its voice. It keeps the feeling apart from the speaker,
+#                so a character can murmur and shout in one voice, and a tag
+#                in corrections.toml chooses which. It costs about eight times
+#                what Turbo costs, so it is for the lines that need it and not
+#                for a volume. It needs a Python of its own: see
+#                docs/configuration.md.
 #   kokoro       One of its own names, such as "af_heart". The first letter
 #                says the accent: a for American, b for British.
 #   espeak       A language and a variant: "en-us", "en-gb+Alicia".

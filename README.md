@@ -166,11 +166,13 @@ runs**. A four hour volume takes about twenty minutes, and the whole of
 Soultale, at 47 hours, takes about four and a half. The second render of
 anything takes seconds, because only what changed is made again.
 
-Five engines use one interface, chosen with `--engine`. **chatterbox** reads
+Six engines use one interface, chosen with `--engine`. **chatterbox** reads
 the book in the voice of a recording you supply, and **chatterbox-turbo** is
 the same through a newer model that reads about twice as fast and holds one
-loudness by itself. **kokoro** chooses from its own list of voices and is the
-one to fall back to. **espeak-ng** sounds like a machine from the 1990s and needs no model, no
+loudness by itself. **indextts** reads those same recordings and is the only
+one that can raise its voice, keeping the feeling apart from the speaker, at
+about eight times the cost. **kokoro** chooses from its own list of voices and
+is the one to fall back to. **espeak-ng** sounds like a machine from the 1990s and needs no model, no
 download and no Python package, so a whole volume can be checked against real
 speech in seconds. **silent** is the default and is a clock: quiet of the
 length the words would take, for checking the pauses and the chapter marks

@@ -56,6 +56,15 @@ book it was written for has not been tested, whatever its tests say.
   Turbo model, which reads about twice as fast and holds one loudness by
   itself, Kokoro, espeak-ng, and a silent engine that gives quiet of the right
   length.
+- IndexTTS 2, the only engine here that can raise its voice. It reads the same
+  recordings and keeps the feeling apart from the speaker, so a character can
+  murmur and shout in one voice. Turbo reads such a pair 0.3 dB apart and this
+  reads it 15.5 dB apart. It costs about eight times what Turbo costs, so it
+  is for the lines that need it rather than for a volume, and the cache keeps
+  the two apart. It runs in a Python of its own because its version and torch
+  pins cannot be met alongside Chatterbox's.
+- The tags in `corrections.toml` choose the feeling on that engine, so the
+  corrections already written keep working and nothing new has to be learned.
 - A recording is part of the cache key and not only its path, so a better
   take of a character remakes that character and nothing else.
 - Every piece of audio is kept under a key made from the text, the voice, the
