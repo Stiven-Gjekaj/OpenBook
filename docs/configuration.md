@@ -402,6 +402,30 @@ That is where the engine looks first. `OPENBOOK_INDEXTTS_PYTHON` names another
 interpreter and `OPENBOOK_INDEXTTS_MODEL` names another directory of weights,
 which is also how the worker is pointed at a machine with a graphics card.
 
+**A render can use more than one engine.** `--engine` says which reads the
+book, and `--engine-for` puts another in front of one kind of line. Repeat it
+for each kind:
+
+```
+openbook render --volume "Prologue" --engine chatterbox-turbo \
+    --engine-for dialogue=indextts --engine-for host=indextts
+```
+
+The kinds are `narration`, `dialogue`, `action`, `announcement`, `end matter`
+and `host`. A misspelled one is refused by name rather than ignored, because
+a route that silently did nothing would give back the render you were trying
+not to make.
+
+**A kind nobody routed keeps the audio it already has.** A key names the
+engine that speaks the line, so putting IndexTTS in front of dialogue leaves
+every line of narration where it is. On the prologue that is 221 of 349 lines
+untouched and 128 to make.
+
+Two engines have to give back audio at the same rate, or their pieces cannot
+be joined. Everything here is 24000 except `espeak`, which is 22050, so that
+one cannot be routed beside the others. It is refused before anything is
+spoken rather than partway through a volume.
+
 **Do not write an `exaggeration` for a new character while Turbo is the
 engine.** It cannot do the thing its name promises, and it still changes the
 key of every line that character says, so writing one makes that character
