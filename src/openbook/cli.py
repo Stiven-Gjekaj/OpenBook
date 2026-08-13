@@ -91,6 +91,16 @@ def build_parser() -> argparse.ArgumentParser:
     render = commands.add_parser("render", help="make the audio for a volume")
     render.add_argument("--volume", required=True)
     render.add_argument("--engine", choices=ENGINES, default="silent")
+    # A second engine for one kind of line. Narration is most of a book and
+    # wants the fastest model that holds steady; dialogue is where somebody
+    # shouts, and one engine can do that. Repeat this for each kind.
+    render.add_argument(
+        "--engine-for",
+        action="append",
+        metavar="KIND=ENGINE",
+        default=[],
+        help="read one kind of line with another engine, such as dialogue=indextts",
+    )
     render.add_argument(
         "--speed", type=float, default=1.0, help="how fast a real voice reads"
     )
@@ -331,8 +341,52 @@ def _engine_for(options):
     espeak-ng is the one in between. It sounds like a machine from the 1990s
     and it says real words at real lengths, which is enough to check the
     captions and the cards of a whole volume in seconds.
+
+    --engine-for puts a second engine in front of one kind of line. What comes
+    back then answers for all of them and hands out the right one for each
+    line, so nothing after this has to know there is more than one.
     """
-    return _one_engine(getattr(options, "engine", "silent"), options)
+    base = _one_engine(getattr(options, "engine", "silent"), options)
+    routing = _routing(getattr(options, "engine_for", None) or [])
+    if not routing:
+        return base
+
+    from .speech.routing import ByKind
+
+    return ByKind(
+        base, by_kind={kind: _one_engine(name, options) for kind, name in routing}
+    )
+
+
+def _routing(asked: list[str]) -> list[tuple[str, str]]:
+    """Read the KIND=ENGINE pairs, and say which one is wrong.
+
+    A misspelled kind is the mistake that costs most here. It is accepted in
+    silence, nothing is routed anywhere, and the render that comes out is the
+    one the person was trying not to make.
+    """
+    from .cast.utterance import KINDS
+
+    found: list[tuple[str, str]] = []
+    for pair in asked:
+        kind, sep, name = pair.partition("=")
+        kind, name = kind.strip(), name.strip()
+        if not sep or not kind or not name:
+            raise OpenBookError(
+                f"--engine-for takes KIND=ENGINE, and {pair!r} is not that"
+            )
+        if kind not in KINDS:
+            raise OpenBookError(
+                f"there is no kind of line called {kind!r}. The kinds are: "
+                + ", ".join(sorted(KINDS))
+            )
+        if name not in ENGINES:
+            raise OpenBookError(
+                f"there is no engine called {name!r}. The engines are: "
+                + ", ".join(ENGINES)
+            )
+        found.append((kind, name))
+    return found
 
 
 def _one_engine(asked: str, options):

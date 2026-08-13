@@ -144,3 +144,65 @@ def test_closing_lets_go_of_every_engine_once():
 def test_an_engine_with_nothing_to_close_is_not_a_problem():
     ByKind(SilentEngine(), by_kind={DIALOGUE: SilentEngine()}).close()
 
+
+# The command line is where a person writes this, so what it refuses matters
+# as much as what it accepts. A misspelled kind accepted in silence routes
+# nothing and gives back the render somebody was trying not to make.
+
+
+class Options:
+    def __init__(self, **fields):
+        self.__dict__.update(fields)
+
+
+def options(**named):
+    fields = {"project": ".", "engine": "silent", "engine_for": []}
+    fields.update(named)
+    return Options(**fields)
+
+
+def test_the_command_line_builds_the_route():
+    from openbook.cli import _engine_for
+
+    # Neither engine is loaded here. Building one only remembers what it was
+    # told, and the model arrives when a line is first spoken.
+    made = _engine_for(options(engine_for=["dialogue=chatterbox-turbo"]))
+    assert made.for_kind(DIALOGUE).name == "chatterbox-turbo"
+    assert made.for_kind(NARRATION).name == "silent"
+
+
+def test_espeak_cannot_be_routed_beside_the_others():
+    """It is the one engine at 22050, and everything else here is at 24000.
+
+    Refusing at the start is the point. The pieces are joined well into a
+    volume, and finding out there is where the time goes.
+    """
+    from openbook.cli import _engine_for
+
+    with pytest.raises(OpenBookError, match="different rates"):
+        _engine_for(options(engine_for=["dialogue=espeak"]))
+
+
+def test_asking_for_no_route_gives_one_plain_engine():
+    from openbook.cli import _engine_for
+
+    made = _engine_for(options())
+    assert made.name == "silent"
+    assert not hasattr(made, "for_kind")
+
+
+@pytest.mark.parametrize(
+    "pair, complaint",
+    [
+        ("dialogue", "takes KIND=ENGINE"),
+        ("=espeak", "takes KIND=ENGINE"),
+        ("dialogue=", "takes KIND=ENGINE"),
+        ("dialog=espeak", "no kind of line called"),
+        ("dialogue=festival", "no engine called"),
+    ],
+)
+def test_the_command_line_says_which_part_is_wrong(pair, complaint):
+    from openbook.cli import _engine_for
+
+    with pytest.raises(OpenBookError, match=complaint):
+        _engine_for(options(engine_for=[pair]))
