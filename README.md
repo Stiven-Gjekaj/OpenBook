@@ -178,6 +178,11 @@ speech in seconds. **silent** is the default and is a clock: quiet of the
 length the words would take, for checking the pauses and the chapter marks
 with nothing installed at all.
 
+One render can use several at once. `--engine-for dialogue=indextts` reads one
+kind of line with another engine, so narration can take the fast model and
+dialogue the one that can shout. A kind nobody routed keeps the audio it
+already has, because a key names the engine that speaks the line.
+
 Chatterbox makes a token at a time, so it can drop a word where Kokoro cannot,
 and a dropped word is found by nothing except listening. It takes less text at
 once for that reason, and its reading is seeded from the words and the voice so
