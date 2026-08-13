@@ -18,7 +18,14 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from ..cast.utterance import ACTION, ANNOUNCEMENT, DIALOGUE, NARRATOR, Utterance
+from ..cast.utterance import (
+    ACTION,
+    ANNOUNCEMENT,
+    DIALOGUE,
+    HOST,
+    NARRATOR,
+    Utterance,
+)
 
 # What a reader can take in. Two lines of about forty characters is the usual
 # limit for a caption, and a cue that stays up longer than this feels stuck.
@@ -196,7 +203,7 @@ def cues_from_timeline(
     """
     cues: list[Cue] = []
     for utterance, start, end in timeline:
-        if utterance.kind == ANNOUNCEMENT and not announcements:
+        if utterance.kind in (ANNOUNCEMENT, HOST) and not announcements:
             continue
         if utterance.kind == ACTION:
             # An action is a sound and not speech, and a caption says so.

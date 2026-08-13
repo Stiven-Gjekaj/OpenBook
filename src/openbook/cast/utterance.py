@@ -30,7 +30,15 @@ ACTION = "action"
 ANNOUNCEMENT = "announcement"
 END_MATTER = "end matter"
 
-KINDS = (NARRATION, DIALOGUE, ACTION, ANNOUNCEMENT, END_MATTER)
+# The host talking to the listener. It shares its name with the speaker above,
+# because they are one thing seen twice: the only lines of this kind are the
+# host's, and the host says nothing else.
+#
+# It was an announcement until a render could send one kind of line to one
+# engine and another kind to another. A chapter name and an intro are both
+# announcements and are read by different people, so one kind could not choose
+# an engine for both without giving the narrator two voices.
+KINDS = (NARRATION, DIALOGUE, ACTION, ANNOUNCEMENT, END_MATTER, HOST)
 
 
 @dataclass(frozen=True)
