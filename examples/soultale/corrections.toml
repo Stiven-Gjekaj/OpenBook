@@ -59,3 +59,20 @@
 "No!" = "[angry] No!"
 "I am the true strongest!" = "[dramatic] I am the true strongest!"
 "All resistance ends." = "[dramatic] All resistance ends."
+
+# Ink names Zero. As written the model says "call... ya... Zero", with the
+# word set apart both sides, and taking the apostrophe off made the gap wider
+# rather than narrower: 0.81 seconds became 1.07. The word is the trouble.
+#
+# Measured, from the same voice and the same seed the render uses:
+#   1.07  "I'll call ya Zero!"        the apostrophe taken off
+#   0.94  "I'll call ya Zero."
+#   0.81  "I'll call ya' Zero!"       as the book writes it
+#   0.70  "I'm gonna call ya Zero!"
+#   0.59  "I'll call yah Zero!"
+#   0.56  "I'm gonna call you Zero!"  chosen
+#   0.46  "I'll call you Zero!"
+#
+# The shortest gap belongs to "you" alone, and it makes Ink more formal than
+# he is. The chosen line keeps him casual in the verb instead.
+"I'll call ya' Zero!" = "I'm gonna call you Zero!"

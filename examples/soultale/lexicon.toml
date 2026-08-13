@@ -22,15 +22,22 @@
 # it as two syllables that rhyme with 'Noah'.
 Woah = "whoa"
 
-# The book elides, and a model reads the mark rather than the elision. These
-# are every one of them in the prologue and Volume 1.
+# The book elides, and a model reads the mark rather than the elision. The
+# apostrophe comes out and the word stays casual.
 #
-# The apostrophe is what a reader hears as a missing letter and what a model
-# hears as punctuation, so it comes out and the word stays casual. Only the
-# mark changes: 'ya' is still 'ya' and not 'you'.
-"ya'" = "ya"
+# There is no entry for "ya'". Taking its mark off made the line worse rather
+# than better: the gap around the word grew from 0.81 to 1.07 seconds, which
+# is the model saying "call... ya... Zero" and is what a listener heard. The
+# word itself is the trouble, not its mark, so that line is answered in
+# corrections.toml where the whole of it can change.
 "'bout" = "bout"
 
 # 'ol' is 'old' with the d gone, and is said 'ole'. Written 'ol' a model reads
 # it to rhyme with 'doll'.
 "ol'" = "ole"
+
+# Six places in the book, and a model pauses at the hyphen and says two
+# things. The whole term is one word to a reader and now one word to the
+# engine. The halves keep their own entries: nothing here names 'Ink' or
+# 'sphere', so 'Thread-Weaver' and the rest still divide as they did.
+"Ink-sphere" = "Inksphere"
