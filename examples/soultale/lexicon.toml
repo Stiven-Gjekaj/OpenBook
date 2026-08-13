@@ -21,3 +21,16 @@
 # The book writes 'Woah'. The word is 'whoa', and an engine given 'Woah' reads
 # it as two syllables that rhyme with 'Noah'.
 Woah = "whoa"
+
+# The book elides, and a model reads the mark rather than the elision. These
+# are every one of them in the prologue and Volume 1.
+#
+# The apostrophe is what a reader hears as a missing letter and what a model
+# hears as punctuation, so it comes out and the word stays casual. Only the
+# mark changes: 'ya' is still 'ya' and not 'you'.
+"ya'" = "ya"
+"'bout" = "bout"
+
+# 'ol' is 'old' with the d gone, and is said 'ole'. Written 'ol' a model reads
+# it to rhyme with 'doll'.
+"ol'" = "ole"
