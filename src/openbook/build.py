@@ -315,10 +315,16 @@ def render_volume(volume: VolumePlan, engine, cache, *, named=None):
     host = Voice(volume.host or volume.narrator)
 
     def rest() -> None:
-        """The gap between the host and the book."""
+        """The gap between the host and the book.
+
+        Its own length, and not the rest between two chapters. That one is
+        three seconds because a listener has just finished a chapter and is
+        owed a moment with it. Arriving from somebody talking to the camera is
+        not that, and three seconds there sounds like the file has stopped.
+        """
         nonlocal at
-        pieces.append(Audio.silence(seconds=render.between_chapters, rate=engine.rate))
-        at += render.between_chapters
+        pieces.append(Audio.silence(seconds=render.at_host, rate=engine.rate))
+        at += render.at_host
 
     def spoken(text: str, title: str, *, after: bool = False) -> None:
         """Put a piece the host reads before or after the chapters.

@@ -449,7 +449,7 @@ def _render(options) -> int:
         f"  {report.utterances} utterances, {report.made} made, "
         f"{report.reused} from the cache"
     )
-    print(f"  {len(marks)} chapters, {audio.seconds / 3600:.2f} hours")
+    print(f"  {_chapter_count(marks)} chapters, {audio.seconds / 3600:.2f} hours")
     _report_corrections(project, volume, named)
     return 0
 
@@ -573,7 +573,7 @@ def _video(options) -> int:
 
     print(f"{out}")
     print(
-        f"  {len(marks)} chapters, {audio.seconds / 3600:.2f} hours, "
+        f"  {_chapter_count(marks)} chapters, {audio.seconds / 3600:.2f} hours, "
         f"{report.made} made, {report.reused} from the cache"
     )
     _report_corrections(project, volume, named)
@@ -727,6 +727,17 @@ def _readable(text: str, path: Path, expected: int) -> None:
             f"{len(found)} entries where {expected} were meant, so something "
             "in the file is not what this expected"
         )
+
+
+def _chapter_count(marks) -> int:
+    """How many chapters a person would count in the finished file.
+
+    The intro and the outro hold a place on the timeline and are not chapters.
+    Counting them told a person the volume had 22 chapters where the file has
+    20, which is the kind of disagreement between what is said and what was
+    made that this project refuses everywhere else.
+    """
+    return sum(1 for mark in marks if not mark.host)
 
 
 def _write_captions(project, beside, report, *, announcements: bool = False):

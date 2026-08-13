@@ -111,8 +111,15 @@ def cast_with_no_voices(project):
     import re
 
     path = project / "cast.toml"
+    # The spacing varies, because some entries are written aligned. A pattern
+    # that wanted one space left the narrator of a range with its voice, and
+    # the render this refuses went through.
     path.write_text(
-        re.sub(r'voice = "[^"]*"', 'voice = ""', path.read_text(encoding="utf-8")),
+        re.sub(
+            r'voice(\s*)= "[^"]*"',
+            lambda m: f'voice{m.group(1)}= ""',
+            path.read_text(encoding="utf-8"),
+        ),
         encoding="utf-8",
     )
     return project
@@ -126,11 +133,11 @@ def cast_with_voices(project):
     text = path.read_text(encoding="utf-8")
     count = [0]
 
-    def fill(_):
+    def fill(m):
         count[0] += 1
-        return f'voice = "v{count[0]:03d}"'
+        return f'voice{m.group(1)}= "v{count[0]:03d}"'
 
-    path.write_text(re.sub(r'voice = ""', fill, text), encoding="utf-8")
+    path.write_text(re.sub(r'voice(\s*)= ""', fill, text), encoding="utf-8")
     return project
 
 
@@ -600,7 +607,14 @@ def test_check_finds_a_voice_recording_that_was_never_made(project, capsys):
     path = project / "cast.toml"
     text = path.read_text(encoding="utf-8")
     path.write_text(
-        re.sub(r'voice = ""', 'voice = "voices/nobody.wav"', text, count=3),
+        # Any three voices, pointed at a file that is not there. Looking for
+        # blank ones tied this to how much of the example is cast.
+        re.sub(
+            r'voice(\s*)= "[^"]*"',
+            lambda m: f'voice{m.group(1)}= "voices/nobody.wav"',
+            text,
+            count=3,
+        ),
         encoding="utf-8",
     )
     assert main(["-C", str(project), "check", "--engine", "chatterbox"]) == 1
@@ -766,7 +780,9 @@ def test_the_host_speaks_outside_the_book_and_takes_no_chapter(project, tmp_path
     assert marks[0].host and marks[-1].host
     assert all(not m.host for m in marks[1:-1]), "every chapter is a chapter"
 
-    rest = opened.grammar.render.between_chapters
+    # Its own length, and not the rest between two chapters.
+    rest = opened.grammar.render.at_host
+    assert rest != opened.grammar.render.between_chapters
     assert marks[1].start == pytest.approx(marks[0].end + rest)
     assert marks[-1].start == pytest.approx(marks[-2].end + rest)
 
@@ -781,3 +797,19 @@ def test_the_host_speaks_outside_the_book_and_takes_no_chapter(project, tmp_path
     from openbook.speech.captions import label_for
 
     assert label_for(said[0], {}) == "", "a caption puts no name on an announcement"
+
+
+def test_the_render_counts_chapters_and_not_the_host():
+    # The file holds the chapters. A summary that counted the intro and the
+    # outro said a volume of 20 had 22, and the M4B beside it said 20.
+    from openbook.cli import _chapter_count
+    from openbook.speech.package import Mark
+
+    marks = [
+        Mark("Introduction", 0.0, 20.0, host=True),
+        Mark("One.", 23.0, 600.0),
+        Mark("Two.", 603.0, 1200.0),
+        Mark("Afterword", 1203.0, 1220.0, host=True),
+    ]
+    assert _chapter_count(marks) == 2
+    assert _chapter_count([m for m in marks if not m.host]) == 2

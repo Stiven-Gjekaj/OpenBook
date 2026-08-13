@@ -166,6 +166,7 @@ separate reading carried at its ends.
 | `pause_at_scene_break` | Silence at a scene break |
 | `pause_after_chapter_name` | Silence after a chapter is announced |
 | `pause_between_chapters` | The rest at the end of a chapter, before the next is announced |
+| `pause_at_host` | The gap between the host and the book, at each end |
 | `action` | `pause`, `narrator`, or `drop` |
 | `pause_at_action` | How long an action lasts when it becomes a pause |
 | `intro` | What the narrator reads before the chapters |
@@ -185,9 +186,11 @@ M4B, and not the times in the YouTube description. The time is not lost,
 because the first chapter listed reads 0:00 and an intro in front of it
 belongs to that chapter as far as a viewer clicking the list is concerned.
 
-A rest of `pause_between_chapters` falls between the host and the book, after
-the intro and before the outro. A listener needs the same moment to change
-from being spoken to, to being read to, in both directions.
+A rest of `pause_at_host` falls between the host and the book, after the intro
+and before the outro. It has a length of its own rather than borrowing the
+rest between two chapters: that one is long because a listener has just
+finished a chapter and is owed a moment with it, and the same length after
+somebody talks to the camera sounds like the file has stopped.
 
 `read_end_matter` decides whether the words that close a chapter are spoken.
 In Soultale every chapter ends with three lines:

@@ -125,18 +125,25 @@ def make_card(
     has_volume = bool(volume_name or volume_title)
 
     gap = style.body_size * 0.9
-    block = title_height + gap
-    if volume_name:
-        block += style.faint_size * 1.9
-    if volume_title:
-        block += style.body_size * 1.35
-    if has_volume:
-        block += gap * 0.5
-    if chapter:
-        block += style.faint_size * 1.9
-    block += len(lines) * style.body_size * 1.35
 
-    top = (style.height - block) / 2
+    # The name of the work is pinned to the middle of the frame, and the rest
+    # is hung above and below it.
+    #
+    # It used to be the whole group that was centred, which reads well on one
+    # card and badly in motion: the cards cut from one to the next, the
+    # wordmark is the only thing on both, and the eye follows it. A card with
+    # no volume and no chapter on it put the wordmark 14 pixels higher than
+    # the card before, so it jumped at every cut.
+    above = 0.0
+    if volume_name:
+        above += style.faint_size * 1.9
+    if volume_title:
+        above += style.body_size * 1.35
+    if has_volume:
+        above += gap * 0.5
+
+    title_top = (style.height - title_height) / 2
+    top = title_top - above
 
     # The volume above the name of the work, stacked the same way as the
     # chapter below it: the number small and dim, the title under it and bright.

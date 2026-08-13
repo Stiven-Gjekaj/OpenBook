@@ -49,15 +49,26 @@ def test_the_example_lists_every_code_that_volume_one_uses():
     assert len(cast.codes()) == 44
 
 
-def test_an_entry_without_a_voice_is_reported_and_not_refused():
-    # A person must be able to read a cast before they fill it in, so loading
-    # works and the report names the entries that are still waiting. The
-    # example is a working project and some of it is cast, so this counts what
-    # is left rather than expecting the whole file to be blank.
-    cast = load_cast(EXAMPLE)
-    assert cast.uncast(), "the example still has entries waiting for a voice"
+def test_an_entry_without_a_voice_is_reported_and_not_refused(tmp_path):
+    """A cast can be read before it is filled in, and says what is waiting.
+
+    It writes its own file. Counting what the example has left made this test
+    fail the day the last entry was given a voice, which is a fact about the
+    book rather than about the code. The example was accommodated once
+    already, and once is the warning.
+    """
+    path = tmp_path / "cast.toml"
+    path.write_text(
+        '[narrator]\nvoice = "af_heart"\n\n'
+        '[cast.BLK]\nname = "Blook"\nvoice = "am_michael"\n\n'
+        '[cast.NEW]\nname = "Not cast yet"\nvoice = ""\n',
+        encoding="utf-8",
+    )
+    cast = load_cast(path)
+    assert [entry.code for entry in cast.uncast()] == ["NEW"]
     assert all(not entry.voice for entry in cast.uncast())
-    assert len(cast.uncast()) + len(cast.voices()) - 1 <= len(cast.codes())
+    assert "af_heart" in cast.voices()
+    assert "am_michael" in cast.voices()
 
 
 def test_reads_a_chapter_and_a_run_of_chapters():
@@ -200,7 +211,10 @@ def test_with_no_host_the_narrator_speaks_them(tmp_path):
 
 
 def test_the_example_names_a_host():
-    assert load_cast(EXAMPLE).host == "voices/host.wav"
+    # That it names one, and not which one. Which one is an authorial choice
+    # and it changes: a Kokoro pass over a volume cannot use a recording, so
+    # the value moves and comes back.
+    assert load_cast(EXAMPLE).host
 
 
 def test_a_narrator_can_change_with_the_chapter(tmp_path):

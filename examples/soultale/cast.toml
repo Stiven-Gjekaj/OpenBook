@@ -96,8 +96,15 @@ voice = "voices/narrator.wav"
 #   name     = "Blook"
 #   voice    = "voices/blook.wav"
 #
-# Nothing here yet. Volume 1 is not cast, and writing a range before the
-# recording exists would only move where the build stops.
+# TEMPORARY. Blook tells Volume 1, so the narrator of chapters 3 to 22 and
+# the code BLK are one person and take one voice. This is a Kokoro name and
+# not a recording, so that the volume can be heard before 37 recordings
+# exist.
+
+[[narrator_range]]
+chapters = "3-22"
+name     = "Blook"
+voice    = "am_michael"
 
 
 [host]
@@ -108,7 +115,12 @@ voice = "voices/narrator.wav"
 # It is not a character and it is not in the cast, because nobody in the book
 # ever hears it. Leave this out and the narrator reads those words, which is
 # what happened before this entry existed.
-voice = "voices/host.wav"
+#
+# TEMPORARY, with the rest of the Kokoro cast below. The real voice is
+# "voices/host.wav", and it has to go back before the prologue is rendered
+# again: Turbo cannot speak a Kokoro name and will say so. The audio the
+# prologue already has is in the cache and is not touched by this.
+voice = "af_sky"
 
 
 # LEADS
@@ -119,7 +131,7 @@ voice = "voices/host.wav"
 # 160 lines. First in chapter 4.
 [cast.BLK]
 name  = "Blook"
-voice = ""
+voice = "am_michael"
 
 # 54 lines. First in chapter 0.
 [cast.INK]
@@ -147,8 +159,8 @@ exaggeration = 0.4
 
 # 39 lines. First in chapter 18.
 [cast.LCH]
-name  = ""
-voice = ""
+name  = "Louch"
+voice = "am_fenrir"
 
 # 35 lines. First in chapter 0.
 [cast.ZER]
@@ -157,68 +169,68 @@ voice = "voices/zero.wav"
 
 # 36 lines. First in chapter 4.
 [cast.GBR]
-name  = ""
-voice = ""
+name  = "Gabriel"
+voice = "am_adam"
 
 # 32 lines. First in chapter 13.
 [cast.RGN]
-name  = ""
-voice = ""
+name  = "Rogen"
+voice = "am_onyx"
 
 # 29 lines. First in chapter 17.
 [cast.RMI]
-name  = ""
-voice = ""
+name  = "Remi"
+voice = "bm_george"
 
 # 26 lines. First in chapter 12.
 [cast.VLT]
-name  = ""
-voice = ""
+name  = "Velvet"
+voice = "af_heart"
 
 # 23 lines. First in chapter 4.
 [cast.LCF]
-name  = ""
-voice = ""
+name  = "Lucifer"
+voice = "am_eric"
 
 # 22 lines. First in chapter 15.
 [cast.SMP]
-name  = ""
-voice = ""
+name  = "Sampo"
+voice = "bm_lewis"
 
 # 21 lines. First in chapter 11.
 [cast.ZPH]
-name  = ""
-voice = ""
+name  = "Zephine"
+voice = "af_bella"
 
 # 21 lines. First in chapter 16.
 [cast.MRL]
-name  = ""
-voice = ""
+name  = "Mirelle"
+voice = "af_nicole"
 
 # 20 lines. First in chapter 10.
 [cast.EMR]
-name  = ""
-voice = ""
+name  = "Emory"
+voice = "am_liam"
 
 # 20 lines. First in chapter 16.
 [cast.DRK]
-name  = ""
-voice = ""
+name  = "Draken"
+voice = "bm_daniel"
 
 # 19 lines. First in chapter 9.
 [cast.MRW]
-name  = ""
-voice = ""
+name  = "Marlow"
+voice = "am_echo"
 
 # 18 lines. First in chapter 14.
 [cast.CAL]
-name  = ""
-voice = ""
+name  = "Calista"
+voice = "bf_emma"
 
 # 15 lines. First in chapter 8.
 [cast.SNA]
-name  = ""
-voice = ""
+name  = "Sienna"
+voice = "af_sarah"
 
 # 13 lines. First in chapter 1.
 [cast.DRM]
@@ -232,8 +244,8 @@ voice = "voices/theend.wav"
 
 # 9 lines. First in chapter 4.
 [cast.VTH]
-name  = ""
-voice = ""
+name  = "Vazroth"
+voice = "bm_fable"
 
 # 7 lines. First in chapter 1.
 [cast.BLB]
@@ -242,18 +254,18 @@ voice = "voices/blueberry.wav"
 
 # 6 lines. First in chapter 14.
 [cast.MAN]
-name  = ""
-voice = ""
+name  = "Man"
+voice = "am_puck"
 
 # 5 lines. First in chapter 7.
 [cast.AQL]
-name  = ""
-voice = ""
+name  = "Aquila"
+voice = "af_kore"
 
 # 5 lines. First in chapter 17.
 [cast.MRC]
-name  = ""
-voice = ""
+name  = "Marcus"
+voice = "am_santa"
 
 
 # SMALL PARTS
@@ -271,8 +283,8 @@ voice = "voices/edge.wav"
 
 # 4 lines. First in chapter 9.
 [cast.VLG]
-name  = ""
-voice = ""
+name  = "Villager"
+voice = "am_fenrir"
 
 # 3 lines. First in chapter 0. The nameless voice of the prologue.
 #
@@ -285,88 +297,88 @@ voice = "voices/zero.wav"
 
 # 3 lines. First in chapter 12.
 [cast.VNT]
-name  = ""
-voice = ""
+name  = "Vincent"
+voice = "am_adam"
 
 # 3 lines. First in chapter 12.
 [cast.SRH]
-name  = ""
-voice = ""
+name  = "Sarah"
+voice = "bf_alice"
 
 # 3 lines. First in chapter 13.
 [cast.AST]
-name  = ""
-voice = ""
+name  = "Astra"
+voice = "af_nova"
 
 # 3 lines. First in chapter 15.
 [cast.CHD]
-name  = ""
-voice = ""
+name  = "Child"
+voice = "af_aoede"
 
 # 3 lines. First in chapter 17.
 [cast.KLN]
-name  = ""
-voice = ""
+name  = "Kellan"
+voice = "am_onyx"
 
 # 2 lines. First in chapter 9.
 [cast.STW]
-name  = ""
-voice = ""
+name  = "Steward"
+voice = "bm_george"
 
 # 2 lines. First in chapter 12.
 [cast.ST1]
-name  = ""
-voice = ""
+name  = "Stranger 1"
+voice = "bf_lily"
 
 # 1 line. First in chapter 5.
 [cast."KID #1"]
-name  = ""
-voice = ""
+name  = "Kid 1"
+voice = "bm_lewis"
 
 # 1 line. First in chapter 5.
 [cast."KID #2"]
-name  = ""
-voice = ""
+name  = "Kid 2"
+voice = "am_liam"
 
 # 1 line. First in chapter 7.
 [cast.MAR]
-name  = ""
-voice = ""
+name  = "Marchant"
+voice = "am_eric"
 
 # 1 line. First in chapter 10.
 [cast.BRN]
-name  = ""
-voice = ""
+name  = "Brennan"
+voice = "bm_daniel"
 
 # 1 line. First in chapter 10.
 [cast.MIN]
-name  = ""
-voice = ""
+name  = "Miner"
+voice = "am_echo"
 
 # 1 line. First in chapter 12.
 [cast.ST2]
-name  = ""
-voice = ""
+name  = "Stranger 2"
+voice = "bm_fable"
 
 # 1 line. First in chapter 15.
 [cast.BCK]
-name  = ""
-voice = ""
+name  = "Baker"
+voice = "am_santa"
 
 # 1 line. First in chapter 15.
 [cast.WMN]
-name  = ""
-voice = ""
+name  = "Woman"
+voice = "af_river"
 
 # 1 line. First in chapter 16.
 [cast.MCH]
-name  = ""
-voice = ""
+name  = "Mechanic"
+voice = "am_fenrir"
 
 # 1 line. First in chapter 22.
 [cast.MOM]
-name  = ""
-voice = ""
+name  = "Mom"
+voice = "af_jessica"
 
 
 # UNKNOWN SPEAKERS

@@ -271,3 +271,16 @@ def test_a_span_that_is_not_chapters_is_refused(tmp_path):
     )
     with pytest.raises(ConfigError, match="does not name a chapter"):
         load_grammar(write(tmp_path, text))
+
+
+def test_the_host_rest_has_a_length_of_its_own(tmp_path):
+    # Three seconds after somebody talks to the camera sounds like the file
+    # has stopped. Between two chapters it is a pause a listener is owed.
+    grammar = load_grammar(write(tmp_path, MINIMAL))
+    assert grammar.render.at_host == 1.5, "a second and a half by default"
+
+    text = MINIMAL.replace(
+        'pause_after_chapter_name = "1s"',
+        'pause_after_chapter_name = "1s"\npause_at_host = "400ms"',
+    )
+    assert load_grammar(write(tmp_path, text)).render.at_host == 0.4
