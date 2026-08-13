@@ -332,7 +332,11 @@ def _engine_for(options):
     and it says real words at real lengths, which is enough to check the
     captions and the cards of a whole volume in seconds.
     """
-    asked = getattr(options, "engine", "silent")
+    return _one_engine(getattr(options, "engine", "silent"), options)
+
+
+def _one_engine(asked: str, options):
+    """One engine, by the name the command line uses for it."""
     if asked.startswith("chatterbox"):
         from .speech.chatterbox import ChatterboxEngine, ChatterboxTurboEngine
 
