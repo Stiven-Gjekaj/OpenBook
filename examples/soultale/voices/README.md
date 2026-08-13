@@ -14,20 +14,21 @@ book then has two characters that a reader cannot tell apart.
 | END | The end | My Liege, Dramatic Old Male | a voice library, not a character | 79 Hz |
 | EDG | Edge | Denji | Chainsaw Man | 113 Hz |
 | ZER | zero | Ayanokoji | Classroom of the Elite | 130 Hz |
-| INK | Ink | Childe | Genshin Impact | 178 Hz |
+| DRM | dream | Douma | Demon Slayer | 138 Hz |
+| INK | Ink | Ink Sans | an Undertale fan voice | 204 Hz |
 | | narrator | Frieren, soft | Frieren: Beyond Journey's End | 211 Hz |
-| DRM | dream | Abridged Kirito | Sword Art Online Abridged | 274 Hz |
 | BLB | Blueberry | Luffy | One Piece | 341 Hz |
 
 Ordered by pitch, because that is the order in which two of them collide.
 
-The closest pair is Ink and the host, 11 Hz apart, and they never meet: the
-host speaks only before and after the book. Among characters who share a
-scene, the closest are Edge and zero at 17 Hz, and Edge has four lines.
+**Two pairs are close, and the author chose both knowing it.** Ink and the
+narrator are 7 Hz apart and they alternate constantly: narration, Ink,
+narration. dream and zero are 8 Hz apart and share chapters 1 and 2. Pitch is
+one dimension of a voice and character is another, and Ink Sans is Ink.
 
-This took three attempts. dream and Ink were 3 Hz apart with Sunday and
-Subaru, then 7 Hz apart with Xiao and Childe. They are 96 Hz apart now, so if
-a listener still confuses them the reason is not pitch.
+The narrator moved twice before this over the same measurement, so the number
+is written down rather than argued about. dream and Ink were 3 Hz apart with
+Sunday and Subaru, and 7 Hz apart with Xiao and Childe.
 
 `///` is the nameless voice of the prologue. It is zero, so it uses
 `zero.wav`. Change it whenever ZER changes, or the two come apart.
@@ -41,6 +42,9 @@ voices close in pitch are the two a listener confuses. The cast above spans
 | Voice | From | Pitch | File | Was |
 | ----- | ---- | ----- | ---- | --- |
 | Xiao | Genshin Impact | 171 Hz | `xiao.wav` | dream, never heard |
+| Childe | Genshin Impact | 178 Hz | `childe.wav` | Ink |
+| Makima | Chainsaw Man | 189 Hz | `makima.wav` | the host |
+| Abridged Kirito | SAO Abridged | 274 Hz | `kirito.wav` | dream |
 | Venti | Genshin Impact | 274 Hz | `venti.wav` | dream |
 | Yanqing | Honkai: Star Rail | 288 Hz | `yanqing.wav` | Ink, then Blueberry |
 
@@ -56,7 +60,7 @@ made from him.
 
 | Voice | From | Pitch |
 | ----- | ---- | ----- |
-| Makima | Chainsaw Man | 189 Hz |
+| Stark | Frieren: Beyond Journey's End | 145 Hz |
 
 This voice speaks to the viewer and not to the book. It reads the words
 before the chapters start and the words after they end, where the video says

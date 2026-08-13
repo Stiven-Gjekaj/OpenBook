@@ -70,6 +70,28 @@ They also apply to a change that you start without a request.
 - Give the number that you can prove.
   Do not give a number that you calculated from a part.
 
+## What a test can hold on to
+
+- A test asks the code a question.
+  Do not let it ask the example configuration a question.
+- Build the state that a test needs inside the test.
+  Do not read it out of the file that the author edits.
+- Reason: the example is a working book, and every value in it is a choice
+  that the author makes again.
+  A test that read the action mode from it failed when the author changed the
+  mode.
+  A test that counted the entries with no voice failed when the last of them
+  received one.
+  A test that asked for the host by name failed when the host changed for one
+  render.
+- Reason: a test can also pass for the wrong reason.
+  One test wrote the word "drop" into a file that already said "drop", so it
+  tested nothing, and nobody could see this.
+- Match the shape of the file, not one form of it.
+  A helper looked for one space before an equals sign.
+  An entry with more spaces kept its voice, and the render that the test
+  refuses went through.
+
 ## What to keep
 
 - Look in a directory before you delete it.
