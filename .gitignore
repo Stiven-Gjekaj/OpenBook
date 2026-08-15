@@ -48,3 +48,9 @@ examples/soultale/music/
 
 # macOS writes these into every directory it looks at.
 .DS_Store
+
+# The settings of whichever assistant a contributor uses. What the project
+# asks of one is in AGENTS.md, which every contributor reads and no tool has
+# to be configured to obey. A checked in settings file speaks for one tool and
+# silently for nobody else.
+.claude/
