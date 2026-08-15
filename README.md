@@ -13,6 +13,7 @@ _Reads EPUB, separates narration from dialogue, writes one file for each volume_
 
 <p align="center">
   <a href="https://www.youtube.com/@SoultaleLibrary"><img src="https://img.shields.io/badge/Listen_on_YouTube-Soultale_Library-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="The Soultale Library channel on YouTube"/></a>
+  <a href="https://ko-fi.com/stivengjekaj"><img src="https://img.shields.io/badge/Ko--fi-Support_this_project-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Support this project on Ko-fi"/></a>
 </p>
 
 <p align="center">
